@@ -1,6 +1,8 @@
 import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
 import {ZodError} from 'zod';
+import { isGeneralAppFailureResponse } from "../types/response/general-app-response";
+import { isDatabaseError, isZodError } from "../types/error/general-app-error";
 
 export class UserController {
 
@@ -8,25 +10,30 @@ export class UserController {
 
     public static async createUser(req: Request, res: Response) : Promise<any> {
         try {
+            
             const result = await UserController.userService.createUser(req.body);
-            if (!result.success) {
-                return res.status(result.error.statusCode).json({
-                    success: false,
-                    message: result.error.businessMessage
-                });
+
+            if (isGeneralAppFailureResponse(result)) {
+                if(isDatabaseError(result.error) || isZodError(result.error)) {
+                    return res.status(result.statusCode).json({
+                        success: false,
+                        message: result.businessMessage,
+                        error: result.error
+                    });
+                }
+                else {
+                    // Something went wrong - internal server error
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error'
+                    });
+                }
             }
-            return res.status(201).json({
-                success: true,
-                data: result.output
-            });
+            
+            // User created successfully
+            return res.status(201).json(result);
+
         } catch (error) {
-            if (error instanceof ZodError) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Validation failed',
-                    errors: error.errors
-                });
-            }
             return res.status(500).json({
                 success: false,
                 message: 'Internal server error'
@@ -39,18 +46,25 @@ export class UserController {
             
             console.log('find all users');
             const result = await UserController.userService.findAllUsers();
-            console.log(result);
 
-            if (!result.success) {
-                return res.status(result.error.statusCode).json({
-                    success: false,
-                    message: result.error.businessMessage
-                });
+            if (isGeneralAppFailureResponse(result)) {
+                if(isDatabaseError(result.error) || isZodError(result.error)) {
+                    return res.status(result.statusCode).json({
+                        success: false,
+                        message: result.businessMessage,
+                        error: result.error
+                    });
+                } else {
+                    // Something went wrong - internal server error
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error'
+                    });
+                }
             }
-            return res.status(200).json({
-                success: true,
-                data: result.output
-            });
+
+            return res.status(200).json(result);
+
         } catch (error) {
             console.log(error);
             return res.status(500).json({

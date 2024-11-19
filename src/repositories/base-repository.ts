@@ -1,8 +1,9 @@
 // src/repositories/base.repository.ts
 import { Pool, QueryResult } from 'pg';
 import pool from '../db-connection/connect';
-import { DatabaseErrorHandler } from '../types/error/database-error-handler';
-import { IDatabaseError } from '../types/error/i-database-error';
+import { DatabaseErrorHandler } from '../error-handlers.ts/database-error-handler';
+import { DatabaseError } from '../types/error/database-error';
+import { GeneralAppResponse } from '../types/response/general-app-response';
 
 export abstract class BaseRepository {
 
@@ -15,12 +16,12 @@ export abstract class BaseRepository {
   protected async executeQuery<T>(
     query: string, 
     params?: any[]
-  ): Promise<{output: T, success: true} | {error: IDatabaseError, success: false}> {
+  ): Promise<GeneralAppResponse<T>> {
     try {
       const result: QueryResult = await this.pool.query(query, params);
-      return { output: result.rows as T, success: true };
+      return { output: result.rows as T, success: true } as GeneralAppResponse<T>;
     } catch (error: any) {
-      return { error: DatabaseErrorHandler.handle(error), success: false };
+      return DatabaseErrorHandler.handle(error) as GeneralAppResponse<T>;
     }
   }
 }
