@@ -14,6 +14,7 @@ export class UserController {
             const result = await UserController.userService.createUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
+                console.log('failure response');
                 if(isDatabaseError(result.error) || isZodError(result.error)) {
                     return res.status(result.statusCode).json({
                         success: false,
@@ -48,6 +49,7 @@ export class UserController {
             const result = await UserController.userService.findAllUsers();
 
             if (isGeneralAppFailureResponse(result)) {
+                console.log('failure response');
                 if(isDatabaseError(result.error) || isZodError(result.error)) {
                     return res.status(result.statusCode).json({
                         success: false,

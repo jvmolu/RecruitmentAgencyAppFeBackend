@@ -23,6 +23,7 @@ export class UserService {
         const validationResult = UserSchema.safeParse(user);
         if (!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
             return {
                 error: zodError,
                 statusCode: 400,

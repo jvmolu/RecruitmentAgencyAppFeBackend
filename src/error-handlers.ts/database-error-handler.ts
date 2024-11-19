@@ -8,6 +8,8 @@ export class DatabaseErrorHandler {
     static handle(error: PgDatabaseError): FailureResponse {
 
         const dbError: DatabaseError = error as DatabaseError;    
+        dbError.errorType = 'DatabaseError';
+
         const failureResponse : FailureResponse = {
             error: dbError,
             businessMessage: 'Database error occurred',
