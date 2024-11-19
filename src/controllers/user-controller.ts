@@ -1,8 +1,9 @@
 import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
 import {ZodError} from 'zod';
-import { isGeneralAppFailureResponse } from "../types/response/general-app-response";
+import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { isDatabaseError, isZodError } from "../types/error/general-app-error";
+import { UserAuthData } from "../types/response/user-auth-data-response";
 
 export class UserController {
 
@@ -11,7 +12,7 @@ export class UserController {
     public static async createUser(req: Request, res: Response) : Promise<any> {
         try {
             
-            const result = await UserController.userService.createUser(req.body);
+            const result : GeneralAppResponse<UserAuthData> = await UserController.userService.createUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');

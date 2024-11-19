@@ -19,7 +19,7 @@ export abstract class BaseRepository {
   ): Promise<GeneralAppResponse<T>> {
     try {
       const result: QueryResult = await this.pool.query(query, params);
-      return { output: result.rows as T, success: true } as GeneralAppResponse<T>;
+      return { data: result.rows as T, success: true } as GeneralAppResponse<T>;
     } catch (error: any) {
       return DatabaseErrorHandler.handle(error) as GeneralAppResponse<T>;
     }

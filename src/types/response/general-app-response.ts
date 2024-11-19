@@ -1,7 +1,8 @@
 import { GeneralAppError } from "../error/general-app-error";
+import { User } from "../zod/user-entity";
 
 export type SuccessResponse<T> = {
-    output: T;
+    data: T;
     success: true;
 };
 

@@ -16,7 +16,7 @@ class UserRepository extends BaseRepository {
             }
             // If the response is a success response, return the first element of the output array
             // SuccessResponse<User[]> -> SuccessResponse<User> is required hence converting the response
-            return { output: response.output[0], success: true };
+            return { data: response.data[0], success: true };
         }
         catch (error: any) {
             return {
