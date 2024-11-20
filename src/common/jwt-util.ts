@@ -21,3 +21,13 @@ export function verifyJWTToken(token: string) {
     }
     return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
 }
+
+export function getUserIdFromToken(token: string) {
+    try {
+        const decoded: any = verifyJWTToken(token);
+        return decoded.userId;
+    } catch (error) {
+        console.error('Error while verifying token');
+        return null;
+    }
+}

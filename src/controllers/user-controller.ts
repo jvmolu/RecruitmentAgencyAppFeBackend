@@ -2,7 +2,7 @@ import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
 import {ZodError} from 'zod';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { isDatabaseError, isZodError } from "../types/error/general-app-error";
+import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
 import { UserAuthData } from "../types/response/user-auth-data-response";
 
 export class UserController {
@@ -33,6 +33,40 @@ export class UserController {
             
             // User created successfully
             return res.status(201).json(result);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
+
+    public static async loginUser(req: Request, res: Response) : Promise<any> {
+        try {
+            
+            console.log('login user');
+            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.loginUser(req.body);
+
+            if (isGeneralAppFailureResponse(result)) {
+                console.log('failure response');
+                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
+                    return res.status(result.statusCode).json({
+                        success: false,
+                        message: result.businessMessage,
+                        error: result.error
+                    });
+                } else {
+                    // Something went wrong - internal server error
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error'
+                    });
+                }
+            }
+
+            return res.status(200).json(result);
 
         } catch (error) {
             console.log(error);
@@ -76,4 +110,40 @@ export class UserController {
             });
         }
     }
+
+    public static async findUserByToken(req: Request, res: Response) : Promise<any> { 
+        try {
+            
+            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.findUserByToken(req.headers.authorization);
+
+            if (isGeneralAppFailureResponse(result)) {
+                console.log('failure response');
+                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
+                    return res.status(result.statusCode).json({
+                        success: false,
+                        message: result.businessMessage,
+                        error: result.error
+                    });
+                } else {
+                    // Something went wrong - internal server error
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Internal server error'
+                    });
+                }
+            }
+
+            return res.status(200).json(result);
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+
+    }
+
+
 }

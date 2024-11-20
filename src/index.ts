@@ -1,5 +1,5 @@
 // Express Server Typescript
-import express, { Request, Response } from 'express';
+import express from 'express';
 import UserRouter from './routes/user-routes';
 
 const app: express.Application = express();
