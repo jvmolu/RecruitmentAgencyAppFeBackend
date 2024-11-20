@@ -18,11 +18,34 @@ const UserSchema = BaseSchema.merge(
 
 type UserType = z.infer<typeof UserSchema>
 
-class User {
+class User implements UserType {
+
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: number;
+  role: Role;
+  status: Status;
+  createdAt: string;
+  updatedAt: string;
+
   constructor(userData: UserType) {
+
     // This will throw if validation fails
     const validatedUser = UserSchema.parse(userData);
-    Object.assign(this, validatedUser);
+
+    this.id = validatedUser.id;
+    this.firstName = validatedUser.firstName;
+    this.lastName = validatedUser.lastName;
+    this.email = validatedUser.email;
+    this.password = validatedUser.password;
+    this.phone = validatedUser.phone;
+    this.role = validatedUser.role;
+    this.status = validatedUser.status;
+    this.createdAt = validatedUser.createdAt;
+    this.updatedAt = validatedUser.updatedAt;
   }
 }
 

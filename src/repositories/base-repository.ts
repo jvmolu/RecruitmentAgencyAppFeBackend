@@ -4,24 +4,28 @@ import pool from '../db-connection/connect';
 import { DatabaseErrorHandler } from '../error-handlers.ts/database-error-handler';
 import { DatabaseError } from '../types/error/database-error';
 import { GeneralAppResponse } from '../types/response/general-app-response';
+import DbTable from '../enums/db-table';
+import { SchemaMapper } from './table-entity-mapper/schema-mapper';
 
 export abstract class BaseRepository {
 
-  protected pool: Pool;
+  protected tableName: DbTable;
+  protected static pool: Pool = pool;
 
-  constructor() {
-    this.pool = pool;
+  constructor(tableName: DbTable) {
+    this.tableName = tableName;
   }
 
   protected async executeQuery<T>(
     query: string, 
     params?: any[]
-  ): Promise<GeneralAppResponse<T>> {
+  ): Promise<GeneralAppResponse<T[]>> {
     try {
-      const result: QueryResult = await this.pool.query(query, params);
-      return { data: result.rows as T, success: true } as GeneralAppResponse<T>;
+      const dbResult: QueryResult = await pool.query(query, params);
+      const convertedRows: T[] = dbResult.rows.map(row => SchemaMapper.toEntity<T>(this.tableName, row));
+      return { data: convertedRows, success: true } as GeneralAppResponse<T[]>;
     } catch (error: any) {
-      return DatabaseErrorHandler.handle(error) as GeneralAppResponse<T>;
+      return DatabaseErrorHandler.handle(error) as GeneralAppResponse<T[]>;
     }
   }
 }

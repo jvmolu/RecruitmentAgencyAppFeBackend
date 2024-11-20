@@ -24,7 +24,6 @@ export class UserController {
                     });
                 }
                 else {
-                    // Something went wrong - internal server error
                     return res.status(500).json({
                         success: false,
                         message: 'Internal server error'
@@ -36,6 +35,7 @@ export class UserController {
             return res.status(201).json(result);
 
         } catch (error) {
+            console.log(error);
             return res.status(500).json({
                 success: false,
                 message: 'Internal server error'

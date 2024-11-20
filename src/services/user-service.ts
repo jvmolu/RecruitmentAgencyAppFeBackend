@@ -6,9 +6,10 @@ import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { hashPassword } from "../common/hash-util"; 
 import { generateJWTToken } from "../common/jwt-util";
 import { UserAuthData } from "../types/response/user-auth-data-response";
+import DbTable from "../enums/db-table";
 export class UserService {
 
-    private static userRepository: UserRepository = new UserRepository();
+    private static userRepository: UserRepository = new UserRepository(DbTable.USERS);
 
     public async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<UserAuthData>> {        
         
@@ -34,14 +35,16 @@ export class UserService {
 
         const hashedPassword = await hashPassword(user.password);
         user.password = hashedPassword;
-        const token: string = await generateJWTToken(user.id);
-        const response: GeneralAppResponse<User> = await UserService.userRepository.create(user);
+
+        let response: GeneralAppResponse<User> = await UserService.userRepository.create(user);
 
         if (isGeneralAppResponse(response)) {
+            // Remove Password before returning
+            response.data.password = "";
             return {
                 data: {
-                    user: response.data,
-                    token: token
+                    ...response.data,
+                    token: generateJWTToken(user.id)
                 },
                 success: true
             };
@@ -51,7 +54,7 @@ export class UserService {
     }
 
     // Todo User -> User[]
-    public async findAllUsers(): Promise<GeneralAppResponse<User>> {
+    public async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
         return await UserService.userRepository.findAll();
     }
 }
