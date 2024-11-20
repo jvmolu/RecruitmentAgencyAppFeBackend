@@ -11,7 +11,7 @@ export class UserService {
 
     private static userRepository: UserRepository = new UserRepository(DbTable.USERS);
 
-    public async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<UserAuthData>> {        
+    public async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
         
         const user: UserType = {
             id: uuidv4(),
@@ -39,12 +39,12 @@ export class UserService {
         let response: GeneralAppResponse<User> = await UserService.userRepository.create(user);
 
         if (isGeneralAppResponse(response)) {
-            // Remove Password before returning
-            response.data.password = "";
+            // Remove password from the response
+            let {password, ...userDataResponse} = response.data;
             return {
                 data: {
-                    ...response.data,
-                    token: generateJWTToken(user.id)
+                    ...userDataResponse,
+                    token: generateJWTToken(response.data.id)
                 },
                 success: true
             };

@@ -12,7 +12,7 @@ export class UserController {
     public static async createUser(req: Request, res: Response) : Promise<any> {
         try {
             
-            const result : GeneralAppResponse<UserAuthData> = await UserController.userService.createUser(req.body);
+            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.createUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
