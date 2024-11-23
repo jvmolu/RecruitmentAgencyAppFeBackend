@@ -17,6 +17,6 @@ UserRouter.get('/findAllUsers', Authenticate, UserController.findAllUsers);
 UserRouter.get('/', Authenticate, UserController.findUserByToken);
 
 // Get user by params
-UserRouter.get('/findByParams', Authenticate, UserController.findUsersByParams);
+UserRouter.post('/findByParams', Authenticate, UserController.findUsersByParams);
 
 export default UserRouter;

@@ -1,4 +1,5 @@
 import DbTable from "../../enums/db-table";
+import companySchemaMapping from "./table-entity-mismatch-mappings/company-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
 
 export type FieldMapping = {
@@ -9,17 +10,17 @@ export type FieldMapping = {
 export class SchemaMapper {
     
     private static schemas: { [key: string]: {mappings: FieldMapping[]} } = {
-        [DbTable.USERS]: userSchemaMappings
+        [DbTable.USERS]: userSchemaMappings,
+        [DbTable.COMPANIES]: companySchemaMapping
     };
 
     static toEntity<T>(tableName: DbTable, dbRow: {[key: string]: any}): T {
         const schema:{mappings: FieldMapping[]} = this.schemas[tableName];
         if (!schema) return dbRow as T; // No mismatch mappings found, return the row as is.
-
         const result: any = {};
         Object.entries(dbRow).forEach(([dbField, value]) => {
             const mapping = schema.mappings.find(m => m.dbField === dbField);
-            const entityField = mapping ? mapping.entityField : dbField; // If no mapping found, use the dbField as is.
+            const entityField = mapping ? mapping.entityField : dbField; // If no mapping found, use the dbField as is
             result[entityField] = value;
         });
 

@@ -4,8 +4,8 @@ CREATE TYPE company_status AS ENUM ('ACTIVE', 'INACTIVE');
 -- Create companies table
 CREATE TABLE companies (
     id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    website VARCHAR(255),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    website VARCHAR(255) UNIQUE,
     address TEXT,
     is_partner BOOLEAN NOT NULL DEFAULT FALSE,
     status company_status NOT NULL DEFAULT 'ACTIVE',
