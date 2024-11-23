@@ -1,7 +1,7 @@
 import {Request, Response, NextFunction} from 'express';
 import { UserService } from '../../services/user-service';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from '../../types/response/general-app-response';
-import { UserAuthData } from '../../types/response/user-auth-data-response';
+import { UserAuthData } from '../../types/user-auth-data';
 
 const Authenticate = async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
 

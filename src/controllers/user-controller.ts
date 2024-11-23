@@ -2,7 +2,7 @@ import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
-import { UserAuthData } from "../types/response/user-auth-data-response";
+import { UserAuthData } from "../types/user-auth-data";
 import HttpStatusCode from "../enums/http-status-codes";
 
 export class UserController {

@@ -5,7 +5,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse }
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { hashPassword, comparePassword } from "../common/hash-util"; 
 import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
-import { UserAuthData } from "../types/response/user-auth-data-response";
+import { UserAuthData } from "../types/user-auth-data";
 import DbTable from "../enums/db-table";
 import { AuthError } from "../types/error/auth-error";
 import HttpStatusCode from "../enums/http-status-codes";
