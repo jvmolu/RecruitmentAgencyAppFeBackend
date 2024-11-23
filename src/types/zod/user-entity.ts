@@ -33,6 +33,7 @@ class User implements UserType {
 
   constructor(userData: UserType) {
 
+
     // This will throw if validation fails
     const validatedUser = UserSchema.parse(userData);
 

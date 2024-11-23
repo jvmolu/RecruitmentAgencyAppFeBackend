@@ -28,6 +28,53 @@ class UserRepository extends BaseRepository {
         }
     }
 
+    async findByEmail(email: string): Promise<GeneralAppResponse<User>> {
+
+        try {
+            const query: string = `SELECT * FROM ${this.tableName} WHERE email = $1`;
+            const params: any[] = [email];
+            const response: GeneralAppResponse<User[]> = await this.executeQuery<User>(query, params);
+            // If the response is a failure response, directly return
+            if(isGeneralAppFailureResponse(response)) {
+                return response;
+            }
+            // If the response is a success response, return the first element of the output array
+            // SuccessResponse<User[]> -> SuccessResponse<User> is required hence converting the response
+            return { data: response.data[0], success: true };
+        }
+        catch (error: any) {
+            return {
+                error: error,
+                businessMessage: 'Internal server error',
+                statusCode: 500,
+                success: false
+            }
+        }
+    }
+
+    async findById(id: string): Promise<GeneralAppResponse<User>> {
+        try {
+            const query: string = `SELECT * FROM ${this.tableName} WHERE id = $1`;
+            const params: any[] = [id];
+            const response: GeneralAppResponse<User[]> = await this.executeQuery<User>(query, params);
+            // If the response is a failure response, directly return
+            if(isGeneralAppFailureResponse(response)) {
+                return response;
+            }
+            // If the response is a success response, return the first element of the output array
+            // SuccessResponse<User[]> -> SuccessResponse<User> is required hence converting the response
+            return { data: response.data[0], success: true };
+        }
+        catch (error: any) {
+            return {
+                error: error,
+                businessMessage: 'Internal server error',
+                statusCode: 500,
+                success: false
+            }
+        }
+    }
+
     async findAll(): Promise<GeneralAppResponse<User[]>> {
         try {
             const query = `SELECT * FROM ${DbTable.USERS}`;
