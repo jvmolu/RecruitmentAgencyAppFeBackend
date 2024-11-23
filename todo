@@ -1,0 +1,2 @@
+1. Refactor ZodParsingError and AuthError handling in a error handler to remove 
+the error response creation code from services and controllers and use the error handler instead.

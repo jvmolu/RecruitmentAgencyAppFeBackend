@@ -2,6 +2,7 @@ import { DatabaseError as PgDatabaseError } from 'pg';
 import { DatabaseError } from '../types/error/database-error';
 import { errorCodes } from '../common/db-error-codes';
 import { FailureResponse } from '../types/response/general-app-response';
+import HttpStatusCode from '../enums/http-status-codes';
 
 export class DatabaseErrorHandler {
     
@@ -13,21 +14,21 @@ export class DatabaseErrorHandler {
         const failureResponse : FailureResponse = {
             error: dbError,
             businessMessage: 'Database error occurred',
-            statusCode: 500,
+            statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
             success: false
         };
 
         switch (dbError.code) {
             case errorCodes.UNIQUE_VIOLATION:
-                failureResponse.statusCode = 409;
+                failureResponse.statusCode = HttpStatusCode.CONFLICT;
                 failureResponse.businessMessage = 'Record already exists';
                 break;
             case errorCodes.FOREIGN_KEY_VIOLATION:
-                failureResponse.statusCode = 404;
+                failureResponse.statusCode = HttpStatusCode.NOT_FOUND;
                 failureResponse.businessMessage = 'Referenced record not found';
                 break;
             default:
-                failureResponse.statusCode = 500;
+                failureResponse.statusCode = HttpStatusCode.INTERNAL_SERVER_ERROR;
                 failureResponse.businessMessage = 'Database error occurred';
         }
 

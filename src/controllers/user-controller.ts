@@ -1,18 +1,16 @@
 import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
-import {ZodError} from 'zod';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
 import { UserAuthData } from "../types/response/user-auth-data-response";
+import HttpStatusCode from "../enums/http-status-codes";
 
 export class UserController {
-
-    private static userService: UserService = new UserService();
 
     public static async createUser(req: Request, res: Response) : Promise<any> {
         try {
             
-            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.createUser(req.body);
+            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserService.createUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
@@ -24,7 +22,7 @@ export class UserController {
                     });
                 }
                 else {
-                    return res.status(500).json({
+                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                         success: false,
                         message: 'Internal server error'
                     });
@@ -32,7 +30,7 @@ export class UserController {
             }
             
             // User created successfully
-            return res.status(201).json(result);
+            return res.status(HttpStatusCode.CREATED).json(result);
 
         } catch (error) {
             console.log(error);
@@ -47,10 +45,9 @@ export class UserController {
         try {
             
             console.log('login user');
-            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.loginUser(req.body);
+            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserService.loginUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
-                console.log('failure response');
                 if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
                     return res.status(result.statusCode).json({
                         success: false,
@@ -59,18 +56,18 @@ export class UserController {
                     });
                 } else {
                     // Something went wrong - internal server error
-                    return res.status(500).json({
+                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                         success: false,
                         message: 'Internal server error'
                     });
                 }
             }
 
-            return res.status(200).json(result);
+            return res.status(HttpStatusCode.OK).json(result);
 
         } catch (error) {
             console.log(error);
-            return res.status(500).json({
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: 'Internal server error'
             });
@@ -81,7 +78,7 @@ export class UserController {
         try {
             
             console.log('find all users');
-            const result = await UserController.userService.findAllUsers();
+            const result = await UserService.findAllUsers();
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
@@ -93,7 +90,7 @@ export class UserController {
                     });
                 } else {
                     // Something went wrong - internal server error
-                    return res.status(500).json({
+                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                         success: false,
                         message: 'Internal server error'
                     });
@@ -104,7 +101,7 @@ export class UserController {
 
         } catch (error) {
             console.log(error);
-            return res.status(500).json({
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: 'Internal server error'
             });
@@ -113,37 +110,14 @@ export class UserController {
 
     public static async findUserByToken(req: Request, res: Response) : Promise<any> { 
         try {
-            
-            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserController.userService.findUserByToken(req.headers.authorization);
-
-            if (isGeneralAppFailureResponse(result)) {
-                console.log('failure response');
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                } else {
-                    // Something went wrong - internal server error
-                    return res.status(500).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
-            }
-
-            return res.status(200).json(result);
-
+            // Trace has been added by authentication middleware - directly return the user
+            return res.status(HttpStatusCode.OK).json(req.body.user);
         } catch (error) {
             console.log(error);
-            return res.status(500).json({
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: 'Internal server error'
             });
         }
-
     }
-
-
 }

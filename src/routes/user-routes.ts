@@ -1,11 +1,19 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user-controller";
+import Authenticate from "../middlewares/auth/authenticate"
 
 const UserRouter = Router();
 
+// Register a new user
 UserRouter.post('/', UserController.createUser);
+
+// Login a user
 UserRouter.post('/login', UserController.loginUser);
-UserRouter.get('/findAllUsers', UserController.findAllUsers); 
-UserRouter.get('/', UserController.findUserByToken);
+
+// Get all users - only for admin
+UserRouter.get('/findAllUsers', Authenticate, UserController.findAllUsers); 
+
+// Get user by token
+UserRouter.get('/', Authenticate, UserController.findUserByToken);
 
 export default UserRouter;

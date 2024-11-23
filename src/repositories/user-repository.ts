@@ -2,6 +2,7 @@ import { BaseRepository } from "./base-repository";
 import { User, UserType } from "../types/zod/user-entity";
 import DbTable from "../enums/db-table";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
+import HttpStatusCode from "../enums/http-status-codes";
 
 class UserRepository extends BaseRepository {
 
@@ -22,7 +23,7 @@ class UserRepository extends BaseRepository {
             return {
                 error: error,
                 businessMessage: 'Internal server error',
-                statusCode: 500,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
                 success: false
             }
         }
@@ -46,7 +47,7 @@ class UserRepository extends BaseRepository {
             return {
                 error: error,
                 businessMessage: 'Internal server error',
-                statusCode: 500,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
                 success: false
             }
         }
@@ -69,7 +70,7 @@ class UserRepository extends BaseRepository {
             return {
                 error: error,
                 businessMessage: 'Internal server error',
-                statusCode: 500,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
                 success: false
             }
         }
@@ -84,7 +85,7 @@ class UserRepository extends BaseRepository {
             return {
                 error: error,
                 businessMessage: 'Internal server error',
-                statusCode: 500,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
                 success: false
             }
         }

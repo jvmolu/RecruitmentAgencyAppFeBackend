@@ -8,12 +8,13 @@ import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
 import { UserAuthData } from "../types/response/user-auth-data-response";
 import DbTable from "../enums/db-table";
 import { AuthError } from "../types/error/auth-error";
+import HttpStatusCode from "../enums/http-status-codes";
 
 export class UserService {
 
     private static userRepository: UserRepository = new UserRepository(DbTable.USERS);
 
-    public async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    public static async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
         
         const user: UserType = {
             id: uuidv4(),
@@ -29,7 +30,7 @@ export class UserService {
             zodError.errorType = 'ZodParsingError';
             return {
                 error: zodError,
-                statusCode: 400,
+                statusCode: HttpStatusCode.BAD_REQUEST,
                 businessMessage: 'Invalid user data',
                 success: false
             };
@@ -59,7 +60,7 @@ export class UserService {
         return response;
     }
 
-    public async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    public static async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
 
         const validationResult = UserSchema.pick({email: true, password: true}).safeParse(userData);
         if (!validationResult.success) {
@@ -67,7 +68,7 @@ export class UserService {
             zodError.errorType = 'ZodParsingError';
             return {
                 error: zodError,
-                statusCode: 400,
+                statusCode: HttpStatusCode.BAD_REQUEST,
                 businessMessage: 'Invalid user data',
                 success: false
             };
@@ -85,7 +86,7 @@ export class UserService {
             authError.errorType = 'AuthError';
             return {
                 error: authError,
-                statusCode: 401,
+                statusCode: HttpStatusCode.UNAUTHORIZED,
                 businessMessage: 'Invalid email',
                 success: false
             };
@@ -110,25 +111,25 @@ export class UserService {
             authError.errorType = 'AuthError';
             return {
                 error: authError,
-                statusCode: 401,
+                statusCode: HttpStatusCode.UNAUTHORIZED,
                 businessMessage: 'Invalid password',
                 success: false
             };
         }
     }
     // Todo User -> User[]
-    public async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
+    public static async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
         return await UserService.userRepository.findAll();
     }
 
-    public async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
 
         if(!token) {
             const authError: AuthError = new Error('Token not provided') as AuthError;
             authError.errorType = 'AuthError';
             return {
                 error: authError,
-                statusCode: 401,
+                statusCode: HttpStatusCode.UNAUTHORIZED,
                 businessMessage: 'Token not provided',
                 success: false
             };
