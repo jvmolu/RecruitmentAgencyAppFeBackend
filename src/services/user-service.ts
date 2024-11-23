@@ -1,7 +1,7 @@
 import { UserRepository } from "../repositories/user-repository";
 import { User, UserType, UserSchema } from "../types/zod/user-entity";
 import { v4 as uuidv4 } from 'uuid';
-import { GeneralAppResponse, isGeneralAppResponse } from "../types/response/general-app-response";
+import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { hashPassword, comparePassword } from "../common/hash-util"; 
 import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
@@ -43,10 +43,14 @@ export class UserService {
         if (isGeneralAppResponse(response)) {
             // Remove password from the response
             let {password, ...userDataResponse} = response.data;
+            let generateTokenOutput: GeneralAppResponse<string> = generateJWTToken(userDataResponse.id);
+            if(isGeneralAppFailureResponse(generateTokenOutput)) {
+                return generateTokenOutput;
+            }
             return {
                 data: {
                     ...userDataResponse,
-                    token: generateJWTToken(response.data.id)
+                    token: generateTokenOutput.data
                 },
                 success: true
             };
@@ -58,7 +62,6 @@ export class UserService {
     public async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
 
         const validationResult = UserSchema.pick({email: true, password: true}).safeParse(userData);
-
         if (!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';
@@ -72,32 +75,37 @@ export class UserService {
 
         let response: GeneralAppResponse<User> = await UserService.userRepository.findByEmail(userData.email);
 
-        if (isGeneralAppResponse(response)) {
-            const user: User = response.data;
-            if(!user) {
-                let authError: AuthError = new Error('Invalid email') as AuthError;
-                authError.errorType = 'AuthError';
-                return {
-                    error: authError,
-                    statusCode: 401,
-                    businessMessage: 'Invalid email',
-                    success: false
-                };
-            }
+        if(isGeneralAppFailureResponse(response)) {
+            return response;
+        }
 
-            const isPasswordMatched = await comparePassword(userData.password, user.password);
-            if (isPasswordMatched) {
-                let {password, ...userDataResponse} = user;
-                return {
-                    data: {
-                        ...userDataResponse,
-                        token: generateJWTToken(user.id)
-                    },
-                    success: true
-                };
-            }
+        const user: User = response.data;
+        if(!user) {
+            let authError: AuthError = new Error('Invalid email') as AuthError;
+            authError.errorType = 'AuthError';
+            return {
+                error: authError,
+                statusCode: 401,
+                businessMessage: 'Invalid email',
+                success: false
+            };
+        }
 
-            console.log("Invalid password");
+        const isPasswordMatched = await comparePassword(userData.password, user.password);
+        if (isPasswordMatched) {
+            let {password, ...userDataResponse} = user;
+            let generateTokenOutput: GeneralAppResponse<string> = generateJWTToken(userDataResponse.id);
+            if(isGeneralAppFailureResponse(generateTokenOutput)) {
+                return generateTokenOutput;
+            }
+            return {
+                data: {
+                    ...userDataResponse,
+                    token: generateTokenOutput.data
+                },
+                success: true
+            };
+        } else {
             const authError: AuthError = new Error('Invalid password') as AuthError;
             authError.errorType = 'AuthError';
             return {
@@ -107,8 +115,6 @@ export class UserService {
                 success: false
             };
         }
-
-        return response;
     }
     // Todo User -> User[]
     public async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
@@ -116,6 +122,7 @@ export class UserService {
     }
 
     public async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+
         if(!token) {
             const authError: AuthError = new Error('Token not provided') as AuthError;
             authError.errorType = 'AuthError';
@@ -126,33 +133,26 @@ export class UserService {
                 success: false
             };
         }
-        const userId = await getUserIdFromToken(token);
 
-        if (!userId) {
-            const authError: AuthError = new Error('Invalid token') as AuthError;
-            authError.errorType = 'AuthError';
-            return {
-                error: authError,
-                statusCode: 401,
-                businessMessage: 'Invalid token',
-                success: false
-            };
+        const userIdResponse : GeneralAppResponse<string> = getUserIdFromToken(token);
+        if(isGeneralAppFailureResponse(userIdResponse)) {
+            return userIdResponse;
         }
 
+        const userId : string = userIdResponse.data;
         let response: GeneralAppResponse<User> = await UserService.userRepository.findById(userId); 
 
-        if (isGeneralAppResponse(response)) {
-            let {password, ...userDataResponse} = response.data;
-            return {
-                data: {
-                    ...userDataResponse,
-                    token: token
-                },
-                success: true
-            };
-
+        if(isGeneralAppFailureResponse(response)) {
+            return response;
         }
 
-        return response;
+        let {password, ...userDataResponse} = response.data;
+        return {
+            data: {
+                ...userDataResponse,
+                token: token
+            },
+            success: true
+        };
     }
 }
