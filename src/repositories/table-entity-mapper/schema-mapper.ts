@@ -12,7 +12,7 @@ export class SchemaMapper {
         [DbTable.USERS]: userSchemaMappings
     };
 
-    static toEntity<T>(tableName: DbTable, dbRow: any): T {
+    static toEntity<T>(tableName: DbTable, dbRow: {[key: string]: any}): T {
         const schema:{mappings: FieldMapping[]} = this.schemas[tableName];
         if (!schema) return dbRow as T; // No mismatch mappings found, return the row as is.
 
@@ -26,7 +26,7 @@ export class SchemaMapper {
         return result as T;
     }
 
-    static toDbSchema(tableName: DbTable, entity: any): any {
+    static toDbSchema(tableName: DbTable, entity: any): {[key: string]: any} {
 
         const schema = this.schemas[tableName];
         if (!schema) return entity; // No mismatch mappings found, return the entity as is.

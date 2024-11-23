@@ -74,13 +74,12 @@ export class UserService {
             };
         }
 
-        let response: GeneralAppResponse<User> = await UserService.userRepository.findByEmail(userData.email);
-
+        let response: GeneralAppResponse<User[]> = await UserService.userRepository.findByParams({email: userData.email});
         if(isGeneralAppFailureResponse(response)) {
             return response;
         }
 
-        const user: User = response.data;
+        const user: User = response.data[0];
         if(!user) {
             let authError: AuthError = new Error('Invalid email') as AuthError;
             authError.errorType = 'AuthError';
@@ -117,9 +116,28 @@ export class UserService {
             };
         }
     }
-    // Todo User -> User[]
+
     public static async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
-        return await UserService.userRepository.findAll();
+        return await UserService.userRepository.findByParams({});
+    }
+
+    public static async findUsersByParams(userFields: Partial<UserType>): Promise<GeneralAppResponse<User[]>> {
+        // Validate that the userFields are valid
+        const validationResult = UserSchema.partial().safeParse(userFields);
+        if (!validationResult.success) {
+            let zodError: ZodParsingError = validationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid user data',
+                success: false
+            };
+        }
+
+        // Ignore Extra fields
+        userFields = validationResult.data;
+        return await UserService.userRepository.findByParams(userFields);
     }
 
     public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
@@ -141,13 +159,13 @@ export class UserService {
         }
 
         const userId : string = userIdResponse.data;
-        let response: GeneralAppResponse<User> = await UserService.userRepository.findById(userId); 
+        let response: GeneralAppResponse<User[]> = await UserService.userRepository.findByParams({id: userId});
 
         if(isGeneralAppFailureResponse(response)) {
             return response;
         }
 
-        let {password, ...userDataResponse} = response.data;
+        let {password, ...userDataResponse} = response.data[0];
         return {
             data: {
                 ...userDataResponse,

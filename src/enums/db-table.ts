@@ -1,6 +1,7 @@
 enum DbTable {
     USERS = 'users',
-    JOBS = 'jobs'
+    JOBS = 'jobs',
+    COMPANIES = 'companies'
 }
 
 export default DbTable;

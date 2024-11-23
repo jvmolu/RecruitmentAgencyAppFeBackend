@@ -11,8 +11,8 @@ const UserSchema = BaseSchema.merge(
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits'),
-    role: z.enum([Role.ADMIN, Role.CANDIDATE]).default(Role.CANDIDATE), // If the role is not provided, default to Candidate
-    status: z.enum([Status.ACTIVE, Status.INACTIVE]).default(Status.INACTIVE), // If the status is not provided, default to Active
+    role: z.nativeEnum(Role).default(Role.CANDIDATE), // If the role is not provided, default to Candidate
+    status: z.nativeEnum(Status).default(Status.INACTIVE), // If the status is not provided, default to Active
   })
 );
 
@@ -32,7 +32,6 @@ class User implements UserType {
   updatedAt: string;
 
   constructor(userData: UserType) {
-
 
     // This will throw if validation fails
     const validatedUser = UserSchema.parse(userData);
