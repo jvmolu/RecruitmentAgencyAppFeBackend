@@ -111,7 +111,7 @@ export class UserController {
     public static async findUserByToken(req: Request, res: Response) : Promise<any> { 
         try {
             // Trace has been added by authentication middleware - directly return the user
-            return res.status(HttpStatusCode.OK).json(req.body.trace.user);
+            return res.status(HttpStatusCode.OK).json(req.body.user);
         } catch (error) {
             console.log(error);
             return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({

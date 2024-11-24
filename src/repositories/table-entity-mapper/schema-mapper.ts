@@ -23,7 +23,6 @@ export class SchemaMapper {
             const entityField = mapping ? mapping.entityField : dbField; // If no mapping found, use the dbField as is
             result[entityField] = value;
         });
-
         return result as T;
     }
 
@@ -40,5 +39,12 @@ export class SchemaMapper {
         });
 
         return result;
+    }
+
+    static toDbField(tableName: DbTable, entityField: string): string {
+        const schema = this.schemas[tableName];
+        if (!schema) return entityField; // No mismatch mappings found, return the entity field as is.
+        const mapping = schema.mappings.find(m => m.entityField === entityField);
+        return mapping ? mapping.dbField : entityField;
     }
 }

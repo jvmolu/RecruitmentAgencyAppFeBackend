@@ -1,5 +1,5 @@
 import { UserRepository } from "../repositories/user-repository";
-import { User, UserType, UserSchema } from "../types/zod/user-entity";
+import { User, UserType, UserSchema, UserSearchSchema, UserSearchOptions } from "../types/zod/user-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -121,9 +121,9 @@ export class UserService {
         return await UserService.userRepository.findByParams({});
     }
 
-    public static async findUsersByParams(userFields: Partial<UserType>): Promise<GeneralAppResponse<User[]>> {
-        // Validate that the userFields are valid
-        const validationResult = UserSchema.partial().safeParse(userFields);
+    public static async findUsersByParams(userFields: Partial<UserSearchOptions>): Promise<GeneralAppResponse<User[]>> {
+
+        const validationResult = UserSearchSchema.partial().safeParse(userFields);
         if (!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';

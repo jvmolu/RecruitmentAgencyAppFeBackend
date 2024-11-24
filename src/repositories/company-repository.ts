@@ -1,14 +1,18 @@
+import DbTable from "../enums/db-table";
 import HttpStatusCode from "../enums/http-status-codes";
+import QueryOperation from "../enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { Company, CompanyType } from "../types/zod/company-entity";
 import { BaseRepository } from "./base-repository";
+import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
+import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 
 class CompanyRepository extends BaseRepository {
 
     async create(company: CompanyType): Promise<GeneralAppResponse<Company>> {
         try {
-            const query: string = `INSERT INTO ${this.tableName} (id, name, website, address, is_partner, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
-            const params: any[] = [company.id, company.name, company.website, company.address, company.isPartner, company.status, company.createdAt, company.updatedAt];
+            const companyDbFields = SchemaMapper.toDbSchema(DbTable.COMPANIES, company);
+            const { query, params } = QueryBuilder.buildInsertQuery(DbTable.COMPANIES, companyDbFields);
             const response: GeneralAppResponse<Company[]> = await this.executeQuery<Company>(query, params);
             // If the response is a failure response, directly return
             if(isGeneralAppFailureResponse(response)) {
@@ -29,9 +33,25 @@ class CompanyRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(userFields: Partial<CompanyType>): Promise<GeneralAppResponse<Company[]>> {
+    async findByParams(companyFields: Partial<CompanyType>): Promise<GeneralAppResponse<Company[]>> {
         try {
-            const {query, params} = this.createGeneralSelectQuery(userFields);
+            // Build the QueryFields object
+            const queryFields: QueryFields = {};
+            Object.entries(companyFields).forEach(([key, value]) => {
+                let operation: QueryOperation;
+                if(value === null) {
+                    operation = QueryOperation.IS_NULL;
+                } else if (typeof value === 'string' && key != 'id') {
+                    operation = QueryOperation.ILIKE;
+                }
+                else {
+                    operation = QueryOperation.EQUALS;
+                }
+                const keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
+                // Add the field to the queryFields object
+                queryFields[keyToUse] = { value, operation };
+            });
+            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.COMPANIES, queryFields);
             return await this.executeQuery<Company>(query, params);
         }
         catch (error: any) {

@@ -13,7 +13,19 @@ const CompanySchema = BaseSchema.merge(
   })
 );
 
+// Company Search Options Schema which allows Wildcard Search for String Fields
+const CompanySearchSchema = BaseSchema.merge(
+  z.object({
+    name: z.string(),
+    website: z.string(),
+    address: z.string(),
+    isPartner: z.boolean(),
+    status: z.nativeEnum(Status),
+  })
+);
+
 type CompanyType = z.infer<typeof CompanySchema>
+type CompanySearchOptions = z.infer<typeof CompanySearchSchema>
 
 class Company implements CompanyType {
 
@@ -42,4 +54,4 @@ class Company implements CompanyType {
   }
 }
 
-export { CompanySchema, CompanyType, Company };
+export { CompanySchema, CompanyType, Company, CompanySearchSchema, CompanySearchOptions };

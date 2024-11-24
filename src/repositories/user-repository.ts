@@ -1,16 +1,18 @@
 import { BaseRepository } from "./base-repository";
 import { User, UserType } from "../types/zod/user-entity";
-import DbTable from "../enums/db-table";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import HttpStatusCode from "../enums/http-status-codes";
+import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
+import DbTable from "../enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
+import QueryOperation from "../enums/query-operation";
 
 class UserRepository extends BaseRepository {
 
     async create(user: UserType): Promise<GeneralAppResponse<User>> {
         try {
-            const query: string = `INSERT INTO ${this.tableName} (id, first_name, last_name, phone, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
-            const params: any[] = [user.id, user.firstName, user.lastName, user.phone, user.email, user.password, user.createdAt, user.updatedAt];
+            const userDbFields = SchemaMapper.toDbSchema(DbTable.USERS, user);
+            const { query, params } = QueryBuilder.buildInsertQuery(DbTable.USERS, userDbFields);
             const response: GeneralAppResponse<User[]> = await this.executeQuery<User>(query, params);
             // If the response is a failure response, directly return
             if(isGeneralAppFailureResponse(response)) {
@@ -30,25 +32,27 @@ class UserRepository extends BaseRepository {
         }
     }
 
-    async findAll(): Promise<GeneralAppResponse<User[]>> {
-        try {
-            const query = `SELECT * FROM ${this.tableName}`;
-            return await this.executeQuery<User>(query);
-        }
-        catch (error: any) {
-            return {
-                error: error,
-                businessMessage: 'Internal server error',
-                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
-        }
-    }
-
     // Find By General Params
     async findByParams(userFields: Partial<UserType>): Promise<GeneralAppResponse<User[]>> {
         try {
-            const {query, params} = this.createGeneralSelectQuery(userFields);
+            // Build the QueryFields object
+            const queryFields: QueryFields = {};
+            Object.entries(userFields).forEach(([key, value]) => {
+                let operation: QueryOperation;
+                if(value === null) {
+                    operation = QueryOperation.IS_NULL;
+                } else if (typeof value === 'string' && key !== 'id') {
+                    operation = QueryOperation.ILIKE;
+                }
+                else {
+                    operation = QueryOperation.EQUALS;
+                }
+                const keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
+                // Add the field to the queryFields object
+                queryFields[keyToUse] = { value, operation };
+            });
+            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.USERS, queryFields);
+
             return await this.executeQuery<User>(query, params);
         }
         catch (error: any) {

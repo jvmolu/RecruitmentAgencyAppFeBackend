@@ -16,7 +16,20 @@ const UserSchema = BaseSchema.merge(
   })
 );
 
+// Search Options Schema which allows Wildcard Search for String Fields
+const UserSearchSchema = BaseSchema.merge(
+  z.object({
+    firstName: z.string(),
+    lastName: z.string(),
+    email: z.string(),
+    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits'),
+    role: z.nativeEnum(Role),
+    status: z.nativeEnum(Status),
+  })
+);
+
 type UserType = z.infer<typeof UserSchema>
+type UserSearchOptions = z.infer<typeof UserSearchSchema>
 
 class User implements UserType {
 
@@ -49,4 +62,4 @@ class User implements UserType {
   }
 }
 
-export { UserSchema, UserType, User };
+export { UserSchema, UserType, User, UserSearchSchema, UserSearchOptions };
