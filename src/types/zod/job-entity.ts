@@ -31,7 +31,31 @@ const JobSchema = BaseSchema.merge(
     })
 );
 
+const JobSearchSchema = BaseSchema.merge(
+    z.object({
+        companyId: z.string().uuid(),
+        partnerId: z.string().uuid(),
+        budgetAmount: z.number().int(),
+        budgetCurrency: z.nativeEnum(Currency),
+        budgetPer: z.nativeEnum(PaymentPer),
+        jobType: z.nativeEnum(JobsType),
+        contractType: z.nativeEnum(ContractType),
+        title: z.string(),
+        objective: z.string(),
+        goals: z.string(),
+        jobDescription: z.string(),
+        skills: z.array(z.string()),
+        quantity: z.number().int(),
+        requiredBy: z.string().datetime(),
+        hiddenColumns: z.array(z.string()),
+        location: z.string(),
+        workModel: z.nativeEnum(WorkModel),
+        status: z.nativeEnum(Status),
+    })
+);
+
 type JobType = z.infer<typeof JobSchema>
+type JobSearchOptions = z.infer<typeof JobSearchSchema>
 
 class Job implements JobType {
 
@@ -86,4 +110,4 @@ class Job implements JobType {
     }
 }
 
-export { JobSchema, JobType, Job };
+export { JobSchema, JobType, Job, JobSearchSchema, JobSearchOptions };

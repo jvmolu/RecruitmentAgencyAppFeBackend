@@ -1,5 +1,6 @@
 import DbTable from "../../enums/db-table";
 import companySchemaMapping from "./table-entity-mismatch-mappings/company-schema-mapping";
+import jobSchemaMapping from "./table-entity-mismatch-mappings/job-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
 
 export type FieldMapping = {
@@ -11,7 +12,8 @@ export class SchemaMapper {
     
     private static schemas: { [key: string]: {mappings: FieldMapping[]} } = {
         [DbTable.USERS]: userSchemaMappings,
-        [DbTable.COMPANIES]: companySchemaMapping
+        [DbTable.COMPANIES]: companySchemaMapping,
+        [DbTable.JOBS]: jobSchemaMapping
     };
 
     static toEntity<T>(tableName: DbTable, dbRow: {[key: string]: any}): T {

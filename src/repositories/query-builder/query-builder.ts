@@ -26,7 +26,8 @@ export class QueryBuilder {
     [QueryOperation.NOT_IN]: (key) => `${key} NOT IN ($)`,
     [QueryOperation.IS_NULL]: (key) => `${key} IS NULL`,
     [QueryOperation.IS_NOT_NULL]: (key) => `${key} IS NOT NULL`,
-    [QueryOperation.BETWEEN]: (key) => `${key} BETWEEN $ AND $`
+    [QueryOperation.BETWEEN]: (key) => `${key} BETWEEN $ AND $`,
+    [QueryOperation.ARRAY_INTERSECTS]: (key) => `${key} && ARRAY[$]`
   };
 
   static buildSelectQuery(tableName: string, conditions: QueryFields): { query: string; params: any[] } {
@@ -151,7 +152,15 @@ export class QueryBuilder {
       case QueryOperation.NOT_IN:
         const placeholders = value.map((_: any, i: number) => `$${startIndex + i}`).join(', ');
         return {
-          queryPart: ` ${key} ${operation === QueryOperation.IN ? 'IN' : 'NOT IN'} (${placeholders})`,
+          queryPart: ` ${this.operationHandlers[operation](key).replace('$', placeholders)}`,
+          newParams: value,
+          incrementIndex: value.length
+        };
+
+      case QueryOperation.ARRAY_INTERSECTS:
+        const placeholdersArray = value.map((_: any, i: number) => `$${startIndex + i}`).join(', ');
+        return {
+          queryPart: ` ${this.operationHandlers[operation](key).replace('$', placeholdersArray)}`,
           newParams: value,
           incrementIndex: value.length
         };
@@ -165,3 +174,36 @@ export class QueryBuilder {
     }
   }
 }
+
+// JUST A TEST FUNCTION TO CHECK ABOVE FUNCTIONALITIES
+async function main() {
+
+  // Test Query Builder for ArrAy Intersects
+  const jobFields = {
+    id: 1,
+    title: 'Software Engineer',
+    skills: ['React', 'NodeJS'],
+    job_description: null,
+  };
+
+  const queryConditions: QueryFields = {};
+  Object.entries(jobFields).forEach(([key, value]) => {
+    let operation: QueryOperation;
+    if (value === null) {
+      operation = QueryOperation.IS_NULL;
+    } else if (typeof value === 'string' && key !== 'id') {
+      operation = QueryOperation.ILIKE;
+    } else if (Array.isArray(value)) {
+      operation = QueryOperation.ARRAY_INTERSECTS;
+    } else {
+      operation = QueryOperation.EQUALS;
+    }
+    queryConditions[key] = { value, operation };
+  });
+
+  const { query, params } = QueryBuilder.buildSelectQuery('jobs', queryConditions);
+  console.log('query', query);
+  console.log('params', params);
+}
+
+main();

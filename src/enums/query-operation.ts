@@ -11,7 +11,8 @@ enum QueryOperation {
     NOT_IN = 'NOT_IN',
     IS_NULL = 'IS_NULL',
     IS_NOT_NULL = 'IS_NOT_NULL',
-    BETWEEN = 'BETWEEN'
+    BETWEEN = 'BETWEEN',
+    ARRAY_INTERSECTS = 'ARRAY_INTERSECTS'
 }
 
 export default QueryOperation;
