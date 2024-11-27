@@ -7,6 +7,6 @@ const JobRouter = Router();
 
 JobRouter.post('/', Authenticate, JobController.createJob);
 JobRouter.post('/findByParams', Authenticate, JobController.findByParams);
-JobRouter.put('/updateJobs', Authenticate, AuthoriseSuperUser, JobController.updateJobs);
+JobRouter.put('/', Authenticate, AuthoriseSuperUser, JobController.updateJobs);
 
 export default JobRouter;

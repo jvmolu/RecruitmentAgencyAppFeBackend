@@ -97,6 +97,15 @@ export class QueryBuilder {
   }
 
   static buildUpdateQuery(tableName: string, fields: { [key: string]: any }, conditions: QueryFields): { query: string; params: any[] } {
+
+    if (Object.keys(fields).length === 0) {
+      console.log('No fields to update');
+      return { query: '', params: [] };
+    }
+
+    console.log('fields', fields);
+    console.log('conditions', conditions);
+
     let query = `UPDATE ${tableName} SET`;
     const params: any[] = [];
     let paramIndex = 1;
@@ -126,6 +135,8 @@ export class QueryBuilder {
       }
     });
 
+    console.log('query', query + ';');
+    console.log('params', params);
     return { query: query + ';', params };
   }
 

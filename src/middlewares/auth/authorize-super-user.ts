@@ -1,15 +1,26 @@
 import {Request, Response, NextFunction} from 'express';
 import Role from '../../types/enums/role';
+import HttpStatusCode from '../../types/enums/http-status-codes';
 
 const AuthoriseSuperUser = async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
-    const user = req.body.user;
-    if(!user || user.role !== Role.ADMIN) {
-        res.status(403).json({
+    try {
+        const user = req.body.user;
+        if(!user || user.role !== Role.ADMIN) {
+            res.status(HttpStatusCode.FORBIDDEN).json({
+                success: false,
+                message: 'Forbidden'
+            });
+        } else {
+            next();
+        }
+    }
+    catch (error) {
+        console.log(error);
+        res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: 'Forbidden'
+            message: 'Internal server error'
         });
     }
-    next();
 }
 
 export default AuthoriseSuperUser;

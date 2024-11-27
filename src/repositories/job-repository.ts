@@ -101,7 +101,7 @@ class JobRepository extends BaseRepository {
             const updateFields = SchemaMapper.toDbSchema(DbTable.JOBS, jobUpdateFields);
 
             // Build the query
-            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, searchQueryFields, updateFields);
+            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, updateFields, searchQueryFields);
             // Execute the query
             return await this.executeQuery<Job>(query, params);
     }
