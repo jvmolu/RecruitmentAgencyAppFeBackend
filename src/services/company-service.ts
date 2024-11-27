@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class CompanyService {
 
-    private static companyRepository: CompanyRepository = new CompanyRepository(DbTable.COMPANIES);
+    private static companyRepository: CompanyRepository = new CompanyRepository();
 
     public static async createCompany(companyData: Omit<CompanyType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<CompanyType>> {
         
@@ -34,11 +34,6 @@ export class CompanyService {
         company = validationResult.data;
 
         let response: GeneralAppResponse<CompanyType> = await CompanyService.companyRepository.create(company);
-
-        if (isGeneralAppResponse(response)) {
-            return response;
-        }
-
         return response;
     }
 

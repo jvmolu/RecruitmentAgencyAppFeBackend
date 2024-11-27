@@ -6,13 +6,12 @@ import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { hashPassword, comparePassword } from "../common/hash-util"; 
 import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
 import { UserAuthData } from "../types/user-auth-data";
-import DbTable from "../enums/db-table";
 import { AuthError } from "../types/error/auth-error";
 import HttpStatusCode from "../enums/http-status-codes";
 
 export class UserService {
 
-    private static userRepository: UserRepository = new UserRepository(DbTable.USERS);
+    private static userRepository: UserRepository = new UserRepository();
 
     public static async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
         

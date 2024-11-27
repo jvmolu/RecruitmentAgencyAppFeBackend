@@ -9,6 +9,10 @@ import QueryOperation from "../enums/query-operation";
 
 class UserRepository extends BaseRepository {
 
+    constructor() {
+        super(DbTable.USERS);
+    }
+
     async create(user: UserType): Promise<GeneralAppResponse<User>> {
         try {
             const userDbFields = SchemaMapper.toDbSchema(DbTable.USERS, user);

@@ -9,6 +9,10 @@ import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 
 class CompanyRepository extends BaseRepository {
 
+    constructor() {
+        super(DbTable.COMPANIES);
+    }
+
     async create(company: CompanyType): Promise<GeneralAppResponse<Company>> {
         try {
             const companyDbFields = SchemaMapper.toDbSchema(DbTable.COMPANIES, company);
