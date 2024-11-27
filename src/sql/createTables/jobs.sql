@@ -31,6 +31,34 @@ CREATE TABLE jobs (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Constraints
+-- Add constraint for budget fields
+ALTER TABLE jobs
+ADD CONSTRAINT budget_fields_all_or_none CHECK (
+    (
+        budget_amount IS NULL AND 
+        budget_currency IS NULL AND 
+        budget_per IS NULL
+    ) 
+    OR 
+    (
+        budget_amount IS NOT NULL AND 
+        budget_currency IS NOT NULL AND 
+        budget_per IS NOT NULL
+    )
+);
+
+-- Add Foreign Key Constraints
+ALTER TABLE jobs
+ADD CONSTRAINT fk_jobs_company 
+FOREIGN KEY (company_id) 
+REFERENCES companies(id);
+
+ALTER TABLE jobs
+ADD CONSTRAINT fk_jobs_partner 
+FOREIGN KEY (partner_id) 
+REFERENCES companies(id);
+
 -- Create indexes
 CREATE INDEX idx_jobs_company_id ON jobs(company_id);
 CREATE INDEX idx_jobs_partner_id ON jobs(partner_id);
@@ -48,23 +76,7 @@ CREATE INDEX idx_jobs_title_prefix_trgm ON jobs USING gin (title gin_trgm_ops);
 -- Index to search for skills
 CREATE INDEX idx_jobs_skills ON jobs USING gin (skills);
 
--- BUDGET Related
--- Add constraint for budget fields
-ALTER TABLE jobs
-ADD CONSTRAINT budget_fields_all_or_none CHECK (
-    (
-        budget_amount IS NULL AND 
-        budget_currency IS NULL AND 
-        budget_per IS NULL
-    ) 
-    OR 
-    (
-        budget_amount IS NOT NULL AND 
-        budget_currency IS NOT NULL AND 
-        budget_per IS NOT NULL
-    )
-);
-
+-- BUDGET Related Indexes
 -- Create a composite index for budget queries
 -- If you frequently search by amount range without other conditions:
 CREATE INDEX idx_jobs_budget_amount ON jobs(budget_amount);
