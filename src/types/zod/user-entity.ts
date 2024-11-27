@@ -1,6 +1,6 @@
 import BaseSchema from "./base-entity";
-import Role from "../../enums/role";
-import Status from "../../enums/status";
+import Role from "../enums/role";
+import Status from "../enums/status";
 import { z } from "zod";
 
 // Define the schema for the User model

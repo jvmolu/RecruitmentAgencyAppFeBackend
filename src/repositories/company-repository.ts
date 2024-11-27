@@ -1,6 +1,7 @@
-import DbTable from "../enums/db-table";
-import HttpStatusCode from "../enums/http-status-codes";
-import QueryOperation from "../enums/query-operation";
+import { isEnumField } from "../types/enum-field-mapping";
+import DbTable from "../types/enums/db-table";
+import HttpStatusCode from "../types/enums/http-status-codes";
+import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { Company, CompanyType } from "../types/zod/company-entity";
 import { BaseRepository } from "./base-repository";
@@ -45,10 +46,11 @@ class CompanyRepository extends BaseRepository {
                 let operation: QueryOperation;
                 if(value === null) {
                     operation = QueryOperation.IS_NULL;
+                } else if (isEnumField(this.tableName, key)) {
+                    operation = QueryOperation.EQUALS;
                 } else if (typeof value === 'string' && key != 'id') {
                     operation = QueryOperation.ILIKE;
-                }
-                else {
+                } else {
                     operation = QueryOperation.EQUALS;
                 }
                 const keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);

@@ -3,7 +3,7 @@ import { Pool, QueryResult } from 'pg';
 import pool from '../db-connection/connect';
 import { DatabaseErrorHandler } from '../error-handlers.ts/database-error-handler';
 import { GeneralAppResponse } from '../types/response/general-app-response';
-import DbTable from '../enums/db-table';
+import DbTable from '../types/enums/db-table';
 import { SchemaMapper } from './table-entity-mapper/schema-mapper';
 
 export abstract class BaseRepository {

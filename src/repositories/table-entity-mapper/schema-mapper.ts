@@ -1,4 +1,4 @@
-import DbTable from "../../enums/db-table";
+import DbTable from "../../types/enums/db-table";
 import companySchemaMapping from "./table-entity-mismatch-mappings/company-schema-mapping";
 import jobSchemaMapping from "./table-entity-mismatch-mappings/job-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";

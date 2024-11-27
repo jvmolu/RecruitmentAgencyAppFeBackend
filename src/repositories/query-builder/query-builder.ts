@@ -1,4 +1,4 @@
-import QueryOperation from "../../enums/query-operation";
+import QueryOperation from "../../types/enums/query-operation";
 
 // src/types/query/query-condition.ts
 export interface QueryCondition {
@@ -206,4 +206,4 @@ async function main() {
   console.log('params', params);
 }
 
-main();
+// main();

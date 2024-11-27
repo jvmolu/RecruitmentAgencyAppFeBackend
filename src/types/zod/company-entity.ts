@@ -1,4 +1,4 @@
-import Status from "../../enums/status";
+import Status from "../enums/status";
 import BaseSchema from "./base-entity";
 import { z } from "zod";
 

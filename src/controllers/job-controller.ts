@@ -1,4 +1,4 @@
-import HttpStatusCode from "../enums/http-status-codes";
+import HttpStatusCode from "../types/enums/http-status-codes";
 import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";

@@ -1,6 +1,7 @@
-import DbTable from "../enums/db-table";
-import HttpStatusCode from "../enums/http-status-codes";
-import QueryOperation from "../enums/query-operation";
+import { isEnumField } from "../types/enum-field-mapping";
+import DbTable from "../types/enums/db-table";
+import HttpStatusCode from "../types/enums/http-status-codes";
+import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { Job, JobSearchOptions, JobType } from "../types/zod/job-entity";
 import { BaseRepository } from "./base-repository";
@@ -81,13 +82,14 @@ class JobRepository extends BaseRepository {
                 let operation: QueryOperation;
                 if(value === null) {
                     operation = QueryOperation.IS_NULL;
+                } else if (isEnumField(this.tableName, key)) {
+                    operation = QueryOperation.EQUALS;
                 } else if (typeof value === 'string' && key !== 'id') {
                     operation = QueryOperation.ILIKE;
                 } else if (Array.isArray(value)) {
                     // Check if there is intersection between db array and the search array
                     operation = QueryOperation.ARRAY_INTERSECTS;
-                }
-                else {
+                } else {
                     operation = QueryOperation.EQUALS;
                 }
                 const keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);

@@ -1,4 +1,4 @@
-import HttpStatusCode from "../enums/http-status-codes";
+import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyService } from "../services/company-service";
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";

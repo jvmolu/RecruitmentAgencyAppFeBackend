@@ -2,7 +2,7 @@ import { DatabaseError as PgDatabaseError } from 'pg';
 import { DatabaseError } from '../types/error/database-error';
 import { errorCodes } from '../common/db-error-codes';
 import { FailureResponse } from '../types/response/general-app-response';
-import HttpStatusCode from '../enums/http-status-codes';
+import HttpStatusCode from '../types/enums/http-status-codes';
 
 export class DatabaseErrorHandler {
     

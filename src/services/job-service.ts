@@ -3,7 +3,7 @@ import { GeneralAppResponse } from "../types/response/general-app-response";
 import { v4 as uuidv4 } from 'uuid';
 import { JobSchema, JobSearchOptions, JobSearchSchema, JobType } from "../types/zod/job-entity";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
-import HttpStatusCode from "../enums/http-status-codes";
+import HttpStatusCode from "../types/enums/http-status-codes";
 
 export class JobService {
 

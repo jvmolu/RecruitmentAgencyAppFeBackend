@@ -1,9 +1,9 @@
-import ContractType from "../../enums/contract-type";
-import Currency from "../../enums/currency";
-import JobsType from "../../enums/job-type";
-import PaymentPer from "../../enums/payment-per";
-import Status from "../../enums/status";
-import WorkModel from "../../enums/work-model";
+import ContractType from "../enums/contract-type";
+import Currency from "../enums/currency";
+import JobsType from "../enums/job-type";
+import PaymentPer from "../enums/payment-per";
+import Status from "../enums/status";
+import WorkModel from "../enums/work-model";
 import BaseSchema from "./base-entity";
 import { z } from "zod";
 

@@ -1,5 +1,5 @@
-import DbTable from "../enums/db-table";
-import HttpStatusCode from "../enums/http-status-codes";
+import DbTable from "../types/enums/db-table";
+import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyRepository } from "../repositories/company-repository";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { GeneralAppResponse, isGeneralAppResponse } from "../types/response/general-app-response";

@@ -7,7 +7,7 @@ import { hashPassword, comparePassword } from "../common/hash-util";
 import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
 import { UserAuthData } from "../types/user-auth-data";
 import { AuthError } from "../types/error/auth-error";
-import HttpStatusCode from "../enums/http-status-codes";
+import HttpStatusCode from "../types/enums/http-status-codes";
 
 export class UserService {
 

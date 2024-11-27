@@ -1,11 +1,12 @@
 import { BaseRepository } from "./base-repository";
 import { User, UserType } from "../types/zod/user-entity";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import HttpStatusCode from "../enums/http-status-codes";
+import HttpStatusCode from "../types/enums/http-status-codes";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
-import DbTable from "../enums/db-table";
+import DbTable from "../types/enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
-import QueryOperation from "../enums/query-operation";
+import QueryOperation from "../types/enums/query-operation";
+import { isEnumField } from "../types/enum-field-mapping";
 
 class UserRepository extends BaseRepository {
 
@@ -45,10 +46,11 @@ class UserRepository extends BaseRepository {
                 let operation: QueryOperation;
                 if(value === null) {
                     operation = QueryOperation.IS_NULL;
+                } else if (isEnumField(this.tableName, key)) {
+                    operation = QueryOperation.EQUALS;
                 } else if (typeof value === 'string' && key !== 'id') {
                     operation = QueryOperation.ILIKE;
-                }
-                else {
+                } else {
                     operation = QueryOperation.EQUALS;
                 }
                 const keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
