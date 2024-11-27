@@ -42,27 +42,8 @@ class JobRepository extends BaseRepository {
     async findByParams(jobFields: Partial<JobSearchOptions>): Promise<GeneralAppResponse<Job[]>> {
         try {
             // Build the QueryFields object
-            const queryFields: QueryFields = {};
-            Object.entries(jobFields).forEach(([key, value]) => {
-                
-                let operation: QueryOperation;
-                if(value === null) {
-                    operation = QueryOperation.IS_NULL;
-                } else if (typeof value === 'string' && key !== 'id') {
-                    operation = QueryOperation.ILIKE;
-                } else if (Array.isArray(value)) {
-                    // Check if there is intersection between db array and the search array
-                    operation = QueryOperation.ARRAY_INTERSECTS;
-                }
-                else {
-                    operation = QueryOperation.EQUALS;
-                }
-                const keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
-                // Add the field to the queryFields object
-                queryFields[keyToUse] = { value, operation };
-            });
-
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.JOBS, queryFields);
+            const searchQueryFields: QueryFields = this.createSearchFields(jobFields);
+            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.JOBS, searchQueryFields);
             return await this.executeQuery<Job>(query, params);
         }
         catch (error: any) {
@@ -77,33 +58,48 @@ class JobRepository extends BaseRepository {
 
     async updateByParams(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<Job[]>> {
             // Build the QueryFields object
-            const searchQueryFields: QueryFields = {};
-            Object.entries(jobSearchFields).forEach(([key, value]) => {
-                let operation: QueryOperation;
-                if(value === null) {
-                    operation = QueryOperation.IS_NULL;
-                } else if (isEnumField(this.tableName, key)) {
-                    operation = QueryOperation.EQUALS;
-                } else if (typeof value === 'string' && key !== 'id') {
-                    operation = QueryOperation.ILIKE;
-                } else if (Array.isArray(value)) {
-                    // Check if there is intersection between db array and the search array
-                    operation = QueryOperation.ARRAY_INTERSECTS;
-                } else {
-                    operation = QueryOperation.EQUALS;
-                }
-                const keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
-                // Add the field to the queryFields object
-                searchQueryFields[keyToUse] = { value, operation };
-            });
-
+            const searchQueryFields: QueryFields = this.createSearchFields(jobSearchFields);
             // Prepare the update fields
             const updateFields = SchemaMapper.toDbSchema(DbTable.JOBS, jobUpdateFields);
-
             // Build the query
             const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, updateFields, searchQueryFields);
             // Execute the query
             return await this.executeQuery<Job>(query, params);
+    }
+
+    private createSearchFields(jobFields: Partial<JobSearchOptions>): QueryFields {
+        const queryFields: QueryFields = {};
+        Object.entries(jobFields).forEach(([key, value]) => {
+            let operation: QueryOperation;
+            if(value === null) 
+            {
+                operation = QueryOperation.IS_NULL;
+            }
+            else if(key === 'id' || key === 'companyId' || key === 'partnerId')
+            {
+                operation = QueryOperation.EQUALS;
+            }
+            else if (isEnumField(this.tableName, key)) 
+            {
+                operation = QueryOperation.EQUALS;
+            }
+            else if(Array.isArray(value))
+            {
+                operation = QueryOperation.ARRAY_INTERSECTS;
+            }
+            else if (typeof value === 'string')
+            {
+                operation = QueryOperation.ILIKE;
+            } 
+            else 
+            {
+                operation = QueryOperation.EQUALS;
+            }
+            const keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            // Add the field to the queryFields object
+            queryFields[keyToUse] = { value, operation };
+        });
+        return queryFields;
     }
 
 }
