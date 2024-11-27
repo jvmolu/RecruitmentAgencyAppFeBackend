@@ -26,6 +26,7 @@ export class JobController {
                     });
                 }
             }
+            return res.status(HttpStatusCode.CREATED).json(result);
         }
         catch (error) {
             console.log(error);
