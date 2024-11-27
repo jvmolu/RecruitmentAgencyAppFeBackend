@@ -135,9 +135,12 @@ export class QueryBuilder {
       }
     });
 
-    console.log('query', query + ';');
+    // Returning all fields
+    query += ' RETURNING *;';
+
+    console.log('query', query);
     console.log('params', params);
-    return { query: query + ';', params };
+    return { query: query, params };
   }
 
   private static handleOperation(key: string, value: any, operation: QueryOperation, startIndex: number): 
