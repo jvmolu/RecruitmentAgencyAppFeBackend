@@ -8,7 +8,7 @@ const AuthoriseSuperUser = async (req: Request, res: Response, next: NextFunctio
         if(!user || user.role !== Role.ADMIN) {
             res.status(HttpStatusCode.FORBIDDEN).json({
                 success: false,
-                message: 'Forbidden'
+                message: 'Only Super Users are allowed to perform this operation'
             });
         } else {
             next();

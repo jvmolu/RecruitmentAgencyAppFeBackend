@@ -33,7 +33,7 @@ export class EmailService {
                 from: process.env.EMAIL_USER,
                 to,
                 subject,
-                text
+                html: text
             });
             return { data: undefined, success: true };
         } catch (error: any) {
