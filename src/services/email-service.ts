@@ -52,7 +52,7 @@ export class EmailService {
 
 async function main() {
     const emailService = EmailService.getInstance();
-    const response = await emailService.sendEmail('ishikajaiswal525@gmail.com', 'Test email', 'This is a test email');
+    const response = await emailService.sendEmail('anmol.singhal50@gmail.com', 'Test email', 'This is a test email');
     console.log(response);
 }
 
