@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 import { GeneralAppResponse } from '../types/response/general-app-response';
 import { EmailSendError } from '../types/error/email-send-error';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: __dirname + "/./../../.env" });
 
 export class EmailService {
 
@@ -53,4 +56,4 @@ async function main() {
     console.log(response);
 }
 
-main();
+// main();
