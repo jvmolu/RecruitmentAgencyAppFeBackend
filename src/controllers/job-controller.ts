@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
-import { CompanyType } from "../types/zod/company-entity";
 import { JobType } from "../types/zod/job-entity";
 
 export class JobController {
@@ -12,19 +11,11 @@ export class JobController {
         try {
             const result: GeneralAppResponse<JobType> = await JobService.createJob(req.body);
             if(isGeneralAppFailureResponse(result)) {
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
             return res.status(HttpStatusCode.CREATED).json(result);
         }
@@ -41,19 +32,11 @@ export class JobController {
         try {
             const result: GeneralAppResponse<JobType[]> = await JobService.findByParams(req.body);
             if(isGeneralAppFailureResponse(result)) {
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
             return res.status(HttpStatusCode.OK).json(result);
         }
@@ -77,19 +60,11 @@ export class JobController {
             }
             const result: GeneralAppResponse<JobType[]> = await JobService.updateJobs(req.body.searchParams, req.body.updateParams);
             if(isGeneralAppFailureResponse(result)) {
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
             return res.status(HttpStatusCode.OK).json(result);
         }

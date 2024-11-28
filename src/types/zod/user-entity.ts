@@ -19,12 +19,12 @@ const UserSchema = BaseSchema.merge(
 // Search Options Schema which allows Wildcard Search for String Fields
 const UserSearchSchema = BaseSchema.merge(
   z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string(),
-    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits'),
-    role: z.nativeEnum(Role),
-    status: z.nativeEnum(Status),
+    firstName: z.string().nullable(),
+    lastName: z.string().nullable(),
+    email: z.string().nullable(),
+    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').nullable(),
+    role: z.nativeEnum(Role).nullable(),
+    status: z.nativeEnum(Status).nullable(),
   })
 );
 

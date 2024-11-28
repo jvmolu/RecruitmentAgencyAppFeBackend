@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user-controller";
 import Authenticate from "../middlewares/auth/authenticate"
+import AuthoriseSuperUser from "../middlewares/auth/authorize-super-user";
 
 const UserRouter = Router();
 
@@ -10,13 +11,10 @@ UserRouter.post('/', UserController.createUser);
 // Login a user
 UserRouter.post('/login', UserController.loginUser);
 
-// Get all users - only for admin
-UserRouter.get('/findAllUsers', Authenticate, UserController.findAllUsers); 
-
 // Get user by token
 UserRouter.get('/', Authenticate, UserController.findUserByToken);
 
 // Get user by params
-UserRouter.post('/findByParams', Authenticate, UserController.findUsersByParams);
+UserRouter.post('/findByParams', Authenticate, AuthoriseSuperUser, UserController.findUsersByParams);
 
 export default UserRouter;

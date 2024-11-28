@@ -116,10 +116,6 @@ export class UserService {
         }
     }
 
-    public static async findAllUsers(): Promise<GeneralAppResponse<User[]>> {
-        return await UserService.userRepository.findByParams({});
-    }
-
     public static async findUsersByParams(userFields: Partial<UserSearchOptions>): Promise<GeneralAppResponse<User[]>> {
 
         const validationResult = UserSearchSchema.partial().safeParse(userFields);
@@ -164,6 +160,17 @@ export class UserService {
             return response;
         }
 
+        if(response.data.length === 0) {
+            const authError: AuthError = new Error('User not found') as AuthError;
+            authError.errorType = 'AuthError';
+            return {
+                error: authError,
+                statusCode: HttpStatusCode.UNAUTHORIZED,
+                businessMessage: 'User not found',
+                success: false
+            };
+        }
+
         let {password, ...userDataResponse} = response.data[0];
         return {
             data: {
@@ -173,4 +180,5 @@ export class UserService {
             success: true
         };
     }
+
 }

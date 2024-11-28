@@ -1,5 +1,5 @@
 import { BaseRepository } from "./base-repository";
-import { User, UserType } from "../types/zod/user-entity";
+import { User, UserSearchOptions, UserType } from "../types/zod/user-entity";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
@@ -38,7 +38,7 @@ class UserRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(userFields: Partial<UserType>): Promise<GeneralAppResponse<User[]>> {
+    async findByParams(userFields: Partial<UserSearchOptions>): Promise<GeneralAppResponse<User[]>> {
         try {
             // Build the QueryFields object
             const queryFields: QueryFields = {};

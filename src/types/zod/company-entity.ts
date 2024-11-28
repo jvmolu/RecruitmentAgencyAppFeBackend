@@ -16,11 +16,11 @@ const CompanySchema = BaseSchema.merge(
 // Company Search Options Schema which allows Wildcard Search for String Fields
 const CompanySearchSchema = BaseSchema.merge(
   z.object({
-    name: z.string(),
-    website: z.string(),
-    address: z.string(),
-    isPartner: z.boolean(),
-    status: z.nativeEnum(Status),
+    name: z.string().nullable(),
+    website: z.string().nullable(),
+    address: z.string().nullable(),
+    isPartner: z.boolean().nullable(),
+    status: z.nativeEnum(Status).nullable(),
   })
 );
 

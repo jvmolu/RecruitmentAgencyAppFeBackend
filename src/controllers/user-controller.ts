@@ -4,6 +4,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/respon
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
 import { UserAuthData } from "../types/user-auth-data";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { User } from "../types/zod/user-entity";
 
 export class UserController {
 
@@ -74,40 +75,6 @@ export class UserController {
         }
     }
 
-    public static async findAllUsers(req: Request, res: Response) : Promise<any> {
-        try {
-            
-            console.log('find all users');
-            const result = await UserService.findAllUsers();
-
-            if (isGeneralAppFailureResponse(result)) {
-                console.log('failure response');
-                if(isDatabaseError(result.error) || isZodError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                } else {
-                    // Something went wrong - internal server error
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
-            }
-
-            return res.status(HttpStatusCode.OK).json(result);
-
-        } catch (error) {
-            console.log(error);
-            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: 'Internal server error'
-            });
-        }
-    }
-
     public static async findUserByToken(req: Request, res: Response) : Promise<any> { 
         try {
             // Trace has been added by authentication middleware - directly return the user
@@ -124,7 +91,7 @@ export class UserController {
     public static async findUsersByParams(req: Request, res: Response) : Promise<any> {
 
         try {
-            const result = await UserService.findUsersByParams(req.body);
+            const result: GeneralAppResponse<User[]> = await UserService.findUsersByParams(req.body);
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
                 if(isDatabaseError(result.error) || isZodError(result.error)) {

@@ -3,7 +3,7 @@ import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { Company, CompanyType } from "../types/zod/company-entity";
+import { Company, CompanySearchOptions, CompanyType } from "../types/zod/company-entity";
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
@@ -38,7 +38,7 @@ class CompanyRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(companyFields: Partial<CompanyType>): Promise<GeneralAppResponse<Company[]>> {
+    async findByParams(companyFields: Partial<CompanySearchOptions>): Promise<GeneralAppResponse<Company[]>> {
         try {
             // Build the QueryFields object
             const queryFields: QueryFields = {};
