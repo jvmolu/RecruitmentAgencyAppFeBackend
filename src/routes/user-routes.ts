@@ -17,4 +17,10 @@ UserRouter.get('/', Authenticate, UserController.findUserByToken);
 // Get user by params
 UserRouter.post('/findByParams', Authenticate, AuthoriseSuperUser, UserController.findUsersByParams);
 
+// Generate OTP
+UserRouter.post('/generateOTP', UserController.generateOTP);
+
+// Verify OTP
+UserRouter.post('/verifyOTP', UserController.verifyOTP);
+
 export default UserRouter;

@@ -1,4 +1,3 @@
-// Create an HTML Email Invite Template for the user - Put in email the Job ID
 export const emailInviteTemplate = (jobId: string, candidateName: string): string => {
     return `
         <html>

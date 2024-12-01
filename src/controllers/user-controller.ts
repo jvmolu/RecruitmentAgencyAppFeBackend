@@ -117,4 +117,62 @@ export class UserController {
             });
         }
     }
+
+    public static async generateOTP(req: Request, res: Response): Promise<any> {
+        try {
+          const result = await UserService.generateOTP(req.body.email);
+          if (isGeneralAppFailureResponse(result)) {            
+              return res.status(result.statusCode).json({
+                success: false,
+                message: result.businessMessage,
+                error: result.error,
+              });
+          }
+          return res.status(HttpStatusCode.OK).json({
+            success: true,
+            message: 'OTP generated and sent to email',
+          });
+        } catch (error) {
+          console.log(error);
+          return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Internal server error',
+          });
+        }
+    }
+
+    public static async verifyOTP(req: Request, res: Response): Promise<any> {
+        try {
+            const { email, otp } = req.body;
+        
+            // Validate the OTP is between 100000 and 999999 and is a number
+            if (!/^\d{6}$/.test(otp)) {
+                return res.status(HttpStatusCode.BAD_REQUEST).json({
+                success: false,
+                message: 'Invalid OTP',
+                });
+            }
+
+            const result = await UserService.verifyOTP(email, otp);
+            if (isGeneralAppFailureResponse(result)) {
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error,
+                });
+            }
+            
+            return res.status(HttpStatusCode.OK).json({
+                success: true,
+                message: 'OTP verified successfully',
+            });
+        } 
+        catch (error) {
+            console.log(error);
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Internal server error',
+            });
+        }
+    }
 }
