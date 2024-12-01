@@ -3,7 +3,8 @@ enum DbTable {
     JOBS = 'jobs',
     COMPANIES = 'companies',
     INVITES = 'invites',
-    MATCH_REPORTS = 'match_reports'
+    MATCH_REPORTS = 'match_reports',
+    MATCHES = 'matches',
 }
 
 export default DbTable;
