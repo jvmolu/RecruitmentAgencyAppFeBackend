@@ -1,6 +1,6 @@
 // src/repositories/base.repository.ts
 import { Pool, QueryResult } from 'pg';
-import pool from '../db-connection/connect';
+import pool from '../db-connection/pg-connect';
 import { DatabaseErrorHandler } from '../error-handlers.ts/database-error-handler';
 import { GeneralAppResponse } from '../types/response/general-app-response';
 import DbTable from '../types/enums/db-table';

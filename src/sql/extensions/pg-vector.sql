@@ -1,0 +1,3 @@
+CREATE EXTENSION vector
+WITH
+  SCHEMA extensions;
