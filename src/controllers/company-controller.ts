@@ -12,19 +12,11 @@ export class CompanyController {
 
             const result: GeneralAppResponse<CompanyType> = await CompanyService.createCompany(req.body);
             if(isGeneralAppFailureResponse(result)) {
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
 
             return res.status(HttpStatusCode.CREATED).json(result);
@@ -42,19 +34,11 @@ export class CompanyController {
         try {
             const result: GeneralAppResponse<CompanyType[]> = await CompanyService.findByParams(req.body);
             if(isGeneralAppFailureResponse(result)) {
-                if(isDatabaseError(result.error) || isZodError(result.error) || isAuthError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
             return res.status(HttpStatusCode.OK).json(result);
         }
