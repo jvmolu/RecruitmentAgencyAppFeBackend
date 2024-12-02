@@ -10,6 +10,7 @@ const UserSchema = BaseSchema.merge(
     lastName: z.string().min(1, 'Last name must be at least 1 character'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters'),
     phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits'),
     role: z.nativeEnum(Role).default(Role.CANDIDATE), // If the role is not provided, default to Candidate
     status: z.nativeEnum(Status).default(Status.INACTIVE), // If the status is not provided, default to Active
@@ -22,6 +23,7 @@ const UserSearchSchema = BaseSchema.merge(
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     email: z.string().nullable(),
+    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').nullable(),
     phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').nullable(),
     role: z.nativeEnum(Role).nullable(),
     status: z.nativeEnum(Status).nullable(),
@@ -38,6 +40,7 @@ class User implements UserType {
   lastName: string;
   email: string;
   password: string;
+  countryCode: string;
   phone: number;
   role: Role;
   status: Status;
@@ -54,6 +57,7 @@ class User implements UserType {
     this.lastName = validatedUser.lastName;
     this.email = validatedUser.email;
     this.password = validatedUser.password;
+    this.countryCode = validatedUser.countryCode;
     this.phone = validatedUser.phone;
     this.role = validatedUser.role;
     this.status = validatedUser.status;
