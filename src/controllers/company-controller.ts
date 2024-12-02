@@ -1,6 +1,5 @@
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyService } from "../services/company-service";
-import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { CompanyType } from "../types/zod/company-entity";
 import {Request, Response} from 'express';
