@@ -10,8 +10,8 @@ const UserSchema = BaseSchema.merge(
     lastName: z.string().min(1, 'Last name must be at least 1 character'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters'),
-    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits'),
+    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').optional(),
+    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').optional(),
     role: z.nativeEnum(Role).default(Role.CANDIDATE), // If the role is not provided, default to Candidate
     status: z.nativeEnum(Status).default(Status.INACTIVE), // If the status is not provided, default to Active
   })
@@ -40,8 +40,8 @@ class User implements UserType {
   lastName: string;
   email: string;
   password: string;
-  countryCode: string;
-  phone: number;
+  countryCode: string | undefined;
+  phone: number | undefined;
   role: Role;
   status: Status;
   createdAt: string;
