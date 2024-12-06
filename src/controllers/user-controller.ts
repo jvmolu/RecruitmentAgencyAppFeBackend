@@ -120,7 +120,7 @@ export class UserController {
 
     public static async generateOTP(req: Request, res: Response): Promise<any> {
         try {
-          const result = await UserService.generateOTP(req.body.email);
+          const result = await UserService.generateOTP(req.body.user.email);
           if (isGeneralAppFailureResponse(result)) {            
               return res.status(result.statusCode).json({
                 success: false,
@@ -143,7 +143,8 @@ export class UserController {
 
     public static async verifyOTP(req: Request, res: Response): Promise<any> {
         try {
-            const { email, otp } = req.body;
+            const { otp } = req.body;
+            const email = req.body.user.email;
         
             // Validate the OTP is between 100000 and 999999 and is a number
             if (!/^\d{6}$/.test(otp)) {

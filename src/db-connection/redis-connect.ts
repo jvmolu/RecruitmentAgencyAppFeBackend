@@ -5,6 +5,7 @@ dotenv.config({ path: __dirname + "/./../../.env" });
 
 // Redis Client
 const client: RedisClientType = createClient({
+    username: process.env.REDIS_USERNAME,
     password: process.env.REDIS_PASSWORD,
     socket: {
         host: process.env.REDIS_HOST,
