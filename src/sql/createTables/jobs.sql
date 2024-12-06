@@ -9,8 +9,8 @@ CREATE TYPE budget_currency_type AS ENUM ('USD', 'EUR', 'INR');
 -- Create jobs table
 CREATE TABLE jobs (
     id UUID PRIMARY KEY,
-    company_id UUID NOT NULL,
-    partner_id UUID,
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    partner_id UUID REFERENCES partners(id),
     budget_amount INT,
     budget_currency budget_currency_type,
     budget_per budget_per_type,
@@ -47,17 +47,6 @@ ADD CONSTRAINT budget_fields_all_or_none CHECK (
         budget_per IS NOT NULL
     )
 );
-
--- Add Foreign Key Constraints
-ALTER TABLE jobs
-ADD CONSTRAINT fk_jobs_company 
-FOREIGN KEY (company_id) 
-REFERENCES companies(id);
-
-ALTER TABLE jobs
-ADD CONSTRAINT fk_jobs_partner 
-FOREIGN KEY (partner_id) 
-REFERENCES companies(id);
 
 -- Create indexes
 CREATE INDEX idx_jobs_company_id ON jobs(company_id);

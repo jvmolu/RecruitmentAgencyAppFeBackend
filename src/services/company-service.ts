@@ -37,7 +37,6 @@ export class CompanyService {
         return response;
     }
 
-
     public static async findByParams(companyFields: Partial<CompanySearchOptions>): Promise<GeneralAppResponse<CompanyType[]>> {
 
         const validationResult = CompanySearchSchema.partial().safeParse(companyFields);

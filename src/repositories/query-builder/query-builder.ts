@@ -143,6 +143,19 @@ export class QueryBuilder {
     return { query: query, params };
   }
 
+  public static buildBulkInsertQuery(tableName: string, fieldsArray: any[]): { query: string, params: any[] } {
+    const keys = Object.keys(fieldsArray[0]);
+    const columns = keys.join(", ");
+    const values = fieldsArray.map((fields, index) => {
+        const placeholders = keys.map((_, i) => `$${index * keys.length + i + 1}`).join(", ");
+        return `(${placeholders})`;
+    }).join(", ");
+    const params = fieldsArray.flatMap(Object.values);
+
+    const query = `INSERT INTO ${tableName} (${columns}) VALUES ${values} RETURNING *`;
+    return { query, params };
+  }
+
   private static handleOperation(key: string, value: any, operation: QueryOperation, startIndex: number): 
     { queryPart: string; newParams: any[]; incrementIndex: number } {
 

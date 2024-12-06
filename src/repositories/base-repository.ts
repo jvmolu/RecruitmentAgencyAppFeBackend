@@ -1,5 +1,5 @@
 // src/repositories/base.repository.ts
-import { Pool, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 import pool from '../db-connection/pg-connect';
 import { DatabaseErrorHandler } from '../error-handlers.ts/database-error-handler';
 import { GeneralAppResponse } from '../types/response/general-app-response';
@@ -9,7 +9,7 @@ import { SchemaMapper } from './table-entity-mapper/schema-mapper';
 export abstract class BaseRepository {
 
   protected tableName: DbTable;
-  protected static pool: Pool = pool;
+  public static pool: Pool = pool;
 
   constructor(tableName: DbTable) {
     this.tableName = tableName;
@@ -17,10 +17,12 @@ export abstract class BaseRepository {
 
   protected async executeQuery<T>(
     query: string, 
-    params?: any[]
+    params?: any[],
+    client?: PoolClient
   ): Promise<GeneralAppResponse<T[]>> {
+    const clientToUse = client || BaseRepository.pool;
     try {
-      const dbResult: QueryResult = await pool.query(query, params);
+      const dbResult: QueryResult = await clientToUse.query(query, params);
       const convertedRows: T[] = dbResult.rows.map(row => SchemaMapper.toEntity<T>(this.tableName, row));
       return { data: convertedRows, success: true } as GeneralAppResponse<T[]>;
     } catch (error: any) {
