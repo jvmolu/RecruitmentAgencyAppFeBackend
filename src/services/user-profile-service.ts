@@ -5,7 +5,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/respon
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { Transactional } from "../decorators/transactional";
-import { UserEducation, UserEducationType } from "../types/zod/user-education-entity";
+import { UserEducationType } from "../types/zod/user-education-entity";
 import { UserExperienceType } from "../types/zod/user-experience-entity";
 import { PoolClient } from "pg";
 import { UserEducationService } from "./user-education-service";
@@ -110,8 +110,6 @@ export class UserProfileService {
         if (isGeneralAppFailureResponse(userProfileResult)) {
             return userProfileResult;
         }
-
-
 
         // If Education and Experience data is provided, then ONLY 1 User Profile record should be updated
         if(userProfileResult.data.length > 1) {

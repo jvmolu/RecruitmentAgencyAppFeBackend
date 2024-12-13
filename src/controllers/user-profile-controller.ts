@@ -1,12 +1,7 @@
 import { Request, Response } from 'express';
 import { UserProfileService } from '../services/user-profile-service';
-import { UserProfileType } from '../types/zod/user-profile-entity';
-import { UserEducationType } from '../types/zod/user-education-entity';
-import { UserExperienceType } from '../types/zod/user-experience-entity';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from '../types/response/general-app-response';
 import HttpStatusCode from '../types/enums/http-status-codes';
-import { UserEducationService } from '../services/user-education-service';
-import { UserExperienceService } from '../services/user-experiences-service';
 
 export class UserProfileController {
     
