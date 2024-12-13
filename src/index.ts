@@ -8,6 +8,7 @@ import JobRouter from './routes/job-routes';
 import InviteRouter from './routes/invite-routes';
 import MatchReportRouter from './routes/match-report-routes';
 import MatchRouter from './routes/match-routes';
+import UserProfileRouter from './routes/user-profile-routes';
 
 dotenv.config({path: './../.env'});
 
@@ -34,6 +35,7 @@ app.use('/api/v1/jobs', JobRouter);
 app.use('/api/v1/invites', InviteRouter);
 app.use('/api/v1/match-reports', MatchReportRouter);
 app.use('/api/v1/matches', MatchRouter);
+app.use('/api/v1/user-profile', UserProfileRouter);
 
 app.listen(process.env.PORT, () => {
     console.log('Server is running on port ' + process.env.PORT);

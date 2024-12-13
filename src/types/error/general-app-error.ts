@@ -4,10 +4,11 @@ import { DataNotFoundError } from "./data-not-found-error";
 import { DatabaseError } from "./database-error";
 import { EmailSendError } from "./email-send-error";
 import { RedisError } from "./redis-error";
+import { S3Error } from "./s3-error";
 import { ZodParsingError } from "./zod-parsing-error";
 
 // General Error Type to be used accross application
-export type GeneralAppError = ZodParsingError | DatabaseError | AuthError | DataNotFoundError | EmailSendError | RedisError | BadRequestError;
+export type GeneralAppError = ZodParsingError | DatabaseError | AuthError | DataNotFoundError | EmailSendError | RedisError | BadRequestError | S3Error;
 
 // Type Guard Functions
 export function isDatabaseError(error: GeneralAppError): error is DatabaseError {
@@ -32,4 +33,12 @@ export function isEmailSendError(error: GeneralAppError): error is EmailSendErro
 
 export function isRedisError(error: GeneralAppError): error is RedisError {
     return (error as RedisError).errorType === "RedisError";
+}
+
+export function isBadRequestError(error: GeneralAppError): error is BadRequestError {
+    return (error as BadRequestError).errorType === "BadRequestError";
+}
+
+export function isS3Error(error: GeneralAppError): error is S3Error {
+    return (error as S3Error).errorType === "S3Error";
 }

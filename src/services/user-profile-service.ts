@@ -11,10 +11,12 @@ import { PoolClient } from "pg";
 import { UserEducationService } from "./user-education-service";
 import { UserExperienceService } from "./user-experiences-service";
 import { BadRequestError } from "../types/error/bad-request-error";
+import S3Service from "./aws-service";
 
 export class UserProfileService {
 
     private static userProfileRepository: UserProfileRepository = new UserProfileRepository();
+    private static s3Service: S3Service = S3Service.getInstance();
 
     @Transactional()
     public static async createUserProfileWithDetails(profileData: Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, educationData: Omit<UserEducationType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], experienceData: Omit<UserExperienceType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
@@ -233,5 +235,33 @@ export class UserProfileService {
             };
         }
         return await this.userProfileRepository.findByParams(validationResult.data);
+    }
+
+    /**
+     * @method uploadResume
+     * @description Handles the upload of a resume file to DigitalOcean Spaces.
+     * @param file - The file to be uploaded.
+     * @param bucketName - The name of the bucket to upload the file to.
+     * @param userId - The identifier for the user.
+     * @returns Promise resolving to a GeneralAppResponse containing the file URL or an error.
+    **/
+    public static async uploadResume(bucketName: string, userId: string, file: Express.Multer.File): Promise<GeneralAppResponse<string>> {
+
+        const fileUrl: string = `/cand/user-profiles/${userId}/resume.pdf`;
+        const uploadResult: GeneralAppResponse<void> = await this.s3Service.uploadFile(bucketName, fileUrl, file.buffer);
+
+        if(isGeneralAppFailureResponse(uploadResult)) {
+            return {
+                success: false,
+                businessMessage: uploadResult.businessMessage,
+                error: uploadResult.error,
+                statusCode: uploadResult.statusCode
+            };
+        }
+
+        return {
+            success: true,
+            data: fileUrl
+        };
     }
 }

@@ -5,7 +5,7 @@ import AuthoriseSuperUser from "../middlewares/auth/authorize-super-user";
 
 const JobRouter = Router();
 
-JobRouter.post('/', Authenticate, JobController.createJob);
+JobRouter.post('/', Authenticate, AuthoriseSuperUser, JobController.createJob);
 
 JobRouter.post('/findByParams', Authenticate, (req, res, next) => {
     if (req.params.is_show_applies === 'true' || req.params.is_show_matches === 'true') {
