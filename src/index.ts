@@ -9,6 +9,9 @@ import InviteRouter from './routes/invite-routes';
 import MatchReportRouter from './routes/match-report-routes';
 import MatchRouter from './routes/match-routes';
 import UserProfileRouter from './routes/user-profile-routes';
+import ApplicationRouter from './routes/application-routes';
+import { RouteNotFound } from './middlewares/error-handling/route-not-found';
+import { ErrorHandler } from './middlewares/error-handling/general-error-handler';
 
 dotenv.config({path: './../.env'});
 
@@ -36,6 +39,11 @@ app.use('/api/v1/invites', InviteRouter);
 app.use('/api/v1/match-reports', MatchReportRouter);
 app.use('/api/v1/matches', MatchRouter);
 app.use('/api/v1/user-profile', UserProfileRouter);
+app.use('/api/v1/applications', ApplicationRouter);
+
+// Error handling middleware
+app.use(RouteNotFound);
+app.use(ErrorHandler)
 
 app.listen(process.env.PORT, () => {
     console.log('Server is running on port ' + process.env.PORT);

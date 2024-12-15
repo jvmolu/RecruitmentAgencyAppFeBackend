@@ -1,3 +1,5 @@
+import { Application } from "../zod/application-entity";
+
 enum DbTable {
     USERS = 'users',
     JOBS = 'jobs',
@@ -7,7 +9,8 @@ enum DbTable {
     MATCHES = 'matches',
     USER_PROFILES = 'user_profiles',
     USER_EXPERIENCES = 'user_experiences',
-    USER_EDUCATION = 'user_education'
+    USER_EDUCATION = 'user_education',
+    APPLICATIONS = 'applications'
 }
 
 export default DbTable;

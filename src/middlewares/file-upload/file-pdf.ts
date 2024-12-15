@@ -1,5 +1,3 @@
-// MIDDLEWARE TO CHECK IF THE req.file IS A PDF FILE
-
 import { Request, Response, NextFunction } from 'express';
 import HttpStatusCode from '../../types/enums/http-status-codes';
 
