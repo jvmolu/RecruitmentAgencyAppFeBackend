@@ -2,8 +2,7 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";
-import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
-import { JobType } from "../types/zod/job-entity";
+import { Job, JobSearchParams, JobSearchParamsSchema, JobSearchSchema, JobType, JobWithCompanyData } from "../types/zod/job-entity";
 
 export class JobController {
 
@@ -28,19 +27,18 @@ export class JobController {
         }
     }
     
-    public static async findByParams(req: Request, res: Response) : Promise<any> {
+    public static async findByParams(req: Request, res: Response): Promise<any> {
         try {
-            const result: GeneralAppResponse<JobType[]> = await JobService.findByParams(req.body);
-            if(isGeneralAppFailureResponse(result)) {
+            const result: GeneralAppResponse<JobWithCompanyData[]>  = await JobService.findByParams(req.body, req.query);
+            if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
-                    success: false,
-                    message: result.businessMessage,
-                    error: result.error
+                success: false,
+                message: result.businessMessage,
+                error: result.error,
                 });
             }
             return res.status(HttpStatusCode.OK).json(result);
-        }
-        catch (error) {
+        } catch (error) {
             console.log(error);
             return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
                 success: false,

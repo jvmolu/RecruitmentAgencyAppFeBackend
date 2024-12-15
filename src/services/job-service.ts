@@ -1,9 +1,10 @@
 import { JobRepository } from "../repositories/job-repository";
 import { GeneralAppResponse } from "../types/response/general-app-response";
 import { v4 as uuidv4 } from 'uuid';
-import { JobSchema, JobSearchOptions, JobSearchSchema, JobType } from "../types/zod/job-entity";
+import { JobSchema, JobSearchOptions, JobSearchSchema, JobType, Job, JobWithCompanyData, JobSearchParams, JobSearchParamsSchema } from "../types/zod/job-entity";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { Company, CompanyType } from "../types/zod/company-entity";
 
 export class JobService {
 
@@ -36,8 +37,20 @@ export class JobService {
         return response;
     }
 
-    public static async findByParams(jobFields: Partial<JobSearchOptions>): Promise<GeneralAppResponse<JobType[]>> {
-        
+    public static async findByParams(jobFields: Partial<JobSearchOptions>, jobSearchParams: Partial<JobSearchParams>): Promise<GeneralAppResponse<JobWithCompanyData[]>> {
+
+        const jobSearchParamsValidationResult = JobSearchParamsSchema.safeParse(jobSearchParams);
+        if(!jobSearchParamsValidationResult.success) {
+            let zodError: ZodParsingError = jobSearchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid job search parameters',
+                success: false
+            };
+        }
+
         const validationResult = JobSearchSchema.partial().safeParse(jobFields);
         if(!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
@@ -51,8 +64,12 @@ export class JobService {
         }
 
         jobFields = validationResult.data;
-        return await JobService.jobRepository.findByParams(jobFields);
-    }
+        jobSearchParams = jobSearchParamsValidationResult.data;
+
+        console.log(jobFields, jobSearchParams);
+
+        return await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
+      }
 
     public static async updateJobs(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<JobType[]>> {
 

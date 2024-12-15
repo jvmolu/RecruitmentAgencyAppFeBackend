@@ -4,8 +4,9 @@ import JobsType from "../enums/job-type";
 import PaymentPer from "../enums/payment-per";
 import Status from "../enums/status";
 import WorkModel from "../enums/work-model";
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
+import { CompanyType } from "./company-entity";
 
 // Define the schema for the Job model - CamelCase Fields
 const JobSchema = BaseSchema.merge(
@@ -54,8 +55,18 @@ const JobSearchSchema = BaseSchema.merge(
     })
 );
 
+const JobSearchParamsSchema = BaseSearchParams.merge(
+    z.object({
+        isShowCompanyData: z.boolean().default(true),
+        isShowAppliesCount: z.boolean().default(true),
+        isShowMatchesCount: z.boolean().default(true),
+    })
+);
+
 type JobType = z.infer<typeof JobSchema>
 type JobSearchOptions = z.infer<typeof JobSearchSchema>
+type JobWithCompanyData = (Job & { company: Partial<CompanyType> });
+type JobSearchParams = z.infer<typeof JobSearchParamsSchema>
 
 class Job implements JobType {
 
@@ -110,4 +121,4 @@ class Job implements JobType {
     }
 }
 
-export { JobSchema, JobType, Job, JobSearchSchema, JobSearchOptions };
+export { JobSchema, JobType, Job, JobSearchSchema, JobSearchOptions, JobWithCompanyData, JobSearchParamsSchema, JobSearchParams };

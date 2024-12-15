@@ -8,7 +8,7 @@ const JobRouter = Router();
 JobRouter.post('/', Authenticate, AuthoriseSuperUser, JobController.createJob);
 
 JobRouter.post('/findByParams', Authenticate, (req, res, next) => {
-    if (req.params.is_show_applies === 'true' || req.params.is_show_matches === 'true') {
+    if (req.params.isShowAppliesCount === 'true' || req.params.isShowMatchesCount === 'true') {
         AuthoriseSuperUser(req, res, next);
     } else {
         next();

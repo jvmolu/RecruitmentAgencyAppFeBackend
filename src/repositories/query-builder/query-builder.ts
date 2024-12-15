@@ -1,4 +1,6 @@
 import QueryOperation from "../../types/enums/query-operation";
+import { JoinClause } from "../../types/enums/join-type";
+import { SortOrder } from "../../types/enums/sort-order";
 
 // src/types/query/query-condition.ts
 export interface QueryCondition {
@@ -30,12 +32,44 @@ export class QueryBuilder {
     [QueryOperation.ARRAY_INTERSECTS]: (key) => `${key} && ARRAY[$]`
   };
 
-  static buildSelectQuery(tableName: string, conditions: QueryFields): { query: string; params: any[] } {
+  public static buildSelectQuery(
+    tableName: string,
+    conditions: QueryFields = {},
+    baseTableAlias: string = 't0',
+    selectFieldsAndAlias: { field: string, alias?: string }[] = [],
+    joins: JoinClause[] = [],
+    limit: number = 0,
+    offset: number = 0,
+    orderBy: string = '',
+    sortOrder: SortOrder = SortOrder.ASC
+  ): { query: string; params: any[] } {
 
-    console.log('conditions', conditions);
-    let query = `SELECT * FROM ${tableName}`;
+    let query = `SELECT `;
+  
+    // If selectFields are specified, use them; otherwise, select all from base table
+    if (selectFieldsAndAlias.length > 0) {
+      selectFieldsAndAlias.forEach((selectField, index) => {
+        query += `${selectField.field}`;
+        if (selectField.alias) {
+          query += ` AS ${selectField.alias}`;
+        }
+        if (index < selectFieldsAndAlias.length - 1) {
+          query += ', ';
+        }
+      });
+    } else {
+      query += `${baseTableAlias}.*`;
+    }
+  
+    query += ` FROM ${tableName} ${baseTableAlias} `;
+  
+    // Add JOIN clauses
+    joins.forEach((join, index) => {
+      const alias = join.alias || `t${index + 1}`;
+      query += `${join.joinType} ${join.tableName} ${alias} ON ${join.onCondition} `;
+    });
+
     const params: any[] = [];
-    let paramIndex = 1;
 
     if (Object.keys(conditions).length === 0) {
       console.log('query', query + ';');
@@ -44,11 +78,14 @@ export class QueryBuilder {
     }
 
     query += ' WHERE';
-    
+  
+    // return { conditionStrings, params };
+    let paramIndex = 1;
     Object.entries(conditions).forEach(([key, condition], index) => {
+      const paramPlaceholder = `$${index + 1}`;
       const { value, operation } = condition;
+      const qualifiedField = `${baseTableAlias}.${key}`;
       const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
-      
       query += queryPart;
       params.push(...newParams);
       paramIndex += incrementIndex;
@@ -57,6 +94,19 @@ export class QueryBuilder {
         query += ' AND';
       }
     });
+
+    // ORDER_BY
+    if (orderBy) {
+      query += ` ORDER BY ${orderBy} ${sortOrder}`;
+    }
+
+    // Add LIMIT and OFFSET
+    if (limit > 0) {
+      query += ` LIMIT ${limit}`;
+    }
+    if (offset > 0) {
+      query += ` OFFSET ${offset}`;
+    }
 
     console.log('query', query + ';');
     console.log('params', params);

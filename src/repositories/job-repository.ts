@@ -3,10 +3,12 @@ import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { Job, JobSearchOptions, JobType } from "../types/zod/job-entity";
+import { Job, JobSearchOptions, JobSearchParams, JobType, JobWithCompanyData } from "../types/zod/job-entity";
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
+import { JoinClause, JoinType } from '../types/enums/join-type';
+import { Company, CompanyType } from '../types/zod/company-entity';
 
 class JobRepository extends BaseRepository {
 
@@ -38,34 +40,96 @@ class JobRepository extends BaseRepository {
         }
     }
 
-    // Find By General Params
-    async findByParams(jobFields: Partial<JobSearchOptions>): Promise<GeneralAppResponse<Job[]>> {
+    async updateByParams(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<Job[]>> {
+        // Build the QueryFields object
+        const searchQueryFields: QueryFields = this.createSearchFields(jobSearchFields);
+        // Prepare the update fields
+        const updateFields = SchemaMapper.toDbSchema(DbTable.JOBS, jobUpdateFields);
+        // Build the query
+        const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, updateFields, searchQueryFields);
+        // Execute the query
+        return await this.executeQuery<Job>(query, params);
+    }
+
+    async findByParams(
+        jobFields: Partial<JobSearchOptions>,
+        jobSearchParams: JobSearchParams
+      ): Promise<GeneralAppResponse<JobWithCompanyData[]>> {
+
         try {
-            // Build the QueryFields object
-            const searchQueryFields: QueryFields = this.createSearchFields(jobFields);
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.JOBS, searchQueryFields);
-            return await this.executeQuery<Job>(query, params);
-        }
-        catch (error: any) {
+
+          const searchQueryFields: QueryFields = this.createSearchFields(jobFields);
+          const companyTableAlias = 'c';
+          const jobTableAlias = 't0';
+    
+          // Define JOIN clause to join with companies table
+          const joins: JoinClause[] = [
+            {
+              joinType: JoinType.LEFT,
+              tableName: DbTable.COMPANIES,
+              alias: companyTableAlias,
+              onCondition: `${jobTableAlias}.company_id = ${companyTableAlias}.id`,
+            },
+          ];
+
+          const selectFieldsAndAlias = [
+            { field: `${jobTableAlias}.*` },
+            { field: `${companyTableAlias}.id`, alias: 'company_id' },
+            { field: `${companyTableAlias}.name`, alias: 'company_name' },
+            { field: `${companyTableAlias}.website`, alias: 'company_website' },
+          ]
+
+          let offset = 0;
+          if (jobSearchParams.page && jobSearchParams.limit) {
+            offset = (jobSearchParams.page - 1) * jobSearchParams.limit;
+          }
+
+          const { query, params } = QueryBuilder.buildSelectQuery(
+            DbTable.JOBS,
+            searchQueryFields,
+            jobTableAlias,
+            selectFieldsAndAlias,
+            joins,
+            jobSearchParams.limit,
+            offset,
+            jobSearchParams.orderBy,
+            jobSearchParams.order
+          );
+
+          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+
+          if (isGeneralAppFailureResponse(response)) {
+            return response;
+          }
+
+          // Map the result to include company data
+          const data: JobWithCompanyData[] = response.data.map((row) => {
+            const { company_id, company_name, company_website, ...jobFields } = row;
             return {
-                error: error,
-                businessMessage: 'Internal server error',
-                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
+              ...jobFields,
+              company: {
+                id: company_id,
+                name: company_name,
+                website: company_website,
+              },
+            };
+          });
+          
+          return { success: true, data };
+
+        } 
+        catch (error: any) 
+        {
+            return {
+              error: error,
+              businessMessage: 'Internal server error',
+              statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+              success: false,
+            };
         }
     }
 
-    async updateByParams(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<Job[]>> {
-            // Build the QueryFields object
-            const searchQueryFields: QueryFields = this.createSearchFields(jobSearchFields);
-            // Prepare the update fields
-            const updateFields = SchemaMapper.toDbSchema(DbTable.JOBS, jobUpdateFields);
-            // Build the query
-            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, updateFields, searchQueryFields);
-            // Execute the query
-            return await this.executeQuery<Job>(query, params);
-    }
+
 
     private createSearchFields(jobFields: Partial<JobSearchOptions>): QueryFields {
         const queryFields: QueryFields = {};
