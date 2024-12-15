@@ -3,8 +3,12 @@ the error response creation code from services and controllers and use the error
 
 2. Add 404 status code in FIND calls and UPDATE calls if no data is found based on search params.
 
-3. Add <= and >= and LIMIT and OFFSET Search Functionality
+3. Add <= and >= Functionality
 
-4. Write Join Queries to return combined Data
+4. LIMIT and OFFSET and ORDER_BY Search Functionality -- Done for jobs Only
 
-5. From all routes, in CATCH (if there is try catch), do NEXT(error) as we have added a common error handling middleware
+5. Write Join Queries to return combined Data -- Done for jobs only
+
+6. From all routes, in CATCH (if there is try catch), do NEXT(error) as we have added a common error handling middleware
+
+7. Add a check - currently the value of orderBy params is directly going into sql, - ADD VALIDATIONS FOR IT
