@@ -148,7 +148,6 @@ class JobRepository extends BaseRepository {
           });
 
           return { success: true, data };
-
         } 
         catch (error: any) 
         {
