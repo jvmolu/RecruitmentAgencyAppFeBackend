@@ -38,6 +38,7 @@ export class QueryBuilder {
     baseTableAlias: string = 't0',
     selectFieldsAndAlias: { field: string, alias?: string }[] = [],
     joins: JoinClause[] = [],
+    groupBy: string[] = [],
     limit: number = 0,
     offset: number = 0,
     orderBy: string = '',
@@ -94,6 +95,11 @@ export class QueryBuilder {
         query += ' AND';
       }
     });
+
+    // Group By
+    if (groupBy.length > 0) {
+      query += ` GROUP BY ${groupBy.join(', ')}`;
+    }
 
     // ORDER_BY
     if (orderBy) {

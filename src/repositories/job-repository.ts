@@ -80,6 +80,8 @@ class JobRepository extends BaseRepository {
             { field: `${companyTableAlias}.website`, alias: 'company_website' }, // Not selected by jobTableAlias.*
           ]
 
+          let groupByFields: string[] = [`${jobTableAlias}.id`, `${companyTableAlias}.id`];
+
           if(jobSearchParams.isShowAppliesCount) {
             joins.push({
               joinType: JoinType.LEFT,
@@ -117,6 +119,7 @@ class JobRepository extends BaseRepository {
             jobTableAlias,
             selectFieldsAndAlias,
             joins,
+            groupByFields,
             jobSearchParams.limit,
             offset,
             jobSearchParams.orderBy,
