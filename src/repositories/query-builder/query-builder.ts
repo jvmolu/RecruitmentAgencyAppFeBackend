@@ -72,29 +72,24 @@ export class QueryBuilder {
 
     const params: any[] = [];
 
-    if (Object.keys(conditions).length === 0) {
-      console.log('query', query + ';');
-      console.log('params', params);
-      return { query: query + ';', params };
-    }
-
-    query += ' WHERE';
+    if (Object.keys(conditions).length > 0) {
+      query += ' WHERE';
+      // return { conditionStrings, params };
+      let paramIndex = 1;
+      Object.entries(conditions).forEach(([key, condition], index) => {
+        const paramPlaceholder = `$${index + 1}`;
+        const { value, operation } = condition;
+        const qualifiedField = `${baseTableAlias}.${key}`;
+        const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
+        query += queryPart;
+        params.push(...newParams);
+        paramIndex += incrementIndex;
   
-    // return { conditionStrings, params };
-    let paramIndex = 1;
-    Object.entries(conditions).forEach(([key, condition], index) => {
-      const paramPlaceholder = `$${index + 1}`;
-      const { value, operation } = condition;
-      const qualifiedField = `${baseTableAlias}.${key}`;
-      const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
-      query += queryPart;
-      params.push(...newParams);
-      paramIndex += incrementIndex;
-
-      if (index < Object.keys(conditions).length - 1) {
-        query += ' AND';
-      }
-    });
+        if (index < Object.keys(conditions).length - 1) {
+          query += ' AND';
+        }
+      });
+    }
 
     // Group By
     if (groupBy.length > 0) {
