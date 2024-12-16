@@ -134,7 +134,7 @@ class JobRepository extends BaseRepository {
 
           // Map the result to include company data
           const data: JobWithCompanyData[] = response.data.map((row) => {
-            const { company_name, company_website, ...jobFields } = row;
+            const { applies_count, matches_count, company_name, company_website, ...jobFields } = row;
             return {
               ...jobFields,
               company: jobSearchParams.isShowCompanyData ? {
@@ -142,8 +142,8 @@ class JobRepository extends BaseRepository {
                 name: company_name,
                 website: company_website,
               } : undefined,
-              appliesCount: jobSearchParams.isShowAppliesCount ? row.applies_count : undefined,
-              matchesCount: jobSearchParams.isShowMatchesCount ? row.matches_count : undefined,
+              appliesCount: jobSearchParams.isShowAppliesCount ? applies_count : undefined,
+              matchesCount: jobSearchParams.isShowMatchesCount ? matches_count : undefined,
             };
           });
 
