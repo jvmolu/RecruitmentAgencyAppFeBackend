@@ -46,6 +46,7 @@ class ApplicationRepository extends BaseRepository {
             const searchQueryFields: QueryFields = this.createSearchFields(applicationFields);
             const { query, params } = QueryBuilder.buildSelectQuery(DbTable.APPLICATIONS, searchQueryFields);
             return await this.executeQuery<Application>(query, params);
+        
         } catch (error: any) {
             return {
                 error: error,

@@ -12,3 +12,7 @@ the error response creation code from services and controllers and use the error
 6. From all routes, in CATCH (if there is try catch), do NEXT(error) as we have added a common error handling middleware
 
 7. Add a check - currently the value of orderBy params is directly going into sql, - ADD VALIDATIONS FOR IT
+
+8. Add a Response Filtering Layer before sending output (Specially Needed for Job Data)
+
+9. Add selectFields input option in all GET calls to select only required fields - V2 (This way FE controls what fields are required from table - Light Responses)

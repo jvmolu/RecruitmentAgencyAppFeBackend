@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { SortOrder } from '../enums/sort-order';
 
 export const BaseSchema = z.object({
-  // ID: uuid
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

@@ -13,6 +13,7 @@ const JobSchema = BaseSchema.merge(
     z.object({
         companyId: z.string().uuid(),
         partnerId: z.string().uuid().optional(),
+        experienceRequired: z.number().int().default(0),
         budgetAmount: z.number().int().optional(),
         budgetCurrency: z.nativeEnum(Currency).optional(),
         budgetPer: z.nativeEnum(PaymentPer).optional(),
@@ -36,6 +37,7 @@ const JobSearchSchema = BaseSchema.merge(
     z.object({
         companyId: z.string().uuid().nullable(),
         partnerId: z.string().uuid().nullable(),
+        experienceRequired: z.number().int().nullable(),
         budgetAmount: z.number().int().nullable(),
         budgetCurrency: z.nativeEnum(Currency).nullable(),
         budgetPer: z.nativeEnum(PaymentPer).nullable(),
@@ -58,14 +60,14 @@ const JobSearchSchema = BaseSchema.merge(
 const JobSearchParamsSchema = BaseSearchParams.merge(
     z.object({
         isShowCompanyData: z.boolean().default(true),
-        isShowAppliesCount: z.boolean().default(true),
-        isShowMatchesCount: z.boolean().default(true),
+        isShowAppliesCount: z.boolean().default(false),
+        isShowMatchesCount: z.boolean().default(false),
     })
 );
 
 type JobType = z.infer<typeof JobSchema>
 type JobSearchOptions = z.infer<typeof JobSearchSchema>
-type JobWithCompanyData = (Job & { company: Partial<CompanyType> });
+type JobWithCompanyData = (Job & { company: Partial<CompanyType> | undefined, appliesCount: number | undefined, matchesCount: number | undefined });
 type JobSearchParams = z.infer<typeof JobSearchParamsSchema>
 
 class Job implements JobType {
@@ -73,6 +75,7 @@ class Job implements JobType {
     id: string;
     companyId: string;
     partnerId: string | undefined;
+    experienceRequired: number;
     budgetAmount: number | undefined;
     budgetCurrency: Currency | undefined;
     budgetPer: PaymentPer | undefined;
@@ -100,6 +103,7 @@ class Job implements JobType {
         this.id = validatedJob.id;
         this.companyId = validatedJob.companyId;
         this.partnerId = validatedJob.partnerId;
+        this.experienceRequired = validatedJob.experienceRequired;
         this.budgetAmount = validatedJob.budgetAmount;
         this.budgetCurrency = validatedJob.budgetCurrency;
         this.budgetPer = validatedJob.budgetPer;

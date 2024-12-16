@@ -82,7 +82,6 @@ export class ApplicationService {
         return await this.applicationRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
     }
 
-
     /**
      * @method uploadResume
      * @description Handles the upload of a resume file to DigitalOcean Spaces.

@@ -1,6 +1,6 @@
 import Status  from "../enums/status";
 import ApplicationStages from "../enums/application-stages";
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 import Currency from "../enums/currency";
 import PaymentPer from "../enums/payment-per";
@@ -40,8 +40,17 @@ const ApplicationSearchSchema = BaseSchema.merge(
     })
 );
 
+const ApplicationSearchParamsSchema = BaseSearchParams.merge(
+  z.object({
+      isShowCompanyData: z.boolean().default(true),
+      isShowAppliesCount: z.boolean().default(false),
+      isShowMatchesCount: z.boolean().default(false),
+  })
+);
+
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
+type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
 
 class Application implements ApplicationType {
   id: string;
@@ -90,4 +99,6 @@ export {
   Application,
   ApplicationSearchSchema,
   ApplicationSearchOptions,
+  ApplicationSearchParamsSchema,
+  ApplicationSearchParams
 };

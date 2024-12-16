@@ -24,6 +24,8 @@ const CompanySearchSchema = BaseSchema.merge(
   })
 );
 
+
+
 type CompanyType = z.infer<typeof CompanySchema>
 type CompanySearchOptions = z.infer<typeof CompanySearchSchema>
 

@@ -60,6 +60,8 @@ class JobRepository extends BaseRepository {
 
           const searchQueryFields: QueryFields = this.createSearchFields(jobFields);
           const companyTableAlias = 'c';
+          const applicationsTableAlias = 'a';
+          const matchesTableAlias = 'm';
           const jobTableAlias = 't0';
     
           // Define JOIN clause to join with companies table
@@ -78,6 +80,32 @@ class JobRepository extends BaseRepository {
             { field: `${companyTableAlias}.name`, alias: 'company_name' },
             { field: `${companyTableAlias}.website`, alias: 'company_website' },
           ]
+
+          if(jobSearchParams.isShowAppliesCount) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.APPLICATIONS,
+              alias: applicationsTableAlias,
+              onCondition: `${jobTableAlias}.id = ${applicationsTableAlias}.job_id`,
+            });
+            selectFieldsAndAlias.push({
+              field: `COUNT(DISTINCT ${applicationsTableAlias}.id)`,
+              alias: 'applies_count',
+            });
+          }
+
+          if(jobSearchParams.isShowMatchesCount) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.MATCHES,
+              alias: matchesTableAlias,
+              onCondition: `${jobTableAlias}.id = ${matchesTableAlias}.job_id`,
+            });
+            selectFieldsAndAlias.push({
+              field: `COUNT(DISTINCT ${matchesTableAlias}.id)`,
+              alias: 'matches_count',
+            });
+          }          
 
           let offset = 0;
           if (jobSearchParams.page && jobSearchParams.limit) {
@@ -107,14 +135,16 @@ class JobRepository extends BaseRepository {
             const { company_id, company_name, company_website, ...jobFields } = row;
             return {
               ...jobFields,
-              company: {
+              company: jobSearchParams.isShowCompanyData ? {
                 id: company_id,
                 name: company_name,
                 website: company_website,
-              },
+              } : undefined,
+              appliesCount: jobSearchParams.isShowAppliesCount ? row.applies_count : undefined,
+              matchesCount: jobSearchParams.isShowMatchesCount ? row.matches_count : undefined,
             };
           });
-          
+
           return { success: true, data };
 
         } 
