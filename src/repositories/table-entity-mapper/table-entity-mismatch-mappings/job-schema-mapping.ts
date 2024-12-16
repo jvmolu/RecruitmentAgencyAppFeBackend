@@ -13,4 +13,5 @@ export default {
     { entityField: 'requiredBy', dbField: 'required_by' },
     { entityField: 'hiddenColumns', dbField: 'hidden_columns' },
     { entityField: 'workModel', dbField: 'work_model' },
+    { entityField: 'experienceRequired', dbField: 'experience_required' },
 ]};

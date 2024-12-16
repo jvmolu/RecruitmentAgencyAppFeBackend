@@ -76,8 +76,8 @@ class JobRepository extends BaseRepository {
 
           const selectFieldsAndAlias = [
             { field: `${jobTableAlias}.*` },
-            { field: `${companyTableAlias}.name`, alias: 'company_name' },
-            { field: `${companyTableAlias}.website`, alias: 'company_website' },
+            { field: `${companyTableAlias}.name`, alias: 'company_name' }, // Not selected by jobTableAlias.*
+            { field: `${companyTableAlias}.website`, alias: 'company_website' }, // Not selected by jobTableAlias.*
           ]
 
           if(jobSearchParams.isShowAppliesCount) {
