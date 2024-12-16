@@ -9,7 +9,9 @@ JobRouter.post('/', Authenticate, AuthoriseSuperUser, JobController.createJob);
 
 JobRouter.post('/findByParams', (req, res, next) => {
     if (req.query.isShowAppliesCount === 'true' || req.query.isShowMatchesCount === 'true') {
-        AuthoriseSuperUser(req, res, next);
+        Authenticate(req, res, () => {
+            AuthoriseSuperUser(req, res, next);
+        });
     } else {
         next();
     }
