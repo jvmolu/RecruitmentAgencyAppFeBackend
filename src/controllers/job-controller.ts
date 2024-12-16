@@ -2,7 +2,7 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";
-import { Job, JobSearchParams, JobSearchParamsSchema, JobSearchSchema, JobType, JobWithCompanyData } from "../types/zod/job-entity";
+import { Job, JobSearchParams, JobType, JobWithCompanyData } from "../types/zod/job-entity";
 
 export class JobController {
 

@@ -59,9 +59,10 @@ const JobSearchSchema = BaseSchema.merge(
 
 const JobSearchParamsSchema = BaseSearchParams.merge(
     z.object({
-        isShowCompanyData: z.boolean().default(true),
-        isShowAppliesCount: z.boolean().default(false),
-        isShowMatchesCount: z.boolean().default(false),
+        // I will recieve strings and hence I need transformations which will convert the string to boolean
+        isShowCompanyData: z.string().default('true').transform((val) => val === 'true'), // boolean
+        isShowAppliesCount: z.string().default('false').transform((val) => val === 'true'), // boolean
+        isShowMatchesCount: z.string().default('false').transform((val) => val === 'true') // boolean
     })
 );
 

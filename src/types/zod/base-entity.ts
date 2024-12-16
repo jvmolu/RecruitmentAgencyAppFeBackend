@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SortOrder } from '../enums/sort-order';
+import e from 'express';
 
 export const BaseSchema = z.object({
   id: z.string().uuid(),
@@ -8,10 +9,17 @@ export const BaseSchema = z.object({
 });
 
 export const BaseSearchParams = z.object({
-  limit: z.number().int().default(0),
-  page: z.number().int().default(1),
+  // I will recieve strings in req.query so will need trasnformations
+  limit: z.string().default("0").transform((val) => parseInt(val) || 0),
+  page: z.string().default("0").transform((val) => parseInt(val) || 1),
   orderBy: z.string().default('created_at'),
-  order: z.nativeEnum(SortOrder).default(SortOrder.DESC)
+  order: z.string().default(SortOrder.DESC).transform((val) => {
+    if (val.toUpperCase() === 'ASC') {
+      return SortOrder.ASC;
+    } else {
+      return SortOrder.DESC;
+    }
+  }),
 });
 
 export default BaseSchema;
