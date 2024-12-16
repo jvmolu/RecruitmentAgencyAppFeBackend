@@ -9,7 +9,8 @@ export const ENUM_FIELD_MAP: Record<DbTable, string[]> = {
     [DbTable.MATCHES]: [],
     [DbTable.USER_EXPERIENCES]: [],
     [DbTable.USER_EDUCATION]: [],
-    [DbTable.USER_PROFILES]: ['currentYearlySalary', 'workLocationPreference']
+    [DbTable.USER_PROFILES]: ['currentYearlySalary', 'workLocationPreference'],
+    [DbTable.APPLICATIONS]: ['status', 'expectedBudgetCurrency', 'expectedBudgetPer', 'stage'],
 }
 
 export const isEnumField = (tableName: DbTable, fieldName: string): boolean => {
