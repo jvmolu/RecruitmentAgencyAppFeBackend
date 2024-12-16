@@ -8,7 +8,7 @@ export const BaseSchema = z.object({
 });
 
 export const BaseSearchParams = z.object({
-  limit: z.number().int().default(-1),
+  limit: z.number().int().default(0),
   page: z.number().int().default(1),
   orderBy: z.string().default('created_at'),
   order: z.nativeEnum(SortOrder).default(SortOrder.DESC)

@@ -76,7 +76,6 @@ class JobRepository extends BaseRepository {
 
           const selectFieldsAndAlias = [
             { field: `${jobTableAlias}.*` },
-            { field: `${companyTableAlias}.id`, alias: 'company_id' },
             { field: `${companyTableAlias}.name`, alias: 'company_name' },
             { field: `${companyTableAlias}.website`, alias: 'company_website' },
           ]
@@ -105,7 +104,7 @@ class JobRepository extends BaseRepository {
               field: `COUNT(DISTINCT ${matchesTableAlias}.id)`,
               alias: 'matches_count',
             });
-          }          
+          }
 
           let offset = 0;
           if (jobSearchParams.page && jobSearchParams.limit) {
@@ -132,11 +131,11 @@ class JobRepository extends BaseRepository {
 
           // Map the result to include company data
           const data: JobWithCompanyData[] = response.data.map((row) => {
-            const { company_id, company_name, company_website, ...jobFields } = row;
+            const { company_name, company_website, ...jobFields } = row;
             return {
               ...jobFields,
               company: jobSearchParams.isShowCompanyData ? {
-                id: company_id,
+                id: jobFields.companyId,
                 name: company_name,
                 website: company_website,
               } : undefined,
