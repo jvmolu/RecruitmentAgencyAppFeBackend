@@ -114,7 +114,7 @@ export class QueryBuilder {
     return { query: query + ';', params };
   }
 
-  static buildInsertQuery(tableName: string, fields: { [key: string]: any }): { query: string; params: any[] } {
+  public static buildInsertQuery(tableName: string, fields: { [key: string]: any }): { query: string; params: any[] } {
 
     console.log('fields', fields);
 
@@ -147,7 +147,7 @@ export class QueryBuilder {
     return { query, params };
   }
 
-  static buildUpdateQuery(tableName: string, fields: { [key: string]: any }, conditions: QueryFields): { query: string; params: any[] } {
+  public static buildUpdateQuery(tableName: string, fields: { [key: string]: any }, conditions: QueryFields): { query: string; params: any[] } {
 
     if (Object.keys(fields).length === 0) {
       console.log('No fields to update');
@@ -252,36 +252,3 @@ export class QueryBuilder {
     }
   }
 }
-
-// JUST A TEST FUNCTION TO CHECK ABOVE FUNCTIONALITIES
-async function main() {
-
-  // Test Query Builder for ArrAy Intersects
-  const jobFields = {
-    id: 1,
-    title: 'Software Engineer',
-    skills: ['React', 'NodeJS'],
-    job_description: null,
-  };
-
-  const queryConditions: QueryFields = {};
-  Object.entries(jobFields).forEach(([key, value]) => {
-    let operation: QueryOperation;
-    if (value === null) {
-      operation = QueryOperation.IS_NULL;
-    } else if (typeof value === 'string' && key !== 'id') {
-      operation = QueryOperation.ILIKE;
-    } else if (Array.isArray(value)) {
-      operation = QueryOperation.ARRAY_INTERSECTS;
-    } else {
-      operation = QueryOperation.EQUALS;
-    }
-    queryConditions[key] = { value, operation };
-  });
-
-  const { query, params } = QueryBuilder.buildSelectQuery('jobs', queryConditions);
-  console.log('query', query);
-  console.log('params', params);
-}
-
-// main();

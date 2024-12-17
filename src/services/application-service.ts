@@ -1,5 +1,5 @@
 import { ApplicationRepository } from "../repositories/applications-repository";
-import { ApplicationType, ApplicationSchema, ApplicationSearchOptions, ApplicationSearchSchema } from "../types/zod/application-entity";
+import { ApplicationType, ApplicationSchema, ApplicationSearchOptions, ApplicationSearchSchema, ApplicationWithRelatedData, ApplicationSearchParams, ApplicationSearchParamsSchema } from "../types/zod/application-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -34,7 +34,11 @@ export class ApplicationService {
         return await this.applicationRepository.create(validationResult.data);
     }
 
-    public static async findByParams(applicationFields: Partial<ApplicationSearchOptions>): Promise<GeneralAppResponse<ApplicationType[]>> {
+    public static async findByParams(
+        applicationFields: Partial<ApplicationSearchOptions>,
+        applicationSearchParams: Partial<ApplicationSearchParams>
+    ) : Promise<GeneralAppResponse<ApplicationWithRelatedData[]>> {
+
         const validationResult = ApplicationSearchSchema.partial().safeParse(applicationFields);
         if (!validationResult.success) {
             const zodError: ZodParsingError = validationResult.error as ZodParsingError;
@@ -47,7 +51,19 @@ export class ApplicationService {
             };
         }
 
-        return await this.applicationRepository.findByParams(validationResult.data);
+        const searchParamsValidationResult = ApplicationSearchParamsSchema.partial().safeParse(applicationSearchParams);
+        if (!searchParamsValidationResult.success) {
+            const zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+
+        return await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams);
     }
 
     public static async updateApplications(

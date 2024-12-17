@@ -55,7 +55,7 @@ export class ApplicationController {
 
     public static async findByParams(req: Request, res: Response): Promise<any> {
         try {
-            const result: GeneralAppResponse<ApplicationType[]> = await ApplicationService.findByParams(req.body);
+            const result: GeneralAppResponse<ApplicationType[]> = await ApplicationService.findByParams(req.body, req.query);
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

@@ -4,10 +4,11 @@ import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { Application, ApplicationSearchOptions, ApplicationType } from "../types/zod/application-entity";
+import { Application, ApplicationSearchOptions, ApplicationSearchParams, ApplicationType, ApplicationWithRelatedData } from "../types/zod/application-entity";
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
+import { JoinClause, JoinType } from "../types/enums/join-type";
 
 class ApplicationRepository extends BaseRepository {
     constructor() {
@@ -40,22 +41,95 @@ class ApplicationRepository extends BaseRepository {
 
     /**
      * Find applications by parameters
-     */
-    async findByParams(applicationFields: Partial<ApplicationSearchOptions>): Promise<GeneralAppResponse<Application[]>> {
-        try {
-            const searchQueryFields: QueryFields = this.createSearchFields(applicationFields);
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.APPLICATIONS, searchQueryFields);
-            return await this.executeQuery<Application>(query, params);
+    **/
+    async findByParams(
+        applicationFields: Partial<ApplicationSearchOptions>,
+        applicationSearchParams: ApplicationSearchParams
+      ): Promise<GeneralAppResponse<ApplicationWithRelatedData[]>> {
         
-        } catch (error: any) {
+        try {
+
+          const searchQueryFields: QueryFields = this.createSearchFields(applicationFields);
+          const applicationTableAlias = 'a';
+          const jobTableAlias = 'j';
+          const candidateTableAlias = 'u';
+      
+          const joins: JoinClause[] = [];
+          const selectFieldsAndAlias: {field: string, alias?: string}[] = [
+            { field: `${applicationTableAlias}.*` },
+          ];
+      
+          if (applicationSearchParams.isShowJobData) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.JOBS,
+              alias: jobTableAlias,
+              onCondition: `${applicationTableAlias}.job_id = ${jobTableAlias}.id`,
+            });
+            selectFieldsAndAlias.push({ field: `${jobTableAlias}.title`, alias: 'job_title' });
+          }
+      
+          if (applicationSearchParams.isShowCandidateData) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.USERS,
+              alias: candidateTableAlias,
+              onCondition: `${applicationTableAlias}.candidate_id = ${candidateTableAlias}.id`,
+            });
+            selectFieldsAndAlias.push({ field: `${candidateTableAlias}.first_name`, alias: 'candidate_name' });
+          }
+
+          const groupByFields = [`${applicationTableAlias}.id`];
+          
+          let offset = 0;
+          if (applicationSearchParams.page && applicationSearchParams.limit) {
+            offset = (applicationSearchParams.page - 1) * applicationSearchParams.limit;
+          }
+      
+          const { query, params } = QueryBuilder.buildSelectQuery(
+            DbTable.APPLICATIONS,
+            searchQueryFields,
+            applicationTableAlias,
+            selectFieldsAndAlias,
+            joins,
+            groupByFields,
+            applicationSearchParams.limit,
+            offset,
+            applicationSearchParams.orderBy,
+            applicationSearchParams.order
+          );
+
+          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+          if (isGeneralAppFailureResponse(response)) {
+            return response;
+          }
+      
+          // Map the result to include related data
+          const data: ApplicationWithRelatedData[] = response.data.map((row) => {
+            const { job_title, candidate_name, ...applicationFields } = row;
             return {
-                error: error,
-                businessMessage: 'Internal server error',
-                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
+                ...applicationFields,
+                job: applicationSearchParams.isShowJobData ? {
+                     title: job_title 
+                } : undefined,
+                candidate: applicationSearchParams.isShowCandidateData ? {
+                    firstName: candidate_name 
+                } : undefined
+            };
+          });
+      
+          return { success: true, data };
+        } 
+        catch (error: any) 
+        {
+          return {
+            error,
+            businessMessage: 'Internal server error',
+            statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+            success: false,
+          };
         }
-    }
+      }
 
     /**
      * Update applications by parameters
