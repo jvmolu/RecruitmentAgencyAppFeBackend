@@ -1,5 +1,5 @@
 import Status from "../enums/status";
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 
 // Define the schema for the Company model
@@ -24,10 +24,16 @@ const CompanySearchSchema = BaseSchema.merge(
   })
 );
 
-
+const CompanySearchParamsSchema = BaseSearchParams.merge(
+  z.object({
+      // I will recieve strings and hence I need transformations which will convert the string to boolean
+      isShowNumberOfJobs: z.string().default('false').transform((val) => val === 'true'), // boolean
+  })
+);
 
 type CompanyType = z.infer<typeof CompanySchema>
 type CompanySearchOptions = z.infer<typeof CompanySearchSchema>
+type ComapnySearchParams = z.infer<typeof CompanySearchParamsSchema>
 
 class Company implements CompanyType {
 
@@ -56,4 +62,4 @@ class Company implements CompanyType {
   }
 }
 
-export { CompanySchema, CompanyType, Company, CompanySearchSchema, CompanySearchOptions };
+export { CompanySchema, CompanyType, Company, CompanySearchSchema, CompanySearchOptions, ComapnySearchParams, CompanySearchParamsSchema };

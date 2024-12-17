@@ -1,6 +1,6 @@
 import Currency from "../enums/currency";
 import WorkModel from "../enums/work-model";
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 
 const UserProfileSchema = BaseSchema.merge(
@@ -31,8 +31,17 @@ const UserProfileSearchSchema = BaseSchema.merge(
     })
 );
 
+const UserProfileSearchParamsSchema = BaseSearchParams.merge(
+  z.object({
+      // I will recieve strings and hence I need transformations which will convert the string to boolean
+      isShowUserEducatonData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowUserExperienceData: z.string().default('true').transform((val) => val === 'true') // boolean
+  })
+);
+
 type UserProfileType = z.infer<typeof UserProfileSchema>
 type UserProfileSearchOptions = z.infer<typeof UserProfileSearchSchema>
+type UserProfileSearchParams = z.infer<typeof UserProfileSearchParamsSchema>
 
 class UserProfile implements UserProfileType {
 
@@ -69,4 +78,4 @@ class UserProfile implements UserProfileType {
     }
 };
 
-export { UserProfileSchema, UserProfileType, UserProfile, UserProfileSearchSchema, UserProfileSearchOptions };
+export { UserProfileSchema, UserProfileType, UserProfile, UserProfileSearchSchema, UserProfileSearchOptions, UserProfileSearchParamsSchema, UserProfileSearchParams };

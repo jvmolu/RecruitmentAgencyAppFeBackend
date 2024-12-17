@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class ApplicationController {
 
     public static async createApplication(req: Request, res: Response): Promise<any> {
-        try {            
+        try {
             // Create a uuid
             const applicationId: string = uuidv4();
             const file: Express.Multer.File = req.file as Express.Multer.File;

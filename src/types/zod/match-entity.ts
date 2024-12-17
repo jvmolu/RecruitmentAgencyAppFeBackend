@@ -1,5 +1,5 @@
 // src/types/zod/match-entity.ts
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 
 const MatchSchema = BaseSchema.merge(
@@ -18,8 +18,18 @@ const MatchSearchSchema = BaseSchema.merge(
   })
 );
 
+const MatchSearchParamsSchema = BaseSearchParams.merge(
+  z.object({
+      // I will recieve strings and hence I need transformations which will convert the string to boolean
+      isShowJobData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowCandidateData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowReport: z.string().default('true').transform((val) => val === 'true'), // boolean
+  })
+);
+
 type MatchType = z.infer<typeof MatchSchema>;
 type MatchSearchOptions = z.infer<typeof MatchSearchSchema>;
+type MatchSearchParams = z.infer<typeof MatchSearchParamsSchema>;
 
 class Match implements MatchType {
   id: string;
@@ -40,4 +50,4 @@ class Match implements MatchType {
   }
 }
 
-export { MatchSchema, MatchType, Match, MatchSearchSchema, MatchSearchOptions };
+export { MatchSchema, MatchType, Match, MatchSearchSchema, MatchSearchOptions, MatchSearchParamsSchema, MatchSearchParams };
