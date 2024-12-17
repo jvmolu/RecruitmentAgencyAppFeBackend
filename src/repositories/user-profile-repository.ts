@@ -56,6 +56,8 @@ class UserProfileRepository extends BaseRepository {
             const selectFieldsAndAlias: { field: string; alias?: string }[] = [
                 { field: `${userProfileTableAlias}.*` },
             ];
+
+            let groupByFields: string[] = [`${userProfileTableAlias}.id`];
     
             if (userProfileSearchParams.isShowUserData) {
                 joins.push({
@@ -69,6 +71,7 @@ class UserProfileRepository extends BaseRepository {
                     { field: `${userTableAlias}.last_name`, alias: 'user_last_name' },
                     { field: `${userTableAlias}.email`, alias: 'user_email' }
                 );
+                groupByFields.push(`${userTableAlias}.first_name`, `${userTableAlias}.last_name`, `${userTableAlias}.email`);
             }
     
             if (userProfileSearchParams.isShowUserEducationData) {
@@ -95,7 +98,7 @@ class UserProfileRepository extends BaseRepository {
                 );
             }
     
-            let groupByFields: string[] = [`${userProfileTableAlias}.id`];
+            
     
             let offset = 0;
             if (userProfileSearchParams.page && userProfileSearchParams.limit) {
