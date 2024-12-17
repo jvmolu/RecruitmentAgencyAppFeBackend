@@ -7,6 +7,8 @@ CREATE TABLE user_profiles (
     id UUID PRIMARY KEY,
     user_id UUID REFERENCES users(id) UNIQUE NOT NULL ON DELETE CASCADE,
     about_me TEXT,
+    country_code VARCHAR(10),
+    phone BIGINT UNIQUE,
     current_address VARCHAR(255),
     current_yearly_salary INT,
     current_salary_currency budget_currency_type,
@@ -16,6 +18,20 @@ CREATE TABLE user_profiles (
     work_location_preference work_model NOT NULL DEFAULT 'ONSITE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add Constraint that Country Code and Phone number will both be null or both be not null
+ALTER TABLE user_profiles
+ADD CONSTRAINT country_code_phone_all_or_none CHECK (
+    (
+        country_code IS NULL AND 
+        phone IS NULL
+    ) 
+    OR 
+    (
+        country_code IS NOT NULL AND 
+        phone IS NOT NULL
+    )
 );
 
 -- Indexes

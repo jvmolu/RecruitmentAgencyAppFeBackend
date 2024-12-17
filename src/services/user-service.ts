@@ -1,5 +1,5 @@
 import { UserRepository } from "../repositories/user-repository";
-import { User, UserType, UserSchema, UserSearchSchema, UserSearchOptions } from "../types/zod/user-entity";
+import { User, UserType, UserSchema, UserSearchSchema, UserSearchOptions, UserSearchParams, UserSearchParamsSchema } from "../types/zod/user-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -122,7 +122,10 @@ export class UserService {
         }
     }
 
-    public static async findUsersByParams(userFields: Partial<UserSearchOptions>): Promise<GeneralAppResponse<User[]>> {
+    public static async findUsersByParams(
+        userFields: Partial<UserSearchOptions>,
+        userSearchParams: Partial<UserSearchParams>
+    ): Promise<GeneralAppResponse<User[]>> {
 
         const validationResult = UserSearchSchema.partial().safeParse(userFields);
         if (!validationResult.success) {
@@ -136,9 +139,19 @@ export class UserService {
             };
         }
 
-        // Ignore Extra fields
-        userFields = validationResult.data;
-        return await UserService.userRepository.findByParams(userFields);
+        const searchParamsValidationResult = UserSearchParamsSchema.partial().safeParse(userSearchParams);
+        if(!searchParamsValidationResult.success) {
+            let zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid user search parameters',
+                success: false
+            };
+        }
+
+        return await UserService.userRepository.findByParams(validationResult.data, searchParamsValidationResult.data as UserSearchParams);
     }
 
     public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {

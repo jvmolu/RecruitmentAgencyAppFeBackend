@@ -2,6 +2,7 @@ import BaseSchema, { BaseSearchParams } from "./base-entity";
 import Role from "../enums/role";
 import Status from "../enums/status";
 import { z } from "zod";
+import { UserProfileType } from "./user-profile-entity";
 
 // Define the schema for the User model
 const UserSchema = BaseSchema.merge(
@@ -10,8 +11,6 @@ const UserSchema = BaseSchema.merge(
     lastName: z.string().min(1, 'Last name must be at least 1 character'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').optional(),
-    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').optional(),
     role: z.nativeEnum(Role).default(Role.CANDIDATE), // If the role is not provided, default to Candidate
     status: z.nativeEnum(Status).default(Status.INACTIVE), // If the status is not provided, default to Active
   })
@@ -23,8 +22,6 @@ const UserSearchSchema = BaseSchema.merge(
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     email: z.string().nullable(),
-    countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').nullable(),
-    phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').nullable(),
     role: z.nativeEnum(Role).nullable(),
     status: z.nativeEnum(Status).nullable(),
   })
@@ -40,6 +37,7 @@ const UserSearchParamsSchema = BaseSearchParams.merge(
 type UserType = z.infer<typeof UserSchema>
 type UserSearchOptions = z.infer<typeof UserSearchSchema>
 type UserSearchParams = z.infer<typeof UserSearchParamsSchema>
+type UserWithProfileData = UserType & { profile: Partial<UserProfileType> | undefined }
 
 class User implements UserType {
 
@@ -48,8 +46,6 @@ class User implements UserType {
   lastName: string;
   email: string;
   password: string;
-  countryCode: string | undefined;
-  phone: number | undefined;
   role: Role;
   status: Status;
   createdAt: string;
@@ -65,8 +61,6 @@ class User implements UserType {
     this.lastName = validatedUser.lastName;
     this.email = validatedUser.email;
     this.password = validatedUser.password;
-    this.countryCode = validatedUser.countryCode;
-    this.phone = validatedUser.phone;
     this.role = validatedUser.role;
     this.status = validatedUser.status;
     this.createdAt = validatedUser.createdAt;
@@ -74,4 +68,13 @@ class User implements UserType {
   }
 }
 
-export { UserSchema, UserType, User, UserSearchSchema, UserSearchOptions, UserSearchParams, UserSearchParamsSchema };
+export { 
+  UserSchema,
+  UserType,
+  User,
+  UserSearchSchema,
+  UserSearchOptions,
+  UserSearchParams,
+  UserSearchParamsSchema,
+  UserWithProfileData
+};

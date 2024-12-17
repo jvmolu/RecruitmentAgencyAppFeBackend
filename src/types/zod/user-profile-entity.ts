@@ -10,6 +10,8 @@ const UserProfileSchema = BaseSchema.merge(
         currentAddress: z.string().optional(),
         currentYearlySalary: z.number().optional(),
         currentSalaryCurrency: z.nativeEnum(Currency).optional(),
+        countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').optional(),
+        phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').optional(),
         resumeLink: z.string().optional(),
         skills: z.array(z.string()).optional().default([]),
         activelySearching: z.boolean().default(true),
@@ -24,6 +26,8 @@ const UserProfileSearchSchema = BaseSchema.merge(
         currentAddress: z.string().nullable(),
         currentYearlySalary: z.number().nullable(),
         currentSalaryCurrency: z.nativeEnum(Currency).nullable(),
+        countryCode: z.string().min(1, 'Country code must be at least 1 character').max(10, 'Country code must be at most 10 characters').nullable(),
+        phone: z.number().min(1000000000, 'Phone number must be at least 10 digits').max(9999999999, 'Phone number must be at most 10 digits').nullable(),
         resumeLink: z.string().nullable(),
         skills: z.array(z.string()).nullable(),
         activelySearching: z.boolean().nullable(),
@@ -34,6 +38,7 @@ const UserProfileSearchSchema = BaseSchema.merge(
 const UserProfileSearchParamsSchema = BaseSearchParams.merge(
   z.object({
       // I will recieve strings and hence I need transformations which will convert the string to boolean
+      isShowUserData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowUserEducatonData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowUserExperienceData: z.string().default('true').transform((val) => val === 'true') // boolean
   })
@@ -51,6 +56,8 @@ class UserProfile implements UserProfileType {
     currentAddress: string | undefined;
     currentYearlySalary: number | undefined;
     currentSalaryCurrency: Currency | undefined;
+    countryCode: string | undefined;
+    phone: number | undefined;
     resumeLink: string | undefined;
     skills: string[];
     activelySearching: boolean;
@@ -69,6 +76,8 @@ class UserProfile implements UserProfileType {
         this.currentAddress = validatedUserProfile.currentAddress;
         this.currentYearlySalary = validatedUserProfile.currentYearlySalary;
         this.currentSalaryCurrency = validatedUserProfile.currentSalaryCurrency;
+        this.countryCode = validatedUserProfile.countryCode;
+        this.phone = validatedUserProfile.phone;
         this.resumeLink = validatedUserProfile.resumeLink;
         this.skills = validatedUserProfile.skills;
         this.activelySearching = validatedUserProfile.activelySearching;

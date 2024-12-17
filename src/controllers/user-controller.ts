@@ -91,7 +91,7 @@ export class UserController {
     public static async findUsersByParams(req: Request, res: Response) : Promise<any> {
 
         try {
-            const result: GeneralAppResponse<User[]> = await UserService.findUsersByParams(req.body);
+            const result: GeneralAppResponse<User[]> = await UserService.findUsersByParams(req.body, req.query);
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
                 if(isDatabaseError(result.error) || isZodError(result.error)) {

@@ -1,5 +1,5 @@
 import { BaseRepository } from "./base-repository";
-import { User, UserSearchOptions, UserType } from "../types/zod/user-entity";
+import { User, UserSearchOptions, UserSearchParams, UserType, UserWithProfileData } from "../types/zod/user-entity";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
@@ -7,6 +7,8 @@ import DbTable from "../types/enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import QueryOperation from "../types/enums/query-operation";
 import { isEnumField } from "../types/enum-field-mapping";
+import { JoinClause, JoinType } from "../types/enums/join-type";
+import { SortOrder } from "../types/enums/sort-order";
 
 class UserRepository extends BaseRepository {
 
@@ -38,37 +40,95 @@ class UserRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(userFields: Partial<UserSearchOptions>): Promise<GeneralAppResponse<User[]>> {
+    async findByParams(
+        userFields: Partial<UserSearchOptions>,
+        userSearchParams: UserSearchParams = {limit: 1, page: 1, isShowUserProfileData: false, orderBy: 'created_at', order:SortOrder.DESC}
+      ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
         try {
-            // Build the QueryFields object
-            const queryFields: QueryFields = {};
-            Object.entries(userFields).forEach(([key, value]) => {
-                let operation: QueryOperation;
-                if(value === null) {
-                    operation = QueryOperation.IS_NULL;
-                } else if (isEnumField(this.tableName, key)) {
-                    operation = QueryOperation.EQUALS;
-                } else if (typeof value === 'string' && key !== 'id') {
-                    operation = QueryOperation.ILIKE;
-                } else {
-                    operation = QueryOperation.EQUALS;
-                }
-                const keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
-                // Add the field to the queryFields object
-                queryFields[keyToUse] = { value, operation };
+          const searchQueryFields: QueryFields = this.createSearchFields(userFields);
+          const userTableAlias = 'u';
+          const profileTableAlias = 'p';
+      
+          const joins: JoinClause[] = [];
+          const selectFieldsAndAlias: { field: string; alias?: string }[] = [
+            { field: `${userTableAlias}.*` },
+          ];
+      
+          if (userSearchParams.isShowUserProfileData) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.USER_PROFILES,
+              alias: profileTableAlias,
+              onCondition: `${userTableAlias}.id = ${profileTableAlias}.user_id`,
             });
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.USERS, queryFields);
+            selectFieldsAndAlias.push({ field: `${profileTableAlias}.skills`, alias: 'user_skills' });
+          }
 
-            return await this.executeQuery<User>(query, params);
-        }
-        catch (error: any) {
+          let groupByFields: string[] = [];
+      
+          let offset = 0;
+          if (userSearchParams.page && userSearchParams.limit) {
+            offset = (userSearchParams.page - 1) * userSearchParams.limit;
+          }
+
+          const { query, params } = QueryBuilder.buildSelectQuery(
+            DbTable.USERS,
+            searchQueryFields,
+            userTableAlias,
+            selectFieldsAndAlias,
+            joins,
+            groupByFields,
+            userSearchParams.limit,
+            offset,
+            userSearchParams.orderBy,
+            userSearchParams.order
+          );
+      
+          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+      
+          if (isGeneralAppFailureResponse(response)) {
+            return response;
+          }
+      
+          const data: UserWithProfileData[] = response.data.map((row) => {
+            const { user_skills, ...userFields } = row;
             return {
-                error: error,
-                businessMessage: 'Internal server error',
-                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
+              ...userFields,
+              profile: userSearchParams.isShowUserProfileData ? {
+                skills: user_skills,
+              } : undefined
+            };
+          });
+      
+          return { success: true, data };
+        } catch (error: any) {
+          return {
+            error,
+            businessMessage: 'Internal server error',
+            statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+            success: false,
+          };
         }
+      }
+
+    private createSearchFields(userFields: Partial<UserSearchOptions>): QueryFields {
+        const queryFields: QueryFields = {};
+        Object.entries(userFields).forEach(([key, value]) => {
+            let operation: QueryOperation;
+            if(value === null) {
+                operation = QueryOperation.IS_NULL;
+            } else if (isEnumField(this.tableName, key)) {
+                operation = QueryOperation.EQUALS;
+            } else if (typeof value === 'string') {
+                operation = QueryOperation.ILIKE;
+            } else {
+                operation = QueryOperation.EQUALS;
+            }
+            const keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
+            // Add the field to the queryFields object
+            queryFields[keyToUse] = { value, operation };
+        });
+        return queryFields;
     }
 }
 
