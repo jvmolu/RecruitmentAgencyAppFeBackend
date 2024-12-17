@@ -3,7 +3,7 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyRepository } from "../repositories/company-repository";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { GeneralAppResponse, isGeneralAppResponse } from "../types/response/general-app-response";
-import { ComapnySearchParams, CompanySchema, CompanySearchOptions, CompanySearchSchema, CompanyType, CompanyWithJobCount } from "../types/zod/company-entity";
+import { ComapnySearchParams, CompanySchema, CompanySearchOptions, CompanySearchParamsSchema, CompanySearchSchema, CompanyType, CompanyWithJobCount } from "../types/zod/company-entity";
 import { v4 as uuidv4 } from 'uuid';
 
 export class CompanyService {
@@ -54,7 +54,7 @@ export class CompanyService {
             };
         }
 
-        const companySearchParamsValidationResult = CompanySearchSchema.partial().safeParse(companySearchParams);
+        const companySearchParamsValidationResult = CompanySearchParamsSchema.safeParse(companySearchParams);
         if(!companySearchParamsValidationResult.success) {
             let zodError: ZodParsingError = companySearchParamsValidationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';

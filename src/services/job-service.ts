@@ -39,18 +39,6 @@ export class JobService {
 
     public static async findByParams(jobFields: Partial<JobSearchOptions>, jobSearchParams: Partial<JobSearchParams>): Promise<GeneralAppResponse<JobWithCompanyData[]>> {
 
-        const jobSearchParamsValidationResult = JobSearchParamsSchema.safeParse(jobSearchParams);
-        if(!jobSearchParamsValidationResult.success) {
-            let zodError: ZodParsingError = jobSearchParamsValidationResult.error as ZodParsingError;
-            zodError.errorType = 'ZodParsingError';
-            return {
-                error: zodError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid job search parameters',
-                success: false
-            };
-        }
-
         const validationResult = JobSearchSchema.partial().safeParse(jobFields);
         if(!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
@@ -59,6 +47,18 @@ export class JobService {
                 error: zodError,
                 statusCode: HttpStatusCode.BAD_REQUEST,
                 businessMessage: 'Invalid job data',
+                success: false
+            };
+        }
+
+        const jobSearchParamsValidationResult = JobSearchParamsSchema.safeParse(jobSearchParams);
+        if(!jobSearchParamsValidationResult.success) {
+            let zodError: ZodParsingError = jobSearchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid job search parameters',
                 success: false
             };
         }

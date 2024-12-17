@@ -140,7 +140,7 @@ export class UserService {
             };
         }
 
-        const searchParamsValidationResult = UserSearchParamsSchema.partial().safeParse(userSearchParams);
+        const searchParamsValidationResult = UserSearchParamsSchema.safeParse(userSearchParams);
         if(!searchParamsValidationResult.success) {
             let zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';

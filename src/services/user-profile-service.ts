@@ -239,7 +239,7 @@ export class UserProfileService {
             };
         }
 
-        const searchParams = UserProfileSearchParamsSchema.partial().safeParse(profileSearchParams);
+        const searchParams = UserProfileSearchParamsSchema.safeParse(profileSearchParams);
         if(!searchParams.success) {
             let zodError: ZodParsingError = searchParams.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';
