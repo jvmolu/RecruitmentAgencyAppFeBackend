@@ -13,6 +13,7 @@ import { randomInt } from "crypto";
 import RedisService from "./redis-service";
 import { EmailService } from "./email-service";
 import { forgotPasswordOtpTemplate } from "../templates/forgot-password-otp";
+import { SortOrder } from "../types/enums/sort-order";
 
 export class UserService {
 
@@ -124,7 +125,7 @@ export class UserService {
 
     public static async findUsersByParams(
         userFields: Partial<UserSearchOptions>,
-        userSearchParams: Partial<UserSearchParams>
+        userSearchParams: Partial<UserSearchParams> = {limit: 1, page: 1, isShowUserProfileData: false, orderBy: 'created_at', order:SortOrder.DESC}
     ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
 
         const validationResult = UserSearchSchema.partial().safeParse(userFields);
