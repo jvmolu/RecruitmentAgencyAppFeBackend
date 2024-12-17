@@ -1,4 +1,8 @@
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
+
+// Set the parser for JSON (OID 114) and JSONB (OID 3802)
+types.setTypeParser(114, (value) => JSON.parse(value));
+types.setTypeParser(3802, (value) => JSON.parse(value));
 
 const pool = new Pool({
     user: 'postgres',
