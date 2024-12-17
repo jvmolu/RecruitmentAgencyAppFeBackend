@@ -127,7 +127,7 @@ export class UserProfileController {
 
     public static async findByParams(req: Request, res: Response): Promise<any> {
         try {
-            const result = await UserProfileService.findByParams(req.body);
+            const result = await UserProfileService.findByParams(req.body, req.query);
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

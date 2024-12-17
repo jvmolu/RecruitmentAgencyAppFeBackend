@@ -2,6 +2,9 @@ import Currency from "../enums/currency";
 import WorkModel from "../enums/work-model";
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
+import { UserEducationType } from "./user-education-entity";
+import { UserType } from "./user-entity";
+import { UserExperienceType } from "./user-experience-entity";
 
 const UserProfileSchema = BaseSchema.merge(
     z.object({
@@ -39,7 +42,7 @@ const UserProfileSearchParamsSchema = BaseSearchParams.merge(
   z.object({
       // I will recieve strings and hence I need transformations which will convert the string to boolean
       isShowUserData: z.string().default('true').transform((val) => val === 'true'), // boolean
-      isShowUserEducatonData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowUserEducationData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowUserExperienceData: z.string().default('true').transform((val) => val === 'true') // boolean
   })
 );
@@ -47,6 +50,7 @@ const UserProfileSearchParamsSchema = BaseSearchParams.merge(
 type UserProfileType = z.infer<typeof UserProfileSchema>
 type UserProfileSearchOptions = z.infer<typeof UserProfileSearchSchema>
 type UserProfileSearchParams = z.infer<typeof UserProfileSearchParamsSchema>
+type UserProfileWithRelatedData = UserProfileType & { user: Partial<UserType> | undefined, education: Partial<UserEducationType> | undefined, experience: Partial<UserExperienceType> | undefined }
 
 class UserProfile implements UserProfileType {
 
@@ -87,4 +91,13 @@ class UserProfile implements UserProfileType {
     }
 };
 
-export { UserProfileSchema, UserProfileType, UserProfile, UserProfileSearchSchema, UserProfileSearchOptions, UserProfileSearchParamsSchema, UserProfileSearchParams };
+export {
+    UserProfileSchema,
+    UserProfileType,
+    UserProfile,
+    UserProfileSearchSchema,
+    UserProfileSearchOptions,
+    UserProfileSearchParamsSchema,
+    UserProfileSearchParams,
+    UserProfileWithRelatedData
+};

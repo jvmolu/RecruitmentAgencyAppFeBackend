@@ -1,5 +1,5 @@
 import { UserProfileRepository } from "../repositories/user-profile-repository";
-import { UserProfileType, UserProfileSchema, UserProfileSearchOptions, UserProfileSearchSchema, UserProfile } from "../types/zod/user-profile-entity";
+import { UserProfileType, UserProfileSchema, UserProfileSearchOptions, UserProfileSearchSchema, UserProfile, UserProfileSearchParams, UserProfileWithRelatedData, UserProfileSearchParamsSchema } from "../types/zod/user-profile-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -222,7 +222,11 @@ export class UserProfileService {
         };
     }
 
-    public static async findByParams(profileFields: Partial<UserProfileSearchOptions>): Promise<GeneralAppResponse<UserProfileType[]>> {
+    public static async findByParams(
+        profileFields: Partial<UserProfileSearchOptions>,
+        profileSearchParams: Partial<UserProfileSearchParams>
+    ): Promise<GeneralAppResponse<UserProfileWithRelatedData[]>> {
+        
         const validationResult = UserProfileSearchSchema.partial().safeParse(profileFields);
         if (!validationResult.success) {
             let zodError: ZodParsingError = validationResult.error as ZodParsingError;
@@ -234,7 +238,20 @@ export class UserProfileService {
                 success: false
             };
         }
-        return await this.userProfileRepository.findByParams(validationResult.data);
+
+        const searchParams = UserProfileSearchParamsSchema.partial().safeParse(profileSearchParams);
+        if(!searchParams.success) {
+            let zodError: ZodParsingError = searchParams.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+
+        return await this.userProfileRepository.findByParams(validationResult.data, searchParams.data as UserProfileSearchParams);
     }
 
     /**

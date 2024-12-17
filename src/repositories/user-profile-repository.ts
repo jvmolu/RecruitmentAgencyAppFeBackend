@@ -4,10 +4,11 @@ import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { UserProfile, UserProfileSearchOptions, UserProfileType } from "../types/zod/user-profile-entity";
+import { UserProfile, UserProfileSearchOptions, UserProfileSearchParams, UserProfileType, UserProfileWithRelatedData } from "../types/zod/user-profile-entity";
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
+import { JoinClause, JoinType } from "../types/enums/join-type";
 
 class UserProfileRepository extends BaseRepository {
 
@@ -40,22 +41,111 @@ class UserProfileRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(userProfileFields: Partial<UserProfileSearchOptions>): Promise<GeneralAppResponse<UserProfile[]>> {
+    async findByParams(
+        userProfileFields: Partial<UserProfileSearchOptions>,
+        userProfileSearchParams: UserProfileSearchParams
+    ): Promise<GeneralAppResponse<UserProfileWithRelatedData[]>> {
         try {
-            // Build the QueryFields object
             const searchQueryFields: QueryFields = this.createSearchFields(userProfileFields);
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.USER_PROFILES, searchQueryFields);
-            return await this.executeQuery<UserProfile>(query, params);
-        }
-        catch (error: any) {
+            const userProfileTableAlias = 'p';
+            const userTableAlias = 'u';
+            const educationTableAlias = 'e';
+            const experienceTableAlias = 'ex';
+    
+            const joins: JoinClause[] = [];
+            const selectFieldsAndAlias: { field: string; alias?: string }[] = [
+                { field: `${userProfileTableAlias}.*` },
+            ];
+    
+            if (userProfileSearchParams.isShowUserData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.USERS,
+                    alias: userTableAlias,
+                    onCondition: `${userProfileTableAlias}.user_id = ${userTableAlias}.id`,
+                });
+                selectFieldsAndAlias.push(
+                    { field: `${userTableAlias}.first_name`, alias: 'user_first_name' },
+                    { field: `${userTableAlias}.last_name`, alias: 'user_last_name' },
+                    { field: `${userTableAlias}.email`, alias: 'user_email' }
+                );
+            }
+    
+            if (userProfileSearchParams.isShowUserEducationData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.USER_EDUCATION,
+                    alias: educationTableAlias,
+                    onCondition: `${userProfileTableAlias}.id = ${educationTableAlias}.user_profile_id`,
+                });
+                selectFieldsAndAlias.push(
+                    { field: `array_agg(DISTINCT ${educationTableAlias}.*)`, alias: 'education_data' }
+                );
+            }
+    
+            if (userProfileSearchParams.isShowUserExperienceData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.USER_EXPERIENCES,
+                    alias: experienceTableAlias,
+                    onCondition: `${userProfileTableAlias}.id = ${experienceTableAlias}.user_profile_id`,
+                });
+                selectFieldsAndAlias.push(
+                    { field: `array_agg(DISTINCT ${experienceTableAlias}.*)`, alias: 'experience_data' }
+                );
+            }
+    
+            let groupByFields: string[] = [`${userProfileTableAlias}.id`];
+    
+            let offset = 0;
+            if (userProfileSearchParams.page && userProfileSearchParams.limit) {
+                offset = (userProfileSearchParams.page - 1) * userProfileSearchParams.limit;
+            }
+    
+            const { query, params } = QueryBuilder.buildSelectQuery(
+                DbTable.USER_PROFILES,
+                searchQueryFields,
+                userProfileTableAlias,
+                selectFieldsAndAlias,
+                joins,
+                groupByFields,
+                userProfileSearchParams.limit,
+                offset,
+                userProfileSearchParams.orderBy,
+                userProfileSearchParams.order
+            );
+    
+            const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+    
+            if (isGeneralAppFailureResponse(response)) {
+                return response;
+            }
+    
+            const data: UserProfileWithRelatedData[] = response.data.map((row) => {
+                const { education_data, experience_data, user_first_name, user_last_name, user_email, ...profileFields } = row;
+                return {
+                    ...profileFields,
+                    user: userProfileSearchParams.isShowUserData ? {
+                        firstName: user_first_name,
+                        lastName: user_last_name,
+                        email: user_email
+                    } : undefined,
+                    education: userProfileSearchParams.isShowUserEducationData ? education_data : undefined,
+                    experience: userProfileSearchParams.isShowUserExperienceData ? experience_data : undefined,
+                };
+            });
+    
+            return { success: true, data };
+        } catch (error: any) {
             return {
-                error: error,
+                error,
                 businessMessage: 'Internal server error',
                 statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
+                success: false,
+            };
         }
     }
+    
 
     async updateByParams(userProfileFields: Partial<UserProfileSearchOptions>,
         userProfileUpdatedFields: Partial<UserProfileType>,

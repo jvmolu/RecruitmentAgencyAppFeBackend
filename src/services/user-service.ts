@@ -1,5 +1,5 @@
 import { UserRepository } from "../repositories/user-repository";
-import { User, UserType, UserSchema, UserSearchSchema, UserSearchOptions, UserSearchParams, UserSearchParamsSchema } from "../types/zod/user-entity";
+import { User, UserType, UserSchema, UserSearchSchema, UserSearchOptions, UserSearchParams, UserSearchParamsSchema, UserWithProfileData } from "../types/zod/user-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -125,7 +125,7 @@ export class UserService {
     public static async findUsersByParams(
         userFields: Partial<UserSearchOptions>,
         userSearchParams: Partial<UserSearchParams>
-    ): Promise<GeneralAppResponse<User[]>> {
+    ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
 
         const validationResult = UserSearchSchema.partial().safeParse(userFields);
         if (!validationResult.success) {
