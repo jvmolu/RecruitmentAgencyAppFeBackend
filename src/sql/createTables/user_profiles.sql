@@ -5,7 +5,7 @@ CREATE TYPE budget_currency_type AS ENUM ('USD', 'EUR', 'INR');
 -- Create user_profiles table
 CREATE TABLE user_profiles (
     id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id) UNIQUE NOT NULL ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) UNIQUE NOT NULL,
     about_me TEXT,
     country_code VARCHAR(10),
     phone BIGINT UNIQUE,
