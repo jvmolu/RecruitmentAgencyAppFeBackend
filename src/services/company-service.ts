@@ -3,7 +3,7 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyRepository } from "../repositories/company-repository";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { GeneralAppResponse, isGeneralAppResponse } from "../types/response/general-app-response";
-import { CompanySchema, CompanySearchOptions, CompanySearchSchema, CompanyType } from "../types/zod/company-entity";
+import { ComapnySearchParams, CompanySchema, CompanySearchOptions, CompanySearchSchema, CompanyType, CompanyWithJobCount } from "../types/zod/company-entity";
 import { v4 as uuidv4 } from 'uuid';
 
 export class CompanyService {
@@ -37,7 +37,10 @@ export class CompanyService {
         return response;
     }
 
-    public static async findByParams(companyFields: Partial<CompanySearchOptions>): Promise<GeneralAppResponse<CompanyType[]>> {
+    public static async findByParams(
+        companyFields: Partial<CompanySearchOptions>,
+        companySearchParams: Partial<ComapnySearchParams>
+    ): Promise<GeneralAppResponse<CompanyWithJobCount[]>> {
 
         const validationResult = CompanySearchSchema.partial().safeParse(companyFields);
         if(!validationResult.success) {
@@ -51,7 +54,18 @@ export class CompanyService {
             };
         }
 
-        companyFields = validationResult.data;
-        return await CompanyService.companyRepository.findByParams(companyFields);
+        const companySearchParamsValidationResult = CompanySearchSchema.partial().safeParse(companySearchParams);
+        if(!companySearchParamsValidationResult.success) {
+            let zodError: ZodParsingError = companySearchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid company search parameters',
+                success: false
+            };
+        }
+
+        return await CompanyService.companyRepository.findByParams(validationResult.data, companySearchParamsValidationResult.data as ComapnySearchParams);
     }
 }

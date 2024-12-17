@@ -1,9 +1,10 @@
 import { isEnumField } from "../types/enum-field-mapping";
 import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { JoinClause, JoinType } from "../types/enums/join-type";
 import QueryOperation from "../types/enums/query-operation";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { Company, CompanySearchOptions, CompanyType } from "../types/zod/company-entity";
+import { ComapnySearchParams, Company, CompanySearchOptions, CompanyType, CompanyWithJobCount } from "../types/zod/company-entity";
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
@@ -38,36 +39,96 @@ class CompanyRepository extends BaseRepository {
     }
 
     // Find By General Params
-    async findByParams(companyFields: Partial<CompanySearchOptions>): Promise<GeneralAppResponse<Company[]>> {
+    async findByParams(
+        companyFields: Partial<CompanySearchOptions>,
+        companySearchParams: ComapnySearchParams
+      ): Promise<GeneralAppResponse<CompanyWithJobCount[]>> {
         try {
-            // Build the QueryFields object
-            const queryFields: QueryFields = {};
-            Object.entries(companyFields).forEach(([key, value]) => {
-                let operation: QueryOperation;
-                if(value === null) {
-                    operation = QueryOperation.IS_NULL;
-                } else if (isEnumField(this.tableName, key)) {
-                    operation = QueryOperation.EQUALS;
-                } else if (typeof value === 'string' && key != 'id') {
-                    operation = QueryOperation.ILIKE;
-                } else {
-                    operation = QueryOperation.EQUALS;
-                }
-                const keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
-                // Add the field to the queryFields object
-                queryFields[keyToUse] = { value, operation };
+          const searchQueryFields: QueryFields = this.createSearchFields(companyFields);
+          const companyTableAlias = 'c';
+          const jobTableAlias = 'j';
+      
+          const joins: JoinClause[] = [];
+          const selectFieldsAndAlias: { field: string; alias?: string }[] = [
+            { field: `${companyTableAlias}.*` },
+          ];
+      
+          if (companySearchParams.isShowNumberOfJobs) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.JOBS,
+              alias: jobTableAlias,
+              onCondition: `${companyTableAlias}.id = ${jobTableAlias}.company_id`,
             });
-            const { query, params } = QueryBuilder.buildSelectQuery(DbTable.COMPANIES, queryFields);
-            return await this.executeQuery<Company>(query, params);
-        }
-        catch (error: any) {
+            selectFieldsAndAlias.push({ field: `COUNT(DISTINCT ${jobTableAlias}.id)`, alias: 'jobs_count' });
+          }
+          
+          let groupByFields = [];
+          if (companySearchParams.isShowNumberOfJobs) {
+            groupByFields.push(`${companyTableAlias}.id`);
+          }
+
+          let offset = 0;
+          if (companySearchParams.page && companySearchParams.limit) {
+            offset = (companySearchParams.page - 1) * companySearchParams.limit;
+          }
+      
+          const { query, params } = QueryBuilder.buildSelectQuery(
+            DbTable.COMPANIES,
+            searchQueryFields,
+            companyTableAlias,
+            selectFieldsAndAlias,
+            joins,
+            groupByFields,
+            companySearchParams.limit,
+            offset,
+            companySearchParams.orderBy,
+            companySearchParams.order
+          );
+      
+          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+      
+          if (isGeneralAppFailureResponse(response)) {
+            return response;
+          }
+      
+          const data: CompanyWithJobCount[] = response.data.map((row) => {
+            const { jobs_count, ...companyFields } = row;
             return {
-                error: error,
-                businessMessage: 'Internal server error',
-                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-                success: false
-            }
+              ...companyFields,
+              jobsCount: companySearchParams.isShowNumberOfJobs ? Number(jobs_count) : undefined,
+            };
+          });
+      
+          return { success: true, data };
+        } catch (error: any) {
+          return {
+            error,
+            businessMessage: 'Internal server error',
+            statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+            success: false,
+          };
         }
+      }
+
+    private createSearchFields(companyFields: Partial<CompanySearchOptions>): QueryFields {
+        const queryFields: QueryFields = {};
+        Object.entries(companyFields).forEach(([key, value]) => {
+            let operation: QueryOperation;
+            if(value === null) {
+                operation = QueryOperation.IS_NULL;
+            } else if (isEnumField(this.tableName, key)) {
+                operation = QueryOperation.EQUALS;
+            } else if (typeof value === 'string') {
+                operation = QueryOperation.ILIKE;
+            } else {
+                operation = QueryOperation.EQUALS;
+            }
+            const keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
+            // Add the field to the queryFields object
+            queryFields[keyToUse] = { value, operation };
+        });
+        return queryFields;
     }
 }
 

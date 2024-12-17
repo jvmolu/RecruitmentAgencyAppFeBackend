@@ -34,6 +34,7 @@ const CompanySearchParamsSchema = BaseSearchParams.merge(
 type CompanyType = z.infer<typeof CompanySchema>
 type CompanySearchOptions = z.infer<typeof CompanySearchSchema>
 type ComapnySearchParams = z.infer<typeof CompanySearchParamsSchema>
+type CompanyWithJobCount = CompanyType & { jobCount: number | undefined }
 
 class Company implements CompanyType {
 
@@ -62,4 +63,13 @@ class Company implements CompanyType {
   }
 }
 
-export { CompanySchema, CompanyType, Company, CompanySearchSchema, CompanySearchOptions, ComapnySearchParams, CompanySearchParamsSchema };
+export { 
+  CompanySchema,
+  CompanyType,
+  Company,
+  CompanySearchSchema,
+  CompanySearchOptions,
+  ComapnySearchParams,
+  CompanySearchParamsSchema, 
+  CompanyWithJobCount 
+};

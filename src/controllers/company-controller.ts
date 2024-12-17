@@ -1,7 +1,7 @@
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { CompanyService } from "../services/company-service";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { CompanyType } from "../types/zod/company-entity";
+import { CompanyType, CompanyWithJobCount } from "../types/zod/company-entity";
 import {Request, Response} from 'express';
 
 export class CompanyController {
@@ -31,7 +31,7 @@ export class CompanyController {
 
     public static async findByParams(req: Request, res: Response) : Promise<any> {
         try {
-            const result: GeneralAppResponse<CompanyType[]> = await CompanyService.findByParams(req.body);
+            const result: GeneralAppResponse<CompanyWithJobCount[]> = await CompanyService.findByParams(req.body, req.query);
             if(isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

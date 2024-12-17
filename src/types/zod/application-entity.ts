@@ -53,7 +53,7 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
 type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
-type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType>, candidate: Partial<UserType> }
+type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserType> | undefined }
 
 class Application implements ApplicationType {
   id: string;

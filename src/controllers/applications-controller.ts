@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ApplicationService } from "../services/application-service";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import HttpStatusCode from "../types/enums/http-status-codes";
-import { ApplicationType } from "../types/zod/application-entity";
+import { ApplicationType, ApplicationWithRelatedData } from "../types/zod/application-entity";
 import { v4 as uuidv4 } from 'uuid';
 
 export class ApplicationController {
@@ -55,7 +55,7 @@ export class ApplicationController {
 
     public static async findByParams(req: Request, res: Response): Promise<any> {
         try {
-            const result: GeneralAppResponse<ApplicationType[]> = await ApplicationService.findByParams(req.body, req.query);
+            const result: GeneralAppResponse<ApplicationWithRelatedData[]> = await ApplicationService.findByParams(req.body, req.query);
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,
