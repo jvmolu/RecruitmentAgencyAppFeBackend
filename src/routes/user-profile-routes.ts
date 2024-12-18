@@ -7,8 +7,8 @@ import AuthorizeSelf from "../middlewares/auth/authorize-same-user";
 
 const UserProfileRouter = Router();
 
-UserProfileRouter.post('/', Authenticate, MulterRequestParser, IsPdfFile, UserProfileController.createUserProfile);
+UserProfileRouter.post('/', MulterRequestParser, Authenticate, IsPdfFile, UserProfileController.createUserProfile);
 UserProfileRouter.post('/findByParams', Authenticate, UserProfileController.findByParams);
-UserProfileRouter.put('/', Authenticate, MulterRequestParser, IsPdfFile, AuthorizeSelf, UserProfileController.updateUserProfile);
+UserProfileRouter.put('/', MulterRequestParser, Authenticate, IsPdfFile, AuthorizeSelf, UserProfileController.updateUserProfile);
 
 export default UserProfileRouter;

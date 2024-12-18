@@ -6,7 +6,15 @@ const AuthorizeSelf = async (req: Request, res: Response, next: NextFunction) : 
     try {
 
         const user = req.body.user;
-        const userIdToAccess = req.body.userId;
+        let userIdToAccess = req.body.userId;
+
+        // Check route
+        if(req.originalUrl.includes('applications') === true) {
+            userIdToAccess = req.body.userId;
+        }
+        else if(req.originalUrl.includes('user-profile') === true) {
+            userIdToAccess = req.body.profileSearchFields && req.body.profileSearchFields.userId;
+        }
 
         if(user.role === Role.ADMIN) {
             next();

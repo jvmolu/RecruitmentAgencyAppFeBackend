@@ -8,8 +8,8 @@ import MandateFileUpload from "../middlewares/file-upload/mandate-file-upload";
 
 const ApplicationRouter = Router();
 
-ApplicationRouter.post('/', Authenticate, MulterRequestParser, MandateFileUpload, IsPdfFile, ApplicationController.createApplication);
+ApplicationRouter.post('/', MulterRequestParser, Authenticate, MandateFileUpload, IsPdfFile, ApplicationController.createApplication);
 ApplicationRouter.post('/findByParams', Authenticate, ApplicationController.findByParams);
-ApplicationRouter.put('/', Authenticate, MulterRequestParser, IsPdfFile, AuthorizeSelf, ApplicationController.updateApplications);
+ApplicationRouter.put('/', MulterRequestParser, Authenticate, IsPdfFile, AuthorizeSelf, ApplicationController.updateApplications);
 
 export default ApplicationRouter;
