@@ -1,7 +1,13 @@
 import DbTable from "../../types/enums/db-table";
+import applicationSchemaMapping from "./table-entity-mismatch-mappings/application-schema-mapping";
 import companySchemaMapping from "./table-entity-mismatch-mappings/company-schema-mapping";
 import invitesSchemaMapper from "./table-entity-mismatch-mappings/invites-schema-mapper";
 import jobSchemaMapping from "./table-entity-mismatch-mappings/job-schema-mapping";
+import matchReportSchemaMapping from "./table-entity-mismatch-mappings/match-report-schema-mapping";
+import matchSchemaMapping from "./table-entity-mismatch-mappings/match-schema-mapping";
+import userEducationSchemaMapping from "./table-entity-mismatch-mappings/user-education-schema-mapping";
+import userExperienceSchemaMapping from "./table-entity-mismatch-mappings/user-experience-schema-mapping";
+import userProfileSchemaMapping from "./table-entity-mismatch-mappings/user-profile-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
 
 export type FieldMapping = {
@@ -11,11 +17,17 @@ export type FieldMapping = {
 
 export class SchemaMapper {
     
-    private static schemas: { [key: string]: {mappings: FieldMapping[]} } = {
+    private static schemas: Record<DbTable, {mappings: FieldMapping[]}> = {
         [DbTable.USERS]: userSchemaMappings,
         [DbTable.COMPANIES]: companySchemaMapping,
         [DbTable.JOBS]: jobSchemaMapping,
-        [DbTable.INVITES]: invitesSchemaMapper
+        [DbTable.INVITES]: invitesSchemaMapper,
+        [DbTable.USER_PROFILES]: userProfileSchemaMapping,
+        [DbTable.APPLICATIONS]: applicationSchemaMapping,
+        [DbTable.MATCHES]: matchSchemaMapping,
+        [DbTable.MATCH_REPORTS]: matchReportSchemaMapping,
+        [DbTable.USER_EXPERIENCES]: userExperienceSchemaMapping,
+        [DbTable.USER_EDUCATION]: userEducationSchemaMapping
     };
 
     static toEntity<T>(tableName: DbTable, dbRow: {[key: string]: any}): T {

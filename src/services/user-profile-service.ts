@@ -40,7 +40,7 @@ export class UserProfileService {
             };
         }
 
-        const userProfileResult: GeneralAppResponse<UserProfile> = await this.userProfileRepository.create(userProfile, client);
+        const userProfileResult: GeneralAppResponse<UserProfile> = await this.userProfileRepository.create(validationResult.data, client);
         if (isGeneralAppFailureResponse(userProfileResult)) {
             return userProfileResult;
         }
