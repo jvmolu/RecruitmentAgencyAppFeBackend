@@ -2,7 +2,7 @@ import { UserService } from "../services/user-service";
 import {Request, Response} from 'express';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { isAuthError, isDatabaseError, isZodError } from "../types/error/general-app-error";
-import { UserAuthData } from "../types/user-auth-data";
+import { UserAuthData, UserAuthDataWithProfileData } from "../types/user-auth-data";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { User } from "../types/zod/user-entity";
 
@@ -11,7 +11,7 @@ export class UserController {
     public static async createUser(req: Request, res: Response) : Promise<any> {
         try {
             
-            const result : GeneralAppResponse<Omit<UserAuthData, "password">> = await UserService.createUser(req.body);
+            const result : GeneralAppResponse<Omit<UserAuthDataWithProfileData, "password">> = await UserService.createUser(req.body);
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
