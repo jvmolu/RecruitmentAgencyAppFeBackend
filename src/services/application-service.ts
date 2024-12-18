@@ -1,6 +1,5 @@
 import { ApplicationRepository } from "../repositories/applications-repository";
 import { ApplicationType, ApplicationSchema, ApplicationSearchOptions, ApplicationSearchSchema, ApplicationWithRelatedData, ApplicationSearchParams, ApplicationSearchParamsSchema } from "../types/zod/application-entity";
-import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";

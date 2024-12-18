@@ -34,6 +34,11 @@ export class ApplicationController {
             req.body.id = applicationId;
             req.body.resumeLink = fileUploadResult.data;
 
+            // if req.body.noticePeriod is there, parse it into a number
+            if(req.body.noticePeriod) {
+                req.body.noticePeriod = parseInt(req.body.noticePeriod);
+            }
+
             const result: GeneralAppResponse<ApplicationType> = await ApplicationService.createApplication(req.body);
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
@@ -82,6 +87,10 @@ export class ApplicationController {
                     success: false,
                     message: 'Invalid request body - searchParams and updateParams are required'
                 });
+            }
+
+            if(req.body.updateParams.noticePeriod) {
+                req.body.updateParams.noticePeriod = parseInt(req.body.updateParams.noticePeriod);
             }
 
             // Upload the resume if it exists

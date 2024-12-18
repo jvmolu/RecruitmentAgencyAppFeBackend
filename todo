@@ -18,3 +18,5 @@ the error response creation code from services and controllers and use the error
 9. Add selectFields input option in all GET calls to select only required fields - V2 (This way FE controls what fields are required from table - Light Responses)
 
 10. Update Transactional Decorator to not fetch lastArg and try to find Client but look for an options object which should contain client - remove dependency from ordering of arguments
+
+11. In Email Invite Send, check jobId is valid before hitting sendInvite
