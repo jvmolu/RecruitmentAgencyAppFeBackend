@@ -159,7 +159,7 @@ export class UserService {
 
     public static async findUsersByParams(
         userFields: Partial<UserSearchOptions>,
-        userSearchParams: Partial<UserSearchParams> = {limit: 1, page: 1, isShowUserProfileData: false, orderBy: 'created_at', order:SortOrder.DESC}
+        userSearchParams: any = {limit: "1", page: "1", isShowUserProfileData: "false", orderBy: 'created_at', order:SortOrder.DESC.toString()}
     ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
 
         const validationResult = UserSearchSchema.partial().safeParse(userFields);
