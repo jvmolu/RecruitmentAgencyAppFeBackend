@@ -45,9 +45,10 @@ class UserRepository extends BaseRepository {
         userSearchParams: UserSearchParams = {limit: 1, page: 1, isShowUserProfileData: false, orderBy: 'created_at', order:SortOrder.DESC}
       ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
         try {
-          const searchQueryFields: QueryFields = this.createSearchFields(userFields);
+
           const userTableAlias = 'u';
           const profileTableAlias = 'p';
+          const searchQueryFields: QueryFields = this.createSearchFields(userFields, userTableAlias);
       
           const joins: JoinClause[] = [];
           const selectFieldsAndAlias: { field: string; alias?: string }[] = [
@@ -86,7 +87,6 @@ class UserRepository extends BaseRepository {
           );
       
           const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
-      
           if (isGeneralAppFailureResponse(response)) {
             return response;
           }
@@ -113,7 +113,7 @@ class UserRepository extends BaseRepository {
         }
       }
 
-    private createSearchFields(userFields: Partial<UserSearchOptions>): QueryFields {
+    private createSearchFields(userFields: Partial<UserSearchOptions>, tableSearch?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -129,7 +129,10 @@ class UserRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.USERS, key);
+            if(tableSearch) {
+                keyToUse = `${tableSearch}.${keyToUse}`;
+            }
             // Add the field to the queryFields object
             queryFields[keyToUse] = { value, operation };
         });
