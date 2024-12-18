@@ -9,6 +9,34 @@ export class ApplicationController {
 
     public static async createApplication(req: Request, res: Response): Promise<any> {
         try {
+            
+            // Check if application exists already..
+            const candidateId = req.body.candidateId;
+            const jobId = req.body.jobId;
+
+            if(!candidateId || !jobId) {
+                return res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: 'Invalid request body - candidateId and jobId are required'
+                });
+            }
+
+            const existingApplication: GeneralAppResponse<ApplicationType[]> = await ApplicationService.findByParams({candidateId, jobId}, {});
+            if(isGeneralAppFailureResponse(existingApplication)) {
+                return res.status(existingApplication.statusCode).json({
+                    success: false,
+                    message: existingApplication.businessMessage,
+                    error: existingApplication.error
+                });
+            }
+
+            if(existingApplication.data.length > 0) {
+                return res.status(HttpStatusCode.CONFLICT).json({
+                    success: false,
+                    message: 'Application already exists for this candidate and job'
+                });
+            }
+
             // Create a uuid
             const applicationId: string = uuidv4();
             const file: Express.Multer.File = req.file as Express.Multer.File;

@@ -20,3 +20,5 @@ the error response creation code from services and controllers and use the error
 10. Update Transactional Decorator to not fetch lastArg and try to find Client but look for an options object which should contain client - remove dependency from ordering of arguments
 
 11. In Email Invite Send, check jobId is valid before hitting sendInvite
+
+12. Application Resume Upload is at /cand/applicationID.. make it /cand/jobId-candId..
