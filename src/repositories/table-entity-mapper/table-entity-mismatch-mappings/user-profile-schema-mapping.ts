@@ -6,6 +6,7 @@ export default {
       { entityField: 'currentSalaryAmount', dbField: 'current_salary_amount' },
       { entityField: 'currentSalaryCurrency', dbField: 'current_salary_currency' },
       { entityField: 'currentYearlySalary', dbField: 'current_yearly_salary' },
+      { entityField: 'countryCode', dbField: 'country_code' },
       { entityField: 'resumeLink', dbField: 'resume_link' },
       { entityField: 'activelySearching', dbField: 'actively_searching' },
       { entityField: 'workLocationPreference', dbField: 'work_location_preference' },
