@@ -21,6 +21,10 @@ CREATE TABLE applications (
     invite_id UUID DEFAULT NULL REFERENCES invites(id)
 );
 
+-- Add Constraint -> Combination of candidate_id and job_id should be unique
+ALTER TABLE applications
+ADD CONSTRAINT candidate_job_unique UNIQUE (candidate_id, job_id);
+
 CREATE INDEX idx_applications_candidate_id ON applications(candidate_id);
 CREATE INDEX idx_applications_job_id ON applications(job_id);
 CREATE INDEX idx_applications_status ON applications(status);
