@@ -5,7 +5,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse, isGeneralAppResponse }
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { hashPassword, comparePassword } from "../common/hash-util"; 
 import { generateJWTToken, getUserIdFromToken } from "../common/jwt-util";
-import { UserAuthData } from "../types/user-auth-data";
+import { UserAuthData, UserAuthDataWithProfileData } from "../types/user-auth-data";
 import { AuthError } from "../types/error/auth-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { DataNotFoundError } from "../types/error/data-not-found-error";
@@ -14,13 +14,18 @@ import RedisService from "./redis-service";
 import { EmailService } from "./email-service";
 import { forgotPasswordOtpTemplate } from "../templates/forgot-password-otp";
 import { SortOrder } from "../types/enums/sort-order";
+import { Transactional } from "../decorators/transactional";
+import { PoolClient } from "pg";
+import { UserProfileSchema, UserProfileType } from "../types/zod/user-profile-entity";
+import { UserProfileService } from "./user-profile-service";
 
 export class UserService {
 
     private static userRepository: UserRepository = new UserRepository();
     private static emailService: EmailService = EmailService.getInstance();
 
-    public static async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    @Transactional()
+    public static async createUser(userData: Omit<UserType, 'id' | 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<Omit<UserAuthDataWithProfileData, "password">>> {
         
         const user: UserType = {
             id: uuidv4(),
@@ -45,25 +50,54 @@ export class UserService {
         const hashedPassword = await hashPassword(user.password);
         user.password = hashedPassword;
 
-        let response: GeneralAppResponse<User> = await UserService.userRepository.create(user);
-
-        if (isGeneralAppResponse(response)) {
-            // Remove password from the response
-            let {password, ...userDataResponse} = response.data;
-            let generateTokenOutput: GeneralAppResponse<string> = generateJWTToken(userDataResponse.id);
-            if(isGeneralAppFailureResponse(generateTokenOutput)) {
-                return generateTokenOutput;
-            }
-            return {
-                data: {
-                    ...userDataResponse,
-                    token: generateTokenOutput.data
-                },
-                success: true
-            };
+        let response: GeneralAppResponse<User> = await UserService.userRepository.create(user, client);
+        // if failure response, return the response
+        if(isGeneralAppFailureResponse(response)) {
+            return response;
         }
 
-        return response;
+        // Create a User Profile
+        let userProfileDefaultData : Partial<UserProfileType> = {
+            userId: response.data.id,
+            skills: []
+        };
+
+        // Use Zod Schema to fill in default values
+        const userProfileValidationResult = UserProfileSchema.omit({id: true, createdAt: true, updatedAt: true}).safeParse(userProfileDefaultData);
+        if(!userProfileValidationResult.success) {
+            let zodError: ZodParsingError = userProfileValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+                businessMessage: 'Error Creating User Profile',
+                success: false
+            };
+        }
+        userProfileDefaultData = userProfileValidationResult.data;
+
+        let userProfileResponse: GeneralAppResponse<UserProfileType> = await UserProfileService.createUserProfileWithDetails(userProfileDefaultData as Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, [], [], client);
+        if(isGeneralAppFailureResponse(userProfileResponse)) {
+            userProfileResponse.statusCode = HttpStatusCode.INTERNAL_SERVER_ERROR;
+            userProfileResponse.businessMessage = 'Error Creating User Profile';
+            return userProfileResponse;
+        }
+
+        // Remove password from the response
+        let {password, ...userDataResponse} = response.data;
+        let generateTokenOutput: GeneralAppResponse<string> = generateJWTToken(userDataResponse.id);        
+        if(isGeneralAppFailureResponse(generateTokenOutput)) {
+            return generateTokenOutput;
+        }
+
+        return {
+            data: {
+                ...userDataResponse,
+                token: generateTokenOutput.data,
+                profile: userProfileResponse.data
+            },
+            success: true
+        };
     }
 
     public static async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {

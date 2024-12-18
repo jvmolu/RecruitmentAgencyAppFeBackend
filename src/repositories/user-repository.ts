@@ -9,6 +9,7 @@ import QueryOperation from "../types/enums/query-operation";
 import { isEnumField } from "../types/enum-field-mapping";
 import { JoinClause, JoinType } from "../types/enums/join-type";
 import { SortOrder } from "../types/enums/sort-order";
+import { PoolClient } from "pg";
 
 class UserRepository extends BaseRepository {
 
@@ -16,11 +17,11 @@ class UserRepository extends BaseRepository {
         super(DbTable.USERS);
     }
 
-    async create(user: UserType): Promise<GeneralAppResponse<User>> {
+    async create(user: UserType, client?: PoolClient): Promise<GeneralAppResponse<User>> {
         try {
             const userDbFields = SchemaMapper.toDbSchema(DbTable.USERS, user);
             const { query, params } = QueryBuilder.buildInsertQuery(DbTable.USERS, userDbFields);
-            const response: GeneralAppResponse<User[]> = await this.executeQuery<User>(query, params);
+            const response: GeneralAppResponse<User[]> = await this.executeQuery<User>(query, params, client);
             // If the response is a failure response, directly return
             if(isGeneralAppFailureResponse(response)) {
                 return response;
