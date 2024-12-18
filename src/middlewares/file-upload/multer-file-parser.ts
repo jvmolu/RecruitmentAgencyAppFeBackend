@@ -75,7 +75,14 @@ const MulterRequestParser = (req: Request, res: Response, next: NextFunction): v
         res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ message: err.message, success: false });
       }
     } else {
-      // Everything went fine.
+      // Custom Logic - Whenever file is sent - form data is being sent - get actual body in a stringified format
+      // Everything went fine - GET STRINGIFIED REQUEST BODY AND PARSE IT AND ADD IT TO THE REQUEST BODY
+      const requestBody = JSON.parse(req.body.body);
+      // Add Everything in this body to the request body
+      for (const key in requestBody) {
+          req.body[key] = requestBody[key];
+      }
+      delete req.body.body;
       next();
     }
   });
