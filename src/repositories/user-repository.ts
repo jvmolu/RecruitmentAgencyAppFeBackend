@@ -61,6 +61,7 @@ class UserRepository extends BaseRepository {
               alias: profileTableAlias,
               onCondition: `${userTableAlias}.id = ${profileTableAlias}.user_id`,
             });
+            selectFieldsAndAlias.push({ field: `${profileTableAlias}.id`, alias: 'user_profile_id' });
             selectFieldsAndAlias.push({ field: `${profileTableAlias}.skills`, alias: 'user_skills' });
           }
 
@@ -91,10 +92,11 @@ class UserRepository extends BaseRepository {
           }
       
           const data: UserWithProfileData[] = response.data.map((row) => {
-            const { user_skills, ...userFields } = row;
+            const { user_profile_id, user_skills, ...userFields } = row;
             return {
               ...userFields,
               profile: userSearchParams.isShowUserProfileData ? {
+                id: user_profile_id,
                 skills: user_skills,
               } : undefined
             };
