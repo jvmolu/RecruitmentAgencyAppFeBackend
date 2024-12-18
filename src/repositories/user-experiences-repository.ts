@@ -39,6 +39,12 @@ class UserExperienceRepository extends BaseRepository {
     async createBulk(userExperienceData: UserExperienceType[], client?: PoolClient): Promise<GeneralAppResponse<UserExperienceType[]>> {
         try {
             const userExperienceFields = userExperienceData.map(data => SchemaMapper.toDbSchema(DbTable.USER_EXPERIENCES, data));
+            if(userExperienceFields.length === 0) {
+                return {
+                    data: [],
+                    success: true
+                };
+            }
             const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.USER_EXPERIENCES, userExperienceFields);
             const response: GeneralAppResponse<UserExperienceType[]> = await this.executeQuery<UserExperienceType>(query, params, client);
             if (isGeneralAppFailureResponse(response)) {

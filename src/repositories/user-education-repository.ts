@@ -39,6 +39,12 @@ class UserEducationRepository extends BaseRepository {
     async createBulk(userEducationData: UserEducationType[], client?: PoolClient): Promise<GeneralAppResponse<UserEducationType[]>> {
         try {
             const userEducationFields = userEducationData.map(data => SchemaMapper.toDbSchema(DbTable.USER_EDUCATION, data));
+            if(userEducationFields.length === 0) {
+                return {
+                    data: [],
+                    success: true
+                };
+            }
             const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.USER_EDUCATION, userEducationFields);
             const response: GeneralAppResponse<UserEducationType[]> = await this.executeQuery<UserEducationType>(query, params, client);
             if (isGeneralAppFailureResponse(response)) {
