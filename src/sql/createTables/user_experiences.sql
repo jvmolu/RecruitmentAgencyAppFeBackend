@@ -6,8 +6,11 @@ CREATE TABLE user_experiences (
     role_title VARCHAR(255) NOT NULL,
     from_date DATE NOT NULL,
     to_date DATE,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes
 CREATE INDEX idx_user_experiences_user_profiles_id ON user_experiences(user_profile_id);
+CREATE INDEX idx_user_experiences_created_at ON user_experiences(created_at);
