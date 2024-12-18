@@ -44,10 +44,11 @@ class CompanyRepository extends BaseRepository {
         companySearchParams: ComapnySearchParams
       ): Promise<GeneralAppResponse<CompanyWithJobCount[]>> {
         try {
-          const searchQueryFields: QueryFields = this.createSearchFields(companyFields);
+
           const companyTableAlias = 'c';
           const jobTableAlias = 'j';
-      
+          const searchQueryFields: QueryFields = this.createSearchFields(companyFields, companyTableAlias);
+          
           const joins: JoinClause[] = [];
           const selectFieldsAndAlias: { field: string; alias?: string }[] = [
             { field: `${companyTableAlias}.*` },
@@ -111,7 +112,7 @@ class CompanyRepository extends BaseRepository {
         }
       }
 
-    private createSearchFields(companyFields: Partial<CompanySearchOptions>): QueryFields {
+    private createSearchFields(companyFields: Partial<CompanySearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(companyFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -124,7 +125,10 @@ class CompanyRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
+            if(tableAlias) {
+                keyToUse = `${tableAlias}.${keyToUse}`;
+            }
             // Add the field to the queryFields object
             queryFields[keyToUse] = { value, operation };
         });

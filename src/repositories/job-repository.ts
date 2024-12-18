@@ -58,11 +58,11 @@ class JobRepository extends BaseRepository {
 
         try {
 
-          const searchQueryFields: QueryFields = this.createSearchFields(jobFields);
           const companyTableAlias = 'c';
           const applicationsTableAlias = 'a';
           const matchesTableAlias = 'm';
-          const jobTableAlias = 't0';
+          const jobTableAlias = 'j';
+          const searchQueryFields: QueryFields = this.createSearchFields(jobFields, jobTableAlias);
     
           // Define JOIN clause to join with companies table
           const joins: JoinClause[] = [
@@ -162,7 +162,7 @@ class JobRepository extends BaseRepository {
 
 
 
-    private createSearchFields(jobFields: Partial<JobSearchOptions>): QueryFields {
+    private createSearchFields(jobFields: Partial<JobSearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(jobFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -190,7 +190,11 @@ class JobRepository extends BaseRepository {
             {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            if(tableAlias) 
+            {
+                keyToUse = `${tableAlias}.${keyToUse}`;
+            }
             // Add the field to the queryFields object
             queryFields[keyToUse] = { value, operation };
         });

@@ -49,10 +49,10 @@ class ApplicationRepository extends BaseRepository {
         
         try {
 
-          const searchQueryFields: QueryFields = this.createSearchFields(applicationFields);
           const applicationTableAlias = 'a';
           const jobTableAlias = 'j';
           const candidateTableAlias = 'u';
+          const searchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
       
           const joins: JoinClause[] = [];
           const selectFieldsAndAlias: {field: string, alias?: string}[] = [
@@ -157,7 +157,7 @@ class ApplicationRepository extends BaseRepository {
     /**
      * Create search fields for query building
     **/
-    private createSearchFields(applicationFields: Partial<ApplicationSearchOptions>): QueryFields {
+    private createSearchFields(applicationFields: Partial<ApplicationSearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(applicationFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -172,7 +172,10 @@ class ApplicationRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.APPLICATIONS, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.APPLICATIONS, key);
+            if(tableAlias) {
+                keyToUse = `${tableAlias}.${keyToUse}`;
+            }
             queryFields[keyToUse] = { value, operation };
         });
         return queryFields;

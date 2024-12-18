@@ -46,11 +46,12 @@ class UserProfileRepository extends BaseRepository {
         userProfileSearchParams: UserProfileSearchParams
     ): Promise<GeneralAppResponse<UserProfileWithRelatedData[]>> {
         try {
-            const searchQueryFields: QueryFields = this.createSearchFields(userProfileFields);
+
             const userProfileTableAlias = 'p';
             const userTableAlias = 'u';
             const educationTableAlias = 'e';
             const experienceTableAlias = 'ex';
+            const searchQueryFields: QueryFields = this.createSearchFields(userProfileFields, userProfileTableAlias);
     
             const joins: JoinClause[] = [];
             const selectFieldsAndAlias: { field: string; alias?: string }[] = [
@@ -164,7 +165,7 @@ class UserProfileRepository extends BaseRepository {
             return await this.executeQuery<UserProfile>(query, params);
     }
 
-    private createSearchFields(userProfileFields: Partial<UserProfileSearchOptions>): QueryFields {
+    private createSearchFields(userProfileFields: Partial<UserProfileSearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userProfileFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -188,7 +189,11 @@ class UserProfileRepository extends BaseRepository {
             {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.USER_PROFILES, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.USER_PROFILES, key);
+            if(tableAlias) 
+            {
+                keyToUse = `${tableAlias}.${keyToUse}`;
+            }
             // Add the field to the queryFields object
             queryFields[keyToUse] = { value, operation };
         });
