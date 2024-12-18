@@ -204,6 +204,8 @@ export class QueryBuilder {
     const params = fieldsArray.flatMap(Object.values);
 
     const query = `INSERT INTO ${tableName} (${columns}) VALUES ${values} RETURNING *`;
+    console.log('query', query);
+    console.log('params', params);
     return { query, params };
   }
 

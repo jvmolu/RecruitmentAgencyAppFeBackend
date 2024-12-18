@@ -1,6 +1,6 @@
 export default {
     mappings: [
-        { entityField: 'userId', dbField: 'user_id' },
+        { entityField: 'userProfileId', dbField: 'user_profile_id' },
         { entityField: 'companyName', dbField: 'company_name' },
         { entityField: 'roleTitle', dbField: 'role_title' },
         { entityField: 'fromDate', dbField: 'from_date' },
