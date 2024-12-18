@@ -58,6 +58,8 @@ class ApplicationRepository extends BaseRepository {
           const selectFieldsAndAlias: {field: string, alias?: string}[] = [
             { field: `${applicationTableAlias}.*` },
           ];
+
+          let groupByFields = [`${applicationTableAlias}.id`];
       
           if (applicationSearchParams.isShowJobData) {
             joins.push({
@@ -67,6 +69,7 @@ class ApplicationRepository extends BaseRepository {
               onCondition: `${applicationTableAlias}.job_id = ${jobTableAlias}.id`,
             });
             selectFieldsAndAlias.push({ field: `${jobTableAlias}.title`, alias: 'job_title' });
+            groupByFields.push(`${jobTableAlias}.title`);
           }
       
           if (applicationSearchParams.isShowCandidateData) {
@@ -77,9 +80,8 @@ class ApplicationRepository extends BaseRepository {
               onCondition: `${applicationTableAlias}.candidate_id = ${candidateTableAlias}.id`,
             });
             selectFieldsAndAlias.push({ field: `${candidateTableAlias}.first_name`, alias: 'candidate_name' });
-          }
-
-          const groupByFields = [`${applicationTableAlias}.id`];
+            groupByFields.push(`${candidateTableAlias}.first_name`);
+          }          
           
           let offset = 0;
           if (applicationSearchParams.page && applicationSearchParams.limit) {
