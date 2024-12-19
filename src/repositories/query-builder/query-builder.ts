@@ -232,7 +232,7 @@ export class QueryBuilder {
         params.push(...newParams);
         paramIndex += incrementIndex;
 
-        if (index < Object.keys(conditions).length - 1 && queryPart.length > 0) { // Check if queryPart is not empty i.e. something was added
+        if (index < Object.keys(conditions).length - 1) {
           query += ' AND';
         }
       });
@@ -268,14 +268,6 @@ export class QueryBuilder {
 
       case QueryOperation.IN:
       case QueryOperation.NOT_IN:
-        // If the value is empty, return an empty string
-        if (value.length === 0) {
-          return {
-            queryPart: '',
-            newParams: [],
-            incrementIndex: 0
-          };
-        }
         const placeholders = value.map((_: any, i: number) => `$${startIndex + i}`).join(', ');
         return {
           queryPart: ` ${this.operationHandlers[operation](key).replace('$', placeholders)}`,
