@@ -171,8 +171,6 @@ export class UserProfileService {
         
         // Delete Education Records 
         let allPresentEducationIds : string[] = educationUpdatedData.map(edu => edu.id);
-        // Add 1 Fallback ID to prevent query failure - id not in () is not allowed
-        allPresentEducationIds.push('00000000-0000-0000-0000-000000000000');
         let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds }, client);
         if(isGeneralAppFailureResponse(deleteResponse)) {
             return deleteResponse;
@@ -222,8 +220,6 @@ export class UserProfileService {
 
         // Delete Experience Records
         let allPresentExperienceIds : string[] = experienceUpdatedData.map(exp => exp.id);
-        // Add 1 Fallback ID to prevent query failure - id not in () is not allowed
-        allPresentExperienceIds.push('00000000-0000-0000-0000-000000000000');
         let deleteExperienceResponse = await UserExperienceService.deleteUserExperiences({ userProfileId: userProfileId, idNotIn: allPresentExperienceIds }, client);
         if(isGeneralAppFailureResponse(deleteExperienceResponse)) {
             return deleteExperienceResponse;

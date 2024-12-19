@@ -122,6 +122,11 @@ class UserExperienceRepository extends BaseRepository {
             } else if(key == 'idNotIn') {
                 keyToUse = 'id';
                 operation = QueryOperation.NOT_IN;
+                // Value will be an array
+                if(Array.isArray(value) && value.length == 0) {
+                    // Add a dummy value to prevent SQL syntax error
+                    value.push('00000000-0000-0000-0000-000000000000');
+                }
             } else if (key === 'id' || key === 'userProfileId') {
                 operation = QueryOperation.EQUALS;
             } else if (isEnumField(this.tableName, key)) {
