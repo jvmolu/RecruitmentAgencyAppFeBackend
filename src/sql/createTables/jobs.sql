@@ -10,7 +10,7 @@ CREATE TYPE budget_currency_type AS ENUM ('USD', 'EUR', 'INR');
 CREATE TABLE jobs (
     id UUID PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-    partner_id UUID REFERENCES partners(id),
+    partner_id UUID REFERENCES companies(id),
     experience_required INT NOT NULL,
     budget_amount INT,
     budget_currency budget_currency_type,
