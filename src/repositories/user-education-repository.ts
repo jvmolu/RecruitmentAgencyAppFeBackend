@@ -119,9 +119,11 @@ class UserEducationRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(userEducationFields).forEach(([key, value]) => {
             let operation: QueryOperation;
+            let keyToUse = SchemaMapper.toDbField(DbTable.USER_EDUCATION, key);
             if (value === null) {
                 operation = QueryOperation.IS_NULL;
             } else if(key == 'idNotIn') {
+                keyToUse = 'id';
                 operation = QueryOperation.NOT_IN;
             } else if (key === 'id' || key === 'userProfileId') {
                 operation = QueryOperation.EQUALS;
@@ -132,7 +134,6 @@ class UserEducationRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.USER_EDUCATION, key);
             queryFields[keyToUse] = { value, operation };
         });
         return queryFields;

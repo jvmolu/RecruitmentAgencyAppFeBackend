@@ -116,9 +116,11 @@ class UserExperienceRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(userExperienceFields).forEach(([key, value]) => {
             let operation: QueryOperation;
+            let keyToUse = SchemaMapper.toDbField(DbTable.USER_EXPERIENCES, key);
             if (value === null) {
                 operation = QueryOperation.IS_NULL;
             } else if(key == 'idNotIn') {
+                keyToUse = 'id';
                 operation = QueryOperation.NOT_IN;
             } else if (key === 'id' || key === 'userProfileId') {
                 operation = QueryOperation.EQUALS;
@@ -129,7 +131,6 @@ class UserExperienceRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.USER_EXPERIENCES, key);
             queryFields[keyToUse] = { value, operation };
         });
         return queryFields;
