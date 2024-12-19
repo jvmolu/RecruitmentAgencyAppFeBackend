@@ -114,7 +114,7 @@ export class UserService {
             };
         }
 
-        let response: GeneralAppResponse<UserWithProfileData[]> = await UserService.userRepository.findByParams({email: userData.email}, {limit: 1, page: 1, isShowUserProfileData: true, orderBy: 'created_at', order:SortOrder.DESC});
+        let response: GeneralAppResponse<UserWithProfileData[]> = await UserService.userRepository.findByParams({email: userData.email}, {limit: 1, page: 1, isShowUserProfileData: true, isShowUserEducationData: false, isShowUserExperienceData: false, orderBy: 'created_at', order:SortOrder.DESC});
         if(isGeneralAppFailureResponse(response)) {
             return response;
         }
@@ -208,7 +208,7 @@ export class UserService {
         }
 
         const userId : string = userIdResponse.data;
-        let response: GeneralAppResponse<User[]> = await UserService.userRepository.findByParams({id: userId}, {limit: 1, page: 1, isShowUserProfileData: true, orderBy: 'created_at', order:SortOrder.DESC});
+        let response: GeneralAppResponse<User[]> = await UserService.userRepository.findByParams({id: userId}, {limit: 1, page: 1, isShowUserProfileData: true, isShowUserEducationData: false, isShowUserExperienceData: false, orderBy: 'created_at', order:SortOrder.DESC});
 
         if(isGeneralAppFailureResponse(response)) {
             return response;

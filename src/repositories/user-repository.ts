@@ -43,15 +43,18 @@ class UserRepository extends BaseRepository {
     // Find By General Params
     async findByParams(
         userFields: Partial<UserSearchOptions>,
-        userSearchParams: UserSearchParams = {limit: 1, page: 1, isShowUserProfileData: false, orderBy: 'created_at', order:SortOrder.DESC}
+        userSearchParams: UserSearchParams = {limit: 1, page: 1, isShowUserProfileData: false, isShowUserEducationData: false, isShowUserExperienceData: false, orderBy: 'created_at', order:SortOrder.DESC}
       ): Promise<GeneralAppResponse<UserWithProfileData[]>> {
         try {
 
           const userTableAlias = 'u';
           const profileTableAlias = 'p';
+          const educationTableAlias = 'e';
+          const experienceTableAlias = 'ex';
           const searchQueryFields: QueryFields = this.createSearchFields(userFields, userTableAlias);
       
           const joins: JoinClause[] = [];
+          let groupByFields: string[] = [];
           const selectFieldsAndAlias: { field: string; alias?: string }[] = [
             { field: `${userTableAlias}.*` },
           ];
@@ -65,9 +68,33 @@ class UserRepository extends BaseRepository {
             });
             selectFieldsAndAlias.push({ field: `${profileTableAlias}.id`, alias: 'user_profile_id' });
             selectFieldsAndAlias.push({ field: `${profileTableAlias}.skills`, alias: 'user_skills' });
-          }
 
-          let groupByFields: string[] = [];
+            if (userSearchParams.isShowUserEducationData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.USER_EDUCATION,
+                    alias: educationTableAlias,
+                    onCondition: `${profileTableAlias}.id = ${educationTableAlias}.user_profile_id`,
+                });
+                selectFieldsAndAlias.push(
+                    { field: `json_agg(${educationTableAlias}.*)`, alias: 'education_data' }
+                );
+            }
+    
+            if (userSearchParams.isShowUserExperienceData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.USER_EXPERIENCES,
+                    alias: experienceTableAlias,
+                    onCondition: `${profileTableAlias}.id = ${experienceTableAlias}.user_profile_id`,
+                });
+                selectFieldsAndAlias.push(
+                    { field: `json_agg(${experienceTableAlias}.*)`, alias: 'experience_data' }
+                );
+            }
+
+            groupByFields.push(`${userTableAlias}.id`);
+          }
       
           let offset = 0;
           if (userSearchParams.page && userSearchParams.limit) {
