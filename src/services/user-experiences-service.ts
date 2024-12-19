@@ -100,4 +100,19 @@ export class UserExperienceService {
 
         return await this.userExperienceRepository.createBulk(validationResult.data, client);
     }
+
+    public static async deleteUserExperiences(educationSearchFields: Partial<UserExperienceSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<UserExperienceType[]>> {
+        const searchValidationResult = UserExperienceSearchSchema.partial().safeParse(educationSearchFields);
+        if (!searchValidationResult.success) {
+            let zodError: ZodParsingError = searchValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+        return await this.userExperienceRepository.deleteByParams(searchValidationResult.data, client);
+    }
 }

@@ -147,6 +147,21 @@ export class QueryBuilder {
     return { query, params };
   }
 
+  public static buildBulkInsertQuery(tableName: string, fieldsArray: any[]): { query: string, params: any[] } {
+    const keys = Object.keys(fieldsArray[0]);
+    const columns = keys.join(", ");
+    const values = fieldsArray.map((fields, index) => {
+        const placeholders = keys.map((_, i) => `$${index * keys.length + i + 1}`).join(", ");
+        return `(${placeholders})`;
+    }).join(", ");
+    const params = fieldsArray.flatMap(Object.values);
+
+    const query = `INSERT INTO ${tableName} (${columns}) VALUES ${values} RETURNING *`;
+    console.log('query', query);
+    console.log('params', params);
+    return { query, params };
+  }
+
   public static buildUpdateQuery(tableName: string, fields: { [key: string]: any }, conditions: QueryFields): { query: string; params: any[] } {
 
     if (Object.keys(fields).length === 0) {
@@ -194,19 +209,42 @@ export class QueryBuilder {
     return { query: query, params };
   }
 
-  public static buildBulkInsertQuery(tableName: string, fieldsArray: any[]): { query: string, params: any[] } {
-    const keys = Object.keys(fieldsArray[0]);
-    const columns = keys.join(", ");
-    const values = fieldsArray.map((fields, index) => {
-        const placeholders = keys.map((_, i) => `$${index * keys.length + i + 1}`).join(", ");
-        return `(${placeholders})`;
-    }).join(", ");
-    const params = fieldsArray.flatMap(Object.values);
+  public static buildDeleteQuery(tableName: string, conditions: QueryFields): { query: string; params: any[] } {
+    
+    if (Object.keys(conditions).length === 0) {
+      console.log('No conditions to delete');
+      return { query: '', params: [] };
+    }
 
-    const query = `INSERT INTO ${tableName} (${columns}) VALUES ${values} RETURNING *`;
+    let query = `DELETE FROM ${tableName}`;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if(Object.keys(conditions).length > 0) {
+
+      query += ' WHERE';
+
+      Object.entries(conditions).forEach(([key, condition], index) => {
+        const { value, operation } = condition;
+        const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
+        
+        query += queryPart;
+        params.push(...newParams);
+        paramIndex += incrementIndex;
+
+        if (index < Object.keys(conditions).length - 1) {
+          query += ' AND';
+        }
+      });
+
+    }
+
+    // Returning all fields
+    query += ' RETURNING *;';
+
     console.log('query', query);
     console.log('params', params);
-    return { query, params };
+    return { query: query, params };
   }
 
   private static handleOperation(key: string, value: any, operation: QueryOperation, startIndex: number): 

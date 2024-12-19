@@ -97,12 +97,29 @@ class UserExperienceRepository extends BaseRepository {
         }
     }
 
+    async deleteByParams(userExperienceFields: Partial<UserExperienceSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<UserExperience[]>> {
+        try {
+            const searchQueryFields: QueryFields = this.createSearchFields(userExperienceFields);
+            const { query, params } = QueryBuilder.buildDeleteQuery(DbTable.USER_EXPERIENCES, searchQueryFields);
+            return await this.executeQuery<UserExperience>(query, params, client);
+        } catch (error: any) {
+            return {
+                error,
+                businessMessage: 'Internal server error',
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+                success: false
+            };
+        }
+    }
+
     private createSearchFields(userExperienceFields: Partial<UserExperienceSearchOptions>): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userExperienceFields).forEach(([key, value]) => {
             let operation: QueryOperation;
             if (value === null) {
                 operation = QueryOperation.IS_NULL;
+            } else if(key == 'idNotIn') {
+                operation = QueryOperation.NOT_IN;
             } else if (key === 'id' || key === 'userProfileId') {
                 operation = QueryOperation.EQUALS;
             } else if (isEnumField(this.tableName, key)) {

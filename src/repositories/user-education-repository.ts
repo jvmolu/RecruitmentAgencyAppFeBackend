@@ -97,12 +97,32 @@ class UserEducationRepository extends BaseRepository {
         }
     }
 
+    
+    // Delete by parameters
+    async deleteByParams(userEducationFields: Partial<UserEducationSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<UserEducation[]>> {
+        try {
+            const searchQueryFields: QueryFields = this.createSearchFields(userEducationFields);
+            const { query, params } = QueryBuilder.buildDeleteQuery(DbTable.USER_EDUCATION, searchQueryFields);
+            return await this.executeQuery<UserEducation>(query, params, client);
+        } catch (error: any) {
+            return {
+                error,
+                businessMessage: 'Internal server error',
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+                success: false
+            };
+        }
+    }
+
+
     private createSearchFields(userEducationFields: Partial<UserEducationSearchOptions>): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userEducationFields).forEach(([key, value]) => {
             let operation: QueryOperation;
             if (value === null) {
                 operation = QueryOperation.IS_NULL;
+            } else if(key == 'idNotIn') {
+                operation = QueryOperation.NOT_IN;
             } else if (key === 'id' || key === 'userProfileId') {
                 operation = QueryOperation.EQUALS;
             } else if (isEnumField(this.tableName, key)) {

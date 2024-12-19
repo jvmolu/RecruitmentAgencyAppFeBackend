@@ -17,7 +17,8 @@ const UserEducationSearchSchema = BaseSchema.merge(
         course: z.string().nullable(),
         institute: z.string().nullable(),
         cgpa: z.number().nullable(),
-        passingYear: z.number().int().nullable()
+        passingYear: z.number().int().nullable(),
+        idNotIn: z.array(z.string()).nullable()
     })
 );
 

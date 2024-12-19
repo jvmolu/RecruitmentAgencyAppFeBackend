@@ -100,4 +100,19 @@ export class UserEducationService {
 
         return await this.userEducationRepository.createBulk(validationResult.data, client);
     }
+
+    public static async deleteUserEducations(educationSearchFields: Partial<UserEducationSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<UserEducationType[]>> {
+        const searchValidationResult = UserEducationSearchSchema.partial().safeParse(educationSearchFields);
+        if (!searchValidationResult.success) {
+            let zodError: ZodParsingError = searchValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+        return await this.userEducationRepository.deleteByParams(searchValidationResult.data, client);
+    }
 }

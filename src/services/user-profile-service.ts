@@ -128,7 +128,7 @@ export class UserProfileService {
         // Hence fetching the first record
         const userProfileId: string = userProfileResult.data[0].id;
 
-        // Update education records
+        // Updating Education Data
 
         // Segregate Records to be created vs updated
         let newEducationHistories: any[] = []; // Education history parsing errors are handled in the service
@@ -170,6 +170,13 @@ export class UserProfileService {
             });
         }
         
+        // Delete Education Records 
+        let allPresentEducationIds : string[] = educationData.map(edu => edu.id).filter(id => id !== undefined) as string[];
+        let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds  }, client);
+        if(isGeneralAppFailureResponse(deleteResponse)) {
+            return deleteResponse;
+        }
+
         // Update experience records
 
         // Segregate Records to be created vs updated
@@ -210,6 +217,13 @@ export class UserProfileService {
                 }
                 experienceUpdatedData.push(...result.data);
             });
+        }
+
+        // Delete Experience Records
+        let allPresentExperienceIds : string[] = experienceData.map(exp => exp.id).filter(id => id !== undefined) as string[];
+        let deleteExperienceResponse = await UserExperienceService.deleteUserExperiences({ userProfileId: userProfileId, idNotIn: allPresentExperienceIds }, client);
+        if(isGeneralAppFailureResponse(deleteExperienceResponse)) {
+            return deleteExperienceResponse;
         }
 
         return {

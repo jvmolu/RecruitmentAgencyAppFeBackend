@@ -20,6 +20,7 @@ const UserExperienceSearchSchema = BaseSchema.merge(
         fromDate: z.string().date().nullable(),
         toDate: z.string().date().nullable(),
         description: z.string().nullable(),
+        idNotIn: z.array(z.string()).nullable()
     })
 );
 
