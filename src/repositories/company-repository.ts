@@ -1,3 +1,4 @@
+import { PoolClient } from "pg";
 import { isEnumField } from "../types/enum-field-mapping";
 import DbTable from "../types/enums/db-table";
 import HttpStatusCode from "../types/enums/http-status-codes";
@@ -110,7 +111,28 @@ class CompanyRepository extends BaseRepository {
             success: false,
           };
         }
+    }
+
+    // Update by parameters
+    async updateByParams(
+      companySearchFields: Partial<CompanySearchOptions>,
+      companyUpdateFields: Partial<CompanyType>,
+      client?: PoolClient
+  ): Promise<GeneralAppResponse<Company[]>> {
+      try {
+          const searchQueryFields: QueryFields = this.createSearchFields(companySearchFields);
+          const updateFields = SchemaMapper.toDbSchema(DbTable.COMPANIES, companyUpdateFields);
+          const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.COMPANIES, updateFields, searchQueryFields);
+          return await this.executeQuery<Company>(query, params, client);
+      } catch (error: any) {
+          return {
+              error,
+              businessMessage: 'Internal server error',
+              statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+              success: false
+          };
       }
+    }
 
     private createSearchFields(companyFields: Partial<CompanySearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};

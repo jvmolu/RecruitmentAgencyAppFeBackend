@@ -49,4 +49,33 @@ export class CompanyController {
             });
         }
     }
+
+    public static async updateCompanies(req: Request, res: Response): Promise<any> {
+        try {
+            if (!req.body.searchParams || !req.body.updateParams) {
+                return res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: 'Invalid request body - searchParams and updateParams are required'
+                });
+            }
+
+            const result = await CompanyService.updateCompanies(req.body.searchParams, req.body.updateParams);
+            if (isGeneralAppFailureResponse(result)) {
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
+            }
+
+            return res.status(HttpStatusCode.OK).json(result);
+        } catch (error) {
+            console.error(error);
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error',
+                error
+            });
+        }
+    }
 }

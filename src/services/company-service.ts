@@ -68,4 +68,35 @@ export class CompanyService {
 
         return await CompanyService.companyRepository.findByParams(validationResult.data, companySearchParamsValidationResult.data as ComapnySearchParams);
     }
+
+    public static async updateCompanies(
+        companySearchFields: Partial<CompanySearchOptions>,
+        companyUpdateFields: Partial<CompanyType>
+    ): Promise<GeneralAppResponse<CompanyType[]>> {
+        const searchValidationResult = CompanySearchSchema.partial().safeParse(companySearchFields);
+        if (!searchValidationResult.success) {
+            const zodError = searchValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+
+        const updateValidationResult = CompanySchema.partial().safeParse(companyUpdateFields);
+        if (!updateValidationResult.success) {
+            const zodError = updateValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid update data',
+                success: false
+            };
+        }
+
+        return await this.companyRepository.updateByParams(searchValidationResult.data, updateValidationResult.data);
+    }
 }
