@@ -94,6 +94,7 @@ class UserRepository extends BaseRepository {
             }
 
             groupByFields.push(`${userTableAlias}.id`);
+            groupByFields.push(`${profileTableAlias}.id`);
           }
       
           let offset = 0;
@@ -120,13 +121,17 @@ class UserRepository extends BaseRepository {
           }
       
           const data: UserWithProfileData[] = response.data.map((row) => {
-            const { user_profile_id, user_skills, ...userFields } = row;
+            let { education_data, experience_data, user_profile_id, user_skills, ...userFields } = row;
+            education_data = education_data.length > 0 && education_data[0] !== null ? education_data : [];
+            experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
             return {
               ...userFields,
               profile: userSearchParams.isShowUserProfileData ? {
                 id: user_profile_id,
                 skills: user_skills,
-              } : undefined
+              } : undefined,
+                education: userSearchParams.isShowUserProfileData && userSearchParams.isShowUserEducationData ? education_data : undefined,
+                experience: userSearchParams.isShowUserProfileData && userSearchParams.isShowUserExperienceData ? experience_data : undefined,
             };
           });
       
