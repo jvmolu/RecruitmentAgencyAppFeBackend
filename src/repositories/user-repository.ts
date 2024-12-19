@@ -123,9 +123,19 @@ class UserRepository extends BaseRepository {
           }
       
           const data: UserWithProfileData[] = response.data.map((row) => {
+            
             let { education_data, experience_data, user_profile_data, ...userFields } = row;
+            
             education_data = education_data.length > 0 && education_data[0] !== null ? education_data : [];
             experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+            user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
+
+            // Use Schema Mapper to convert the fields to the user entity
+            userFields = SchemaMapper.toEntity<User>(DbTable.USERS, userFields);
+            user_profile_data = SchemaMapper.toEntity<User>(DbTable.USER_PROFILES, user_profile_data);
+            education_data = education_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EDUCATION, row));
+            experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
+
             return {
               ...userFields,
                 profile: userSearchParams.isShowUserProfileData ? user_profile_data : undefined,

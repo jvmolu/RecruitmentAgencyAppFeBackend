@@ -127,6 +127,11 @@ class UserProfileRepository extends BaseRepository {
                 let { education_data, experience_data, user_first_name, user_last_name, user_email, ...profileFields } = row;
                 education_data = education_data.length > 0 && education_data[0] !== null ? education_data : [];
                 experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+        
+                // Map the data to the entity
+                education_data = education_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EDUCATION, row));
+                experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
+
                 return {
                     ...profileFields,
                     user: userProfileSearchParams.isShowUserData ? {
