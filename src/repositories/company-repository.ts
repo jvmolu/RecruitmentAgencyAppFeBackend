@@ -140,6 +140,8 @@ class CompanyRepository extends BaseRepository {
             let operation: QueryOperation;
             if(value === null) {
                 operation = QueryOperation.IS_NULL;
+            } else if(key == 'id') {
+                operation = QueryOperation.EQUALS;
             } else if (isEnumField(this.tableName, key)) {
                 operation = QueryOperation.EQUALS;
             } else if (typeof value === 'string') {
