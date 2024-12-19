@@ -83,7 +83,7 @@ class UserProfileRepository extends BaseRepository {
                     onCondition: `${userProfileTableAlias}.id = ${educationTableAlias}.user_profile_id`,
                 });
                 selectFieldsAndAlias.push(
-                    { field: `json_agg(${educationTableAlias}.*)`, alias: 'education_data' }
+                    { field: `json_agg(DISTINCT ${educationTableAlias}.*)`, alias: 'education_data' }
                 );
             }
     
@@ -95,7 +95,7 @@ class UserProfileRepository extends BaseRepository {
                     onCondition: `${userProfileTableAlias}.id = ${experienceTableAlias}.user_profile_id`,
                 });
                 selectFieldsAndAlias.push(
-                    { field: `json_agg(${experienceTableAlias}.*)`, alias: 'experience_data' }
+                    { field: `json_agg(DISTINCT ${experienceTableAlias}.*)`, alias: 'experience_data' }
                 );
             }
     
