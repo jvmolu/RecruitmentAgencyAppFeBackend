@@ -78,7 +78,6 @@ export class UserProfileService {
         };
     }
 
-    @Transactional()
     public static async updateUserProfileWithDetails(profileSearchFields: Partial<UserProfileSearchOptions>, profileUpdateFields: Partial<UserProfileType>, educationData: Partial<UserEducationType>[], experienceData: Partial<UserExperienceType>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
         
         // Validate profile search fields
