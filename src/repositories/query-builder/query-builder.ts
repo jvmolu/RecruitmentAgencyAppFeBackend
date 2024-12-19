@@ -232,7 +232,7 @@ export class QueryBuilder {
         params.push(...newParams);
         paramIndex += incrementIndex;
 
-        if (index < Object.keys(conditions).length - 1) {
+        if (index < Object.keys(conditions).length - 1 && queryPart.length > 0) { // Check if queryPart is not empty i.e. something was added
           query += ' AND';
         }
       });

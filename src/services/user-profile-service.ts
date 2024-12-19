@@ -171,7 +171,7 @@ export class UserProfileService {
         
         // Delete Education Records 
         let allPresentEducationIds : string[] = educationUpdatedData.map(edu => edu.id);
-        let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds  }, client);
+        let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds }, client);
         if(isGeneralAppFailureResponse(deleteResponse)) {
             return deleteResponse;
         }
