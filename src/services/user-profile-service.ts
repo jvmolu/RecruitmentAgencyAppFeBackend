@@ -170,7 +170,7 @@ export class UserProfileService {
         }
         
         // Delete Education Records 
-        let allPresentEducationIds : string[] = educationData.map(edu => edu.id).filter(id => id !== undefined) as string[];
+        let allPresentEducationIds : string[] = educationUpdatedData.map(edu => edu.id);
         let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds  }, client);
         if(isGeneralAppFailureResponse(deleteResponse)) {
             return deleteResponse;
@@ -219,7 +219,7 @@ export class UserProfileService {
         }
 
         // Delete Experience Records
-        let allPresentExperienceIds : string[] = experienceData.map(exp => exp.id).filter(id => id !== undefined) as string[];
+        let allPresentExperienceIds : string[] = experienceUpdatedData.map(exp => exp.id);
         let deleteExperienceResponse = await UserExperienceService.deleteUserExperiences({ userProfileId: userProfileId, idNotIn: allPresentExperienceIds }, client);
         if(isGeneralAppFailureResponse(deleteExperienceResponse)) {
             return deleteExperienceResponse;

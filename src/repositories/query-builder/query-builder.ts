@@ -268,6 +268,14 @@ export class QueryBuilder {
 
       case QueryOperation.IN:
       case QueryOperation.NOT_IN:
+        // If the value is empty, return an empty string
+        if (value.length === 0) {
+          return {
+            queryPart: '',
+            newParams: [],
+            incrementIndex: 0
+          };
+        }
         const placeholders = value.map((_: any, i: number) => `$${startIndex + i}`).join(', ');
         return {
           queryPart: ` ${this.operationHandlers[operation](key).replace('$', placeholders)}`,
