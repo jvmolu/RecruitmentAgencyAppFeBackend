@@ -16,7 +16,7 @@ import { forgotPasswordOtpTemplate } from "../templates/forgot-password-otp";
 import { SortOrder } from "../types/enums/sort-order";
 import { Transactional } from "../decorators/transactional";
 import { PoolClient } from "pg";
-import { UserProfileSchema, UserProfileType } from "../types/zod/user-profile-entity";
+import { UserProfileSchema, UserProfileType, UserProfileWithRelatedData } from "../types/zod/user-profile-entity";
 import { UserProfileService } from "./user-profile-service";
 
 export class UserService {
@@ -76,12 +76,13 @@ export class UserService {
         }
         userProfileDefaultData = userProfileValidationResult.data;
 
-        let userProfileResponse: GeneralAppResponse<UserProfileType> = await UserProfileService.createUserProfileWithDetails(userProfileDefaultData as Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, [], [], client);
+        let userProfileResponse: GeneralAppResponse<UserProfileWithRelatedData> = await UserProfileService.createUserProfileWithDetails(userProfileDefaultData as Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, [], [], client);
         if(isGeneralAppFailureResponse(userProfileResponse)) {
             userProfileResponse.statusCode = HttpStatusCode.INTERNAL_SERVER_ERROR;
             userProfileResponse.businessMessage = 'Error Creating User Profile';
             return userProfileResponse;
         }
+        const {education, experience, ...userProfileData} = userProfileResponse.data;
 
         // Remove password from the response
         let {password, ...userDataResponse} = response.data;
@@ -94,13 +95,15 @@ export class UserService {
             data: {
                 ...userDataResponse,
                 token: generateTokenOutput.data,
-                profile: userProfileResponse.data
+                profile: userProfileData,
+                education: education,
+                experience: experience
             },
             success: true
         };
     }
 
-    public static async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    public static async loginUser(userData: Pick<UserType, 'email' | 'password'>): Promise<GeneralAppResponse<Omit<UserAuthDataWithProfileData, "password">>> {
 
         const validationResult = UserSchema.pick({email: true, password: true}).safeParse(userData);
         if (!validationResult.success) {
@@ -119,7 +122,7 @@ export class UserService {
             return response;
         }
 
-        const user: User = response.data[0];
+        const user: UserWithProfileData = response.data[0];
         if(!user) {
             let authError: AuthError = new Error('Invalid email') as AuthError;
             authError.errorType = 'AuthError';
@@ -189,7 +192,7 @@ export class UserService {
         return await UserService.userRepository.findByParams(validationResult.data, searchParamsValidationResult.data as UserSearchParams);
     }
 
-    public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthData, "password">>> {
+    public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthDataWithProfileData, "password">>> {
 
         if(!token) {
             const authError: AuthError = new Error('Token not provided') as AuthError;
@@ -208,7 +211,7 @@ export class UserService {
         }
 
         const userId : string = userIdResponse.data;
-        let response: GeneralAppResponse<User[]> = await UserService.userRepository.findByParams({id: userId}, {limit: 1, page: 1, isShowUserProfileData: true, isShowUserEducationData: true, isShowUserExperienceData: true, orderBy: 'created_at', order:SortOrder.DESC});
+        let response: GeneralAppResponse<UserWithProfileData[]> = await UserService.userRepository.findByParams({id: userId}, {limit: 1, page: 1, isShowUserProfileData: true, isShowUserEducationData: true, isShowUserExperienceData: true, orderBy: 'created_at', order:SortOrder.DESC});
 
         if(isGeneralAppFailureResponse(response)) {
             return response;

@@ -3,6 +3,7 @@ import Role from "../enums/role";
 import Status from "../enums/status";
 import { z } from "zod";
 import { UserProfileType } from "./user-profile-entity";
+import { UserEducationType } from "./user-education-entity";
 
 // Define the schema for the User model
 const UserSchema = BaseSchema.merge(
@@ -39,7 +40,7 @@ const UserSearchParamsSchema = BaseSearchParams.merge(
 type UserType = z.infer<typeof UserSchema>
 type UserSearchOptions = z.infer<typeof UserSearchSchema>
 type UserSearchParams = z.infer<typeof UserSearchParamsSchema>
-type UserWithProfileData = UserType & { profile: Partial<UserProfileType> | undefined }
+type UserWithProfileData = UserType & { profile: Partial<UserProfileType> | undefined, education: Partial<UserEducationType> | undefined, experience: Partial<UserEducationType> | undefined }
 
 class User implements UserType {
 
