@@ -10,7 +10,8 @@ enum DbTable {
     USER_PROFILES = 'user_profiles',
     USER_EXPERIENCES = 'user_experiences',
     USER_EDUCATION = 'user_education',
-    APPLICATIONS = 'applications'
+    APPLICATIONS = 'applications',
+    APPLICATIONS_LIFECYCLE = 'applications_lifecycle',
 }
 
 export default DbTable;

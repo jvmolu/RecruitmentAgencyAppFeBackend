@@ -5,9 +5,8 @@ import { z } from "zod";
 import Currency from "../enums/currency";
 import PaymentPer from "../enums/payment-per";
 import { JobType } from "./job-entity";
-import { UserType, UserWithProfileData } from "./user-entity";
-import { UserProfileType } from "./user-profile-entity";
-import { UserExperienceType } from "./user-experience-entity";
+import { UserWithProfileData } from "./user-entity";
+import { ApplicationLifecycleType } from "./application-lifecycle-entity";
 
 const ApplicationSchema = BaseSchema.merge(
     z.object({
@@ -49,13 +48,14 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
       // I will recieve strings and hence I need transformations which will convert the string to boolean
       isShowJobData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowCandidateData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowLifeCycleData: z.string().default('true').transform((val) => val === 'true'), // boolean
   })
 );
 
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
 type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
-type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserWithProfileData> | undefined }
+type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserWithProfileData> | undefined, lifecycle: ApplicationLifecycleType[] | undefined }
 
 class Application implements ApplicationType {
   id: string;
