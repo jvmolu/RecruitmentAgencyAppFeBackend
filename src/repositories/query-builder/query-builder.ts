@@ -98,7 +98,7 @@ export class QueryBuilder {
 
     // ORDER_BY
     if (orderBy) {
-      query += ` ORDER BY ${orderBy} ${sortOrder}`;
+      query += ` ORDER BY ${baseTableAlias}.${orderBy} ${sortOrder}`;
     }
 
     // Add LIMIT and OFFSET
