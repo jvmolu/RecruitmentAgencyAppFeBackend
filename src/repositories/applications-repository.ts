@@ -176,6 +176,11 @@ class ApplicationRepository extends BaseRepository {
             experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
             lifecycle_data = lifecycle_data.map((row: any) => SchemaMapper.toEntity(DbTable.APPLICATIONS_LIFECYCLE, row));
 
+            // Sort Lifecycle data by createdAt in DESC order
+            lifecycle_data = lifecycle_data.sort((a: ApplicationLifecycleType, b: ApplicationLifecycleType) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
             return {
                 ...applicationFields,
                 job: applicationSearchParams.isShowJobData ? { title: job_title } : undefined,
