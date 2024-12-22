@@ -10,6 +10,7 @@ import { isEnumField } from "../types/enum-field-mapping";
 import { JoinClause, JoinType } from "../types/enums/join-type";
 import { SortOrder } from "../types/enums/sort-order";
 import { PoolClient } from "pg";
+import { UserProfile } from "../types/zod/user-profile-entity";
 
 class UserRepository extends BaseRepository {
 
@@ -129,9 +130,8 @@ class UserRepository extends BaseRepository {
             experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
             user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
 
-            // Use Schema Mapper to convert the fields to the user entity
-            userFields = SchemaMapper.toEntity<User>(DbTable.USERS, userFields);
-            user_profile_data = SchemaMapper.toEntity<User>(DbTable.USER_PROFILES, user_profile_data);
+            // Use Schema Mapper to convert the fields to the entity
+            user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
             education_data = education_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EDUCATION, row));
             experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
 

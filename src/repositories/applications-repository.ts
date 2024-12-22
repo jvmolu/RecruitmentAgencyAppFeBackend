@@ -9,6 +9,8 @@ import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { JoinClause, JoinType } from "../types/enums/join-type";
+import { User } from "../types/zod/user-entity";
+import { UserProfile } from "../types/zod/user-profile-entity";
 
 class ApplicationRepository extends BaseRepository {
     constructor() {
@@ -136,6 +138,11 @@ class ApplicationRepository extends BaseRepository {
             experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
             user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
             candidate_data = candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
+
+            // Use Schema Mapper to convert the fields to the entity
+            candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
+            user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
+            experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
 
             return {
                 ...applicationFields,
