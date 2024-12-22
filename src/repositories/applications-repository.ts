@@ -52,6 +52,8 @@ class ApplicationRepository extends BaseRepository {
           const applicationTableAlias = 'a';
           const jobTableAlias = 'j';
           const candidateTableAlias = 'u';
+          const userProfileTableAlias = 'up';
+          const experienceTable = 'ex';
           const searchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
       
           const joins: JoinClause[] = [];
@@ -73,15 +75,36 @@ class ApplicationRepository extends BaseRepository {
           }
       
           if (applicationSearchParams.isShowCandidateData) {
+            
             joins.push({
               joinType: JoinType.LEFT,
               tableName: DbTable.USERS,
               alias: candidateTableAlias,
               onCondition: `${applicationTableAlias}.candidate_id = ${candidateTableAlias}.id`,
             });
-            selectFieldsAndAlias.push({ field: `${candidateTableAlias}.first_name`, alias: 'candidate_name' });
-            groupByFields.push(`${candidateTableAlias}.first_name`);
-          }          
+
+            // Join users with user_profiles
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.USER_PROFILES,
+              alias: userProfileTableAlias,
+              onCondition: `${candidateTableAlias}.id = ${userProfileTableAlias}.user_id`,
+            });
+
+            // Experience data
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.USER_EXPERIENCES,
+              alias: experienceTable,
+              onCondition: `${userProfileTableAlias}.id = ${experienceTable}.user_profile_id`,
+            });
+
+            selectFieldsAndAlias.push(
+              { field: `json_agg(DISTINCT ${candidateTableAlias}.*)`, alias: 'candidate_data' },
+              { field: `json_agg(DISTINCT ${userProfileTableAlias}.*)`, alias: 'user_profile_data' },
+              { field: `json_agg(DISTINCT ${experienceTable}.*)`, alias: 'experience_data' }
+            );
+          }
           
           let offset = 0;
           if (applicationSearchParams.page && applicationSearchParams.limit) {
@@ -108,15 +131,19 @@ class ApplicationRepository extends BaseRepository {
       
           // Map the result to include related data
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
-            const { job_title, candidate_name, ...applicationFields } = row;
+            const { job_title, candidate_data, user_profile_data, experience_data, ...applicationFields } = row;
             return {
                 ...applicationFields,
-                job: applicationSearchParams.isShowJobData ? {
-                     title: job_title 
-                } : undefined,
+                job: applicationSearchParams.isShowJobData ? { title: job_title } : undefined,
                 candidate: applicationSearchParams.isShowCandidateData ? {
-                    firstName: candidate_name 
-                } : undefined
+                  ...candidate_data,
+                } : undefined,
+                userProfile: applicationSearchParams.isShowCandidateData ? {
+                  ...user_profile_data,
+                } : undefined,
+                experiences: applicationSearchParams.isShowCandidateData ? {
+                  ...experience_data,
+                } : undefined,
             };
           });
       

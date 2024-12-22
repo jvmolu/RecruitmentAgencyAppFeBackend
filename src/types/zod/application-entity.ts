@@ -6,6 +6,8 @@ import Currency from "../enums/currency";
 import PaymentPer from "../enums/payment-per";
 import { JobType } from "./job-entity";
 import { UserType } from "./user-entity";
+import { UserProfileType } from "./user-profile-entity";
+import { UserExperienceType } from "./user-experience-entity";
 
 const ApplicationSchema = BaseSchema.merge(
     z.object({
@@ -53,7 +55,7 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
 type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
-type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserType> | undefined }
+type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserType> | undefined, userProfile: Partial<UserProfileType> | undefined, experiences: Partial<UserExperienceType>[] | undefined }
 
 class Application implements ApplicationType {
   id: string;
