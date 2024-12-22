@@ -15,6 +15,7 @@ CREATE TABLE user_profiles (
     resume_link TEXT,
     skills TEXT[],
     actively_searching BOOLEAN DEFAULT TRUE,
+    total_exp_in_yrs NUMERIC(4, 2), -- 4, 2 means 4 digits in total and 2 after decimal
     work_location_preference work_model NOT NULL DEFAULT 'ONSITE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
