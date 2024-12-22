@@ -24,8 +24,8 @@ class ApplicationRepository extends BaseRepository {
       lifecycleData: ApplicationLifecycleType[],
       client?: PoolClient
     ): Promise<GeneralAppResponse<ApplicationLifecycleType>> {
-      const fields = SchemaMapper.toDbSchema(DbTable.APPLICATIONS_LIFECYCLE, lifecycleData);
-      const { query, params } = QueryBuilder.buildInsertQuery(DbTable.APPLICATIONS_LIFECYCLE, fields);
+      const fields = lifecycleData.map((data) => SchemaMapper.toDbSchema(DbTable.APPLICATIONS_LIFECYCLE, data));
+      const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.APPLICATIONS_LIFECYCLE, fields);
       const response = await this.executeQuery<ApplicationLifecycleType>(query, params, client);
       if (isGeneralAppFailureResponse(response)) {
         return response;
