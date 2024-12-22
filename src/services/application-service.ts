@@ -34,7 +34,7 @@ export class ApplicationService {
             };
         }
 
-        const applicationRes = await this.applicationRepository.create(application, client);
+        const applicationRes = await this.applicationRepository.create(validationResult.data, client);
         if (isGeneralAppFailureResponse(applicationRes)) {
             return applicationRes;
         }
