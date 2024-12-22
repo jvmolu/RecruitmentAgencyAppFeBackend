@@ -68,8 +68,7 @@ class UserRepository extends BaseRepository {
             });
             
             selectFieldsAndAlias.push({
-                field: `json_agg(DISTINCT ${profileTableAlias}.*)`,
-                alias: 'user_profile_data',
+                field: `json_agg(DISTINCT ${profileTableAlias}.*)`, alias: 'user_profile_data',
             });
 
             if (userSearchParams.isShowUserEducationData) {

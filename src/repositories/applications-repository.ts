@@ -131,18 +131,19 @@ class ApplicationRepository extends BaseRepository {
       
           // Map the result to include related data
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
-            const { job_title, candidate_data, user_profile_data, experience_data, ...applicationFields } = row;
+            let { job_title, candidate_data, user_profile_data, experience_data, ...applicationFields } = row;
+
+            experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+            user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
+            candidate_data = candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
+
             return {
                 ...applicationFields,
                 job: applicationSearchParams.isShowJobData ? { title: job_title } : undefined,
                 candidate: applicationSearchParams.isShowCandidateData ? {
                   ...candidate_data,
-                } : undefined,
-                userProfile: applicationSearchParams.isShowCandidateData ? {
-                  ...user_profile_data,
-                } : undefined,
-                experiences: applicationSearchParams.isShowCandidateData ? {
-                  ...experience_data,
+                  profile: user_profile_data,
+                  experience: experience_data
                 } : undefined,
             };
           });
