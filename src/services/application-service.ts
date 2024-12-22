@@ -5,13 +5,17 @@ import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { PoolClient } from "pg";
 import S3Service from "./aws-service";
+import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
+import { v4 as uuidv4 } from "uuid";
+import { Transactional } from "../decorators/transactional";
 
 export class ApplicationService {
 
     private static applicationRepository: ApplicationRepository = new ApplicationRepository();
     private static s3Service: S3Service = S3Service.getInstance();
 
-    public static async createApplication(applicationData: Omit<ApplicationType, 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<ApplicationType>> {
+    @Transactional()
+    public static async createApplication(applicationData: Omit<ApplicationType, 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<ApplicationType>> {
         const application: ApplicationType = {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -30,7 +34,27 @@ export class ApplicationService {
             };
         }
 
-        return await this.applicationRepository.create(validationResult.data);
+        const applicationRes = await this.applicationRepository.create(application, client);
+        if (isGeneralAppFailureResponse(applicationRes)) {
+            return applicationRes;
+        }
+
+        // Insert application lifecycle data
+        const lifecycleData: ApplicationLifecycleType = {
+            id: uuidv4(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            applicationId: applicationRes.data.id,
+            status: applicationRes.data.stage,
+            notes: 'Application created',
+        };
+
+        const insertStatusRes = await this.applicationRepository.insertLifecycles([lifecycleData], client);
+        if (isGeneralAppFailureResponse(insertStatusRes)) {
+            return insertStatusRes;
+        }
+
+        return applicationRes;
     }
 
     public static async findByParams(
@@ -65,6 +89,7 @@ export class ApplicationService {
         return await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams);
     }
 
+    @Transactional()
     public static async updateApplications(
         applicationSearchFields: Partial<ApplicationSearchOptions>, 
         applicationUpdateFields: Partial<ApplicationType>, 
@@ -94,7 +119,30 @@ export class ApplicationService {
             };
         }
 
-        return await this.applicationRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
+        const updateApplicationRes = await this.applicationRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
+        if (isGeneralAppFailureResponse(updateApplicationRes)) {
+            return updateApplicationRes;
+        }
+
+        // Status can only be updated for a single application at a time
+        if(updateValidationResult.data.stage && updateApplicationRes.data.length > 1) {
+        
+            const lifecycleData: ApplicationLifecycleType = {
+                id: uuidv4(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                applicationId: updateApplicationRes.data[0].id,
+                status: updateValidationResult.data.stage,
+                notes: 'Status updated',
+            };
+                
+            const insertStatusRes = await this.applicationRepository.insertLifecycles([lifecycleData], client);
+            if (isGeneralAppFailureResponse(insertStatusRes)) {
+                return insertStatusRes;
+            }
+        }
+
+        return updateApplicationRes;
     }
 
     /**

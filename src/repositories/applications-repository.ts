@@ -11,20 +11,36 @@ import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { JoinClause, JoinType } from "../types/enums/join-type";
 import { User } from "../types/zod/user-entity";
 import { UserProfile } from "../types/zod/user-profile-entity";
+import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
+import { v4 as uuidv4 } from "uuid";
 
 class ApplicationRepository extends BaseRepository {
     constructor() {
         super(DbTable.APPLICATIONS);
     }
 
+    // Insert lifecycle entry
+    public async insertLifecycles(
+      lifecycleData: ApplicationLifecycleType[],
+      client?: PoolClient
+    ): Promise<GeneralAppResponse<ApplicationLifecycleType>> {
+      const fields = SchemaMapper.toDbSchema(DbTable.APPLICATIONS_LIFECYCLE, lifecycleData);
+      const { query, params } = QueryBuilder.buildInsertQuery(DbTable.APPLICATIONS_LIFECYCLE, fields);
+      const response = await this.executeQuery<ApplicationLifecycleType>(query, params, client);
+      if (isGeneralAppFailureResponse(response)) {
+        return response;
+      }
+      return { success: true, data: response.data[0] };
+    }
+
     /**
      * Create a new application
-     */
-    async create(application: ApplicationType): Promise<GeneralAppResponse<Application>> {
+    **/
+    async create(application: ApplicationType, client?: PoolClient): Promise<GeneralAppResponse<Application>> {
         try {
             const applicationDbFields = SchemaMapper.toDbSchema(DbTable.APPLICATIONS, application);
             const { query, params } = QueryBuilder.buildInsertQuery(DbTable.APPLICATIONS, applicationDbFields);
-            const response: GeneralAppResponse<Application[]> = await this.executeQuery<Application>(query, params);
+            const response: GeneralAppResponse<Application[]> = await this.executeQuery<Application>(query, params, client);
             
             if(isGeneralAppFailureResponse(response)) {
                 return response;
@@ -56,6 +72,7 @@ class ApplicationRepository extends BaseRepository {
           const candidateTableAlias = 'u';
           const userProfileTableAlias = 'up';
           const experienceTable = 'ex';
+          const lifecycleTableAlias = 'l';
           const searchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
       
           const joins: JoinClause[] = [];
@@ -107,6 +124,19 @@ class ApplicationRepository extends BaseRepository {
               { field: `json_agg(DISTINCT ${experienceTable}.*)`, alias: 'experience_data' }
             );
           }
+
+          if(applicationSearchParams.isShowLifeCycleData) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.APPLICATIONS_LIFECYCLE,
+              alias: lifecycleTableAlias,
+              onCondition: `${applicationTableAlias}.id = ${lifecycleTableAlias}.application_id`,
+            });
+
+            selectFieldsAndAlias.push(
+              { field: `json_agg(DISTINCT ${lifecycleTableAlias}.*)`, alias: 'lifecycle_data' }
+            );
+          }
           
           let offset = 0;
           if (applicationSearchParams.page && applicationSearchParams.limit) {
@@ -133,9 +163,10 @@ class ApplicationRepository extends BaseRepository {
       
           // Map the result to include related data
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
-            let { job_title, candidate_data, user_profile_data, experience_data, ...applicationFields } = row;
+            let { job_title, candidate_data, lifecycle_data, user_profile_data, experience_data, ...applicationFields } = row;
 
             experience_data = experience_data && experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+            lifecycle_data = lifecycle_data && lifecycle_data.length > 0 && lifecycle_data[0] !== null ? lifecycle_data : [];
             user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
             candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
 
@@ -143,6 +174,7 @@ class ApplicationRepository extends BaseRepository {
             candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
             user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
             experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
+            lifecycle_data = lifecycle_data.map((row: any) => SchemaMapper.toEntity(DbTable.APPLICATIONS_LIFECYCLE, row));
 
             return {
                 ...applicationFields,
@@ -152,6 +184,7 @@ class ApplicationRepository extends BaseRepository {
                   profile: user_profile_data,
                   experience: experience_data
                 } : undefined,
+                lifecycle: applicationSearchParams.isShowLifeCycleData ? lifecycle_data : undefined
             };
           });
       
@@ -180,7 +213,12 @@ class ApplicationRepository extends BaseRepository {
             const searchQueryFields: QueryFields = this.createSearchFields(applicationSearchFields);
             const updateFields = SchemaMapper.toDbSchema(DbTable.APPLICATIONS, applicationUpdateFields);
             const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.APPLICATIONS, updateFields, searchQueryFields);
-            return await this.executeQuery<Application>(query, params, client);
+            const response: GeneralAppResponse<Application[]> = await this.executeQuery<Application>(query, params, client);
+
+            if (isGeneralAppFailureResponse(response)) {
+              return response;
+            }
+            return response;                        
         } catch (error: any) {
             return {
                 error: error,
