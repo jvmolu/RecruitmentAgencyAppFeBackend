@@ -126,9 +126,9 @@ class UserRepository extends BaseRepository {
             
             let { education_data, experience_data, user_profile_data, ...userFields } = row;
             
-            education_data = education_data.length > 0 && education_data[0] !== null ? education_data : [];
-            experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
-            user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
+            education_data = education_data && education_data.length > 0 && education_data[0] !== null ? education_data : [];
+            experience_data = experience_data && experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+            user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
 
             // Use Schema Mapper to convert the fields to the entity
             user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);

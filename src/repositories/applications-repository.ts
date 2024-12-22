@@ -135,9 +135,9 @@ class ApplicationRepository extends BaseRepository {
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
             let { job_title, candidate_data, user_profile_data, experience_data, ...applicationFields } = row;
 
-            experience_data = experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
-            user_profile_data = user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
-            candidate_data = candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
+            experience_data = experience_data && experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
+            user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
+            candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
 
             // Use Schema Mapper to convert the fields to the entity
             candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
