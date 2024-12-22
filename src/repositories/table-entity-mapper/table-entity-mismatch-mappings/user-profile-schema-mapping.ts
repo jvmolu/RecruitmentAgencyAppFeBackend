@@ -12,5 +12,6 @@ export default {
       { entityField: 'workLocationPreference', dbField: 'work_location_preference' },
       { entityField: 'createdAt', dbField: 'created_at' },
       { entityField: 'updatedAt', dbField: 'updated_at' },
+      { entityField: 'totalExpInYrs', dbField: 'total_exp_in_yrs' },
     ],
 };

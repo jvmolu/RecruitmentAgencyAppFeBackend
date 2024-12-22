@@ -9,7 +9,8 @@ export class InviteController {
     public static async sendInvite(req: Request, res: Response) : Promise<any> {
         try {
             const result : GeneralAppResponse<InviteType> = await InviteService.sendAndCreateInvite(req.body);
-            if(isGeneralAppFailureResponse(result)) {
+            if (isGeneralAppFailureResponse(result)) {
+                console.log(result);
                 return res.status(result.statusCode).json({
                     success: false,
                     message: result.businessMessage,
