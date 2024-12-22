@@ -8,6 +8,7 @@ import S3Service from "./aws-service";
 import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
 import { v4 as uuidv4 } from "uuid";
 import { Transactional } from "../decorators/transactional";
+import { BadRequestError } from "../types/error/bad-request-error";
 
 export class ApplicationService {
 
@@ -125,8 +126,19 @@ export class ApplicationService {
         }
 
         // Status can only be updated for a single application at a time
-        if(updateValidationResult.data.stage && updateApplicationRes.data.length > 1) {
-        
+        if(updateValidationResult.data.stage) {
+
+            if(updateApplicationRes.data.length > 1) {
+                let badRequestError: BadRequestError = new Error('Status can only be updated for a single application at a time') as BadRequestError;
+                badRequestError.errorType = 'BadRequestError';
+                return {
+                    error: badRequestError,
+                    statusCode: HttpStatusCode.BAD_REQUEST,
+                    businessMessage: 'Invalid update data',
+                    success: false
+                };    
+            }
+
             const lifecycleData: ApplicationLifecycleType = {
                 id: uuidv4(),
                 createdAt: new Date().toISOString(),
@@ -135,13 +147,13 @@ export class ApplicationService {
                 status: updateValidationResult.data.stage,
                 notes: 'Status updated',
             };
-                
+            
             const insertStatusRes = await this.applicationRepository.insertLifecycles([lifecycleData], client);
             if (isGeneralAppFailureResponse(insertStatusRes)) {
                 return insertStatusRes;
             }
         }
-
+    
         return updateApplicationRes;
     }
 
