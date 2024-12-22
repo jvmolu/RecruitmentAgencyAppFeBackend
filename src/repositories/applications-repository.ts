@@ -23,14 +23,14 @@ class ApplicationRepository extends BaseRepository {
     public async insertLifecycles(
       lifecycleData: ApplicationLifecycleType[],
       client?: PoolClient
-    ): Promise<GeneralAppResponse<ApplicationLifecycleType>> {
+    ): Promise<GeneralAppResponse<ApplicationLifecycleType[]>> {
       const fields = lifecycleData.map((data) => SchemaMapper.toDbSchema(DbTable.APPLICATIONS_LIFECYCLE, data));
       const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.APPLICATIONS_LIFECYCLE, fields);
       const response = await this.executeQuery<ApplicationLifecycleType>(query, params, client);
       if (isGeneralAppFailureResponse(response)) {
         return response;
       }
-      return { success: true, data: response.data[0] };
+      return { success: true, data: response.data };
     }
 
     /**
