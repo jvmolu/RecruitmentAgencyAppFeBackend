@@ -69,6 +69,7 @@ class ApplicationRepository extends BaseRepository {
 
           const applicationTableAlias = 'a';
           const jobTableAlias = 'j';
+          const companyTableAlias = 'c';
           const candidateTableAlias = 'u';
           const userProfileTableAlias = 'up';
           const experienceTable = 'ex';
@@ -83,14 +84,23 @@ class ApplicationRepository extends BaseRepository {
           let groupByFields = [`${applicationTableAlias}.id`];
       
           if (applicationSearchParams.isShowJobData) {
+            
             joins.push({
               joinType: JoinType.LEFT,
               tableName: DbTable.JOBS,
               alias: jobTableAlias,
               onCondition: `${applicationTableAlias}.job_id = ${jobTableAlias}.id`,
             });
-            selectFieldsAndAlias.push({ field: `${jobTableAlias}.title`, alias: 'job_title' });
-            groupByFields.push(`${jobTableAlias}.title`);
+
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.COMPANIES,
+              alias: companyTableAlias,
+              onCondition: `${jobTableAlias}.company_id = ${companyTableAlias}.id`,
+            });
+
+            selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${jobTableAlias}.*)`, alias: 'job_data' });
+            selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${companyTableAlias}.*)`, alias: 'company_data' });
           }
       
           if (applicationSearchParams.isShowCandidateData) {
@@ -163,15 +173,19 @@ class ApplicationRepository extends BaseRepository {
       
           // Map the result to include related data
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
-            let { job_title, candidate_data, lifecycle_data, user_profile_data, experience_data, ...applicationFields } = row;
+            let { job_data, company_data, candidate_data, lifecycle_data, user_profile_data, experience_data, ...applicationFields } = row;
 
             experience_data = experience_data && experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
             lifecycle_data = lifecycle_data && lifecycle_data.length > 0 && lifecycle_data[0] !== null ? lifecycle_data : [];
             user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
             candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
+            job_data = job_data && job_data.length > 0 && job_data[0] !== null ? job_data[0] : [];
+            company_data = company_data && company_data.length > 0 && company_data[0] !== null ? company_data[0] : [];
 
             // Use Schema Mapper to convert the fields to the entity
             candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
+            job_data = SchemaMapper.toEntity(DbTable.JOBS, job_data);
+            company_data = SchemaMapper.toEntity(DbTable.COMPANIES, company_data);
             user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
             experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
             lifecycle_data = lifecycle_data.map((row: any) => SchemaMapper.toEntity(DbTable.APPLICATIONS_LIFECYCLE, row));
@@ -183,7 +197,7 @@ class ApplicationRepository extends BaseRepository {
 
             return {
                 ...applicationFields,
-                job: applicationSearchParams.isShowJobData ? { title: job_title } : undefined,
+                job: applicationSearchParams.isShowJobData ? { ...job_data, company: company_data } : undefined,
                 candidate: applicationSearchParams.isShowCandidateData ? {
                   ...candidate_data,
                   profile: user_profile_data,

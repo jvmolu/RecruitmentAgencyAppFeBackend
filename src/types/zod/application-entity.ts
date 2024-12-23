@@ -4,7 +4,7 @@ import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 import Currency from "../enums/currency";
 import PaymentPer from "../enums/payment-per";
-import { JobType } from "./job-entity";
+import { JobType, JobWithCompanyData } from "./job-entity";
 import { UserWithProfileData } from "./user-entity";
 import { ApplicationLifecycleType } from "./application-lifecycle-entity";
 
@@ -55,7 +55,7 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
 type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
-type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobType> | undefined, candidate: Partial<UserWithProfileData> | undefined, lifecycle: ApplicationLifecycleType[] | undefined }
+type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobWithCompanyData> | undefined, candidate: Partial<UserWithProfileData> | undefined, lifecycle: ApplicationLifecycleType[] | undefined }
 
 class Application implements ApplicationType {
   id: string;
