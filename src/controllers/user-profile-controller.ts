@@ -66,18 +66,18 @@ export class UserProfileController {
 
             const { profileSearchFields, profileUpdateFields, educationData, experienceData } = req.body;
 
-            // Mandate userId in profileSearchFields
-            if(!profileSearchFields.userId) {
-                return res.status(HttpStatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: 'Invalid request',
-                    error: 'userId is required in profileSearchFields'
-                });
-            }
-
             // Now Upload Resume (if any)
             if(req.file) {
                 
+                // Mandate userId in profileSearchFields
+                if(!profileSearchFields.userId) {
+                    return res.status(HttpStatusCode.BAD_REQUEST).json({
+                        success: false,
+                        message: 'Invalid request',
+                        error: 'userId is required in profileSearchFields'
+                    });
+                }
+
                 const file: Express.Multer.File = req.file;
                 const bucketName: string | undefined = process.env.DIGITAL_OCEAN_BUCKET_NAME;
                 if(!bucketName) {
