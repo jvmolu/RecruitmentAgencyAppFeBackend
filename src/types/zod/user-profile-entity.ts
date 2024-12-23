@@ -5,6 +5,8 @@ import { z } from "zod";
 import { UserEducationType } from "./user-education-entity";
 import { UserType } from "./user-entity";
 import { UserExperienceType } from "./user-experience-entity";
+import Status from "../enums/status";
+import Role from "../enums/role";
 
 const UserProfileSchema = BaseSchema.merge(
     z.object({
@@ -37,6 +39,13 @@ const UserProfileSearchSchema = BaseSchema.merge(
         skills: z.array(z.string()).nullable(),
         activelySearching: z.boolean().nullable(),
         workLocationPreference: z.nativeEnum(WorkModel).nullable(),
+
+        // User Table related fields
+        email: z.string().email().nullable(),
+        firstName: z.string().nullable(),
+        lastName: z.string().nullable(),
+        role: z.nativeEnum(Role).nullable(),
+        status: z.nativeEnum(Status).nullable()
     })
 );
 

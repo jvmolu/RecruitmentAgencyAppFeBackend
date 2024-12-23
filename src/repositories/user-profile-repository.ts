@@ -9,6 +9,7 @@ import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { JoinClause, JoinType } from "../types/enums/join-type";
+import { UserSearchOptions } from "../types/zod/user-entity";
 
 class UserProfileRepository extends BaseRepository {
 
@@ -40,6 +41,18 @@ class UserProfileRepository extends BaseRepository {
         }
     }
 
+    private fetchUserFieldsFromUserProfieFields(userProfileFields: Partial<UserProfileSearchOptions>): Partial<UserSearchOptions> {
+        const userCols: string[] = ['firstName', 'lastName', 'email', 'status', 'role'];
+        const userFields: { [key: string]: any } = {};
+        userCols.forEach((col: string) => {
+            if(userProfileFields[col as keyof UserProfileSearchOptions]) {
+                userFields[col] = userProfileFields[col as keyof UserProfileSearchOptions];
+                delete userProfileFields[col as keyof UserProfileSearchOptions];
+            }
+        });
+        return userFields as Partial<UserSearchOptions>;
+    }
+
     // Find By General Params
     async findByParams(
         userProfileFields: Partial<UserProfileSearchOptions>,
@@ -51,7 +64,14 @@ class UserProfileRepository extends BaseRepository {
             const userTableAlias = 'u';
             const educationTableAlias = 'e';
             const experienceTableAlias = 'ex';
-            const searchQueryFields: QueryFields = this.createSearchFields(userProfileFields, userProfileTableAlias);
+
+            // Fetch User Table Fields from userProfileFields and delete them from userProfileFields
+            // This will also delete the user fields from userProfileFields
+            const userFields = this.fetchUserFieldsFromUserProfieFields(userProfileFields);
+
+            const userProfileSearchQueryFields: QueryFields = this.createSearchFields(userProfileFields, userProfileTableAlias);
+            const userSearchQueryFields: QueryFields = this.createSearchFields(userFields, userTableAlias);
+            const searchQueryFields: QueryFields = { ...userProfileSearchQueryFields, ...userSearchQueryFields };
     
             const joins: JoinClause[] = [];
             const selectFieldsAndAlias: { field: string; alias?: string }[] = [
@@ -146,6 +166,7 @@ class UserProfileRepository extends BaseRepository {
     
             return { success: true, data };
         } catch (error: any) {
+            console.error(error);
             return {
                 error,
                 businessMessage: 'Internal server error',

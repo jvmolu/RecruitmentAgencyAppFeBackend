@@ -26,3 +26,11 @@ the error response creation code from services and controllers and use the error
 13. Lock Routes which cannot be accessed simultaneously multiple times (ex: same guy clicks submit application to same job multiple times before first request is processed)
 
 14. Implement fetching userIdToAccess in Authorise Self User Middleware for Application Routes and everywhere it is being used.
+
+FE Changes:
+
+1. Add Delete Pop Up for all Delete Actions
+
+2. Link Pages from Dashboard, Update users->candidates
+
+3. Enable Partner Comapnies and their Creation
