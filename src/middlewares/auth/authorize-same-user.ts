@@ -10,7 +10,8 @@ const AuthorizeSelf = async (req: Request, res: Response, next: NextFunction) : 
 
         // Check route
         if(req.originalUrl.includes('applications') === true) {
-            userIdToAccess = req.body.userId;
+            // Fetch Application by ID and take candidate ID
+            userIdToAccess = user.id; // FOR NOW THIS WILL BYPASS THIS CHECK IN APPLICATIONS
         }
         else if(req.originalUrl.includes('user-profile') === true) {
             userIdToAccess = req.body.profileSearchFields && req.body.profileSearchFields.userId;
