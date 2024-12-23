@@ -112,6 +112,17 @@ export class UserProfileService {
             return userProfileResult;
         }
 
+        if(userProfileResult.data.length === 0) {
+            const notFoundError: BadRequestError = new Error('No user profile found for the given search parameters') as BadRequestError;
+            notFoundError.errorType = 'BadRequestError';
+            return {
+                success: false,
+                error: notFoundError,
+                statusCode: HttpStatusCode.NOT_FOUND,
+                businessMessage: 'No user profile found for the given search parameters'
+            };
+        }
+
         // If Education and Experience data is provided, then ONLY 1 User Profile record should be updated
         if(userProfileResult.data.length > 1) {
             const badRequestError: BadRequestError = new Error('Multiple user profiles found for the given search parameters, ambiguity in updating education and experience records') as BadRequestError;
