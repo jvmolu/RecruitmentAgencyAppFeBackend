@@ -80,7 +80,7 @@ class UserProfileRepository extends BaseRepository {
 
             let groupByFields: string[] = [`${userProfileTableAlias}.id`];
     
-            if (userProfileSearchParams.isShowUserData) {
+            if (userProfileSearchParams.isShowUserData || Object.keys(userFields).length > 0) {
                 joins.push({
                     joinType: JoinType.LEFT,
                     tableName: DbTable.USERS,
