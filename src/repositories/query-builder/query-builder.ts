@@ -29,7 +29,7 @@ export class QueryBuilder {
     [QueryOperation.IS_NULL]: (key) => `${key} IS NULL`,
     [QueryOperation.IS_NOT_NULL]: (key) => `${key} IS NOT NULL`,
     [QueryOperation.BETWEEN]: (key) => `${key} BETWEEN $ AND $`,
-    [QueryOperation.ARRAY_INTERSECTS]: (key) => `${key} && ARRAY[$]`
+    [QueryOperation.ARRAY_INTERSECTS]: (key) => `${key} && ARRAY[$]::text[]`
   };
 
   public static buildSelectQuery(

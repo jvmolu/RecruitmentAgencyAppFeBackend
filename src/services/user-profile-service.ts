@@ -141,7 +141,7 @@ export class UserProfileService {
         const userId: string = userProfileResult.data[0].userId;
 
         // Update user data using UserService
-        const userProfileSearchFields: Partial<UserSearchOptions> = { id: userProfileId };
+        const userProfileSearchFields: Partial<UserSearchOptions> = { id: userId };
         const userUpdateResult = await this.userProfileRepository.updateByParams(userProfileSearchFields, userUpdateFields, client);
         if (isGeneralAppFailureResponse(userUpdateResult)) {
             return userUpdateResult;
