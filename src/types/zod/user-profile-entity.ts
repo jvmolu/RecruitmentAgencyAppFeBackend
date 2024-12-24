@@ -7,6 +7,7 @@ import { UserType } from "./user-entity";
 import { UserExperienceType } from "./user-experience-entity";
 import Status from "../enums/status";
 import Role from "../enums/role";
+import { DateRange, NumberRange } from "./range-entities";
 
 const UserProfileSchema = BaseSchema.merge(
     z.object({
@@ -45,7 +46,14 @@ const UserProfileSearchSchema = BaseSchema.merge(
         firstName: z.string().nullable(),
         lastName: z.string().nullable(),
         role: z.nativeEnum(Role).nullable(),
-        status: z.nativeEnum(Status).nullable()
+        status: z.nativeEnum(Status).nullable(),
+
+        // Min-Max Options - Handled in repository
+        // Range will be like: {min: 0, max: 10}
+        currentSalaryRange: NumberRange.optional(),
+        totalExpInYrsRange: NumberRange.optional(),
+        createdAtRange: DateRange.optional(),
+        updatedAtRange: DateRange.optional()
     })
 );
 

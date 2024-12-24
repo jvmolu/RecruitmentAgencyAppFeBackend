@@ -7,6 +7,7 @@ import WorkModel from "../enums/work-model";
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 import { CompanyType } from "./company-entity";
+import { DateRange, NumberRange } from "./range-entities";
 
 // Define the schema for the Job model - CamelCase Fields
 const JobSchema = BaseSchema.merge(
@@ -54,6 +55,13 @@ const JobSearchSchema = BaseSchema.merge(
         location: z.string().nullable(),
         workModel: z.nativeEnum(WorkModel).nullable(),
         status: z.nativeEnum(Status).nullable(),
+
+        // Min-Max Options - Handled in repository
+        // Range will be like: {min: 0, max: 10}
+        experienceRequiredRange: NumberRange.optional(),
+        budgetAmountRange: NumberRange.optional(),
+        createdDateRange: DateRange.optional(),
+        updatedDateRange: DateRange.optional()
     })
 );
 

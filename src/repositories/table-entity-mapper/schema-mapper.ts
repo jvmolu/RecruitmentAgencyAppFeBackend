@@ -9,7 +9,7 @@ import matchSchemaMapping from "./table-entity-mismatch-mappings/match-schema-ma
 import userEducationSchemaMapping from "./table-entity-mismatch-mappings/user-education-schema-mapping";
 import userExperienceSchemaMapping from "./table-entity-mismatch-mappings/user-experience-schema-mapping";
 import userProfileSchemaMapping from "./table-entity-mismatch-mappings/user-profile-schema-mapping";
-import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mapping";
+import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
 
 export type FieldMapping = {
     entityField: string;

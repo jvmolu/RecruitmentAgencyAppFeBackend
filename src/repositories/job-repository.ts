@@ -8,7 +8,8 @@ import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { JoinClause, JoinType } from '../types/enums/join-type';
-import { Company, CompanyType } from '../types/zod/company-entity';
+import { z } from "zod";
+import { isDateRange, isNumberRange } from "../types/zod/range-entities";
 
 class JobRepository extends BaseRepository {
 
@@ -160,12 +161,15 @@ class JobRepository extends BaseRepository {
         }
     }
 
-
-
     private createSearchFields(jobFields: Partial<JobSearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(jobFields).forEach(([key, value]) => {
+          
+            let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
             let operation: QueryOperation;
+            let valueToUse: any = value;
+
             if(value === null) 
             {
                 operation = QueryOperation.IS_NULL;
@@ -177,6 +181,35 @@ class JobRepository extends BaseRepository {
             else if (isEnumField(this.tableName, key)) 
             {
                 operation = QueryOperation.EQUALS;
+            }
+            else if (isNumberRange(value) || isDateRange(value))
+            {
+               // value is like: { min: 10, max: 20 }
+               // need to use queryOperation based on if we have both min and max or only one of them
+               // value needs to be an array of two elements or a single element
+               const { min, max } = value;
+               keyToUse = keyToUse.replace('Range', '');
+
+               if(min && max) 
+               {
+                  operation = QueryOperation.BETWEEN;
+                  valueToUse = [min, max];
+               }
+               else if(min) 
+               {
+                  operation = QueryOperation.GREATER_THAN_EQUALS;
+                  valueToUse = min;
+               }
+               else if(max)
+               {
+                  operation = QueryOperation.LESS_THAN_EQUALS;
+                  valueToUse = max;
+               }
+               else 
+               {
+                 // INVALID RANGE
+                 return;
+               }
             }
             else if(Array.isArray(value))
             {
@@ -192,13 +225,8 @@ class JobRepository extends BaseRepository {
             {
                 operation = QueryOperation.EQUALS;
             }
-            let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
-            if(tableAlias) 
-            {
-                keyToUse = `${tableAlias}.${keyToUse}`;
-            }
             // Add the field to the queryFields object
-            queryFields[keyToUse] = { value, operation };
+            queryFields[keyToUse] = { value:valueToUse, operation };
         });
         return queryFields;
     }
