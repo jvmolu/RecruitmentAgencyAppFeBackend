@@ -154,6 +154,20 @@ class UserRepository extends BaseRepository {
         }
       }
 
+    async updateByParams(userFields: Partial<UserSearchOptions>,
+        userUpdateFields: Partial<UserType>,
+        client?: PoolClient
+    ): Promise<GeneralAppResponse<User[]>> {
+            // Build the QueryFields object
+            const searchQueryFields: QueryFields = this.createSearchFields(userFields);
+            // Prepare the update fields
+            const updateFields = SchemaMapper.toDbSchema(DbTable.USERS, userUpdateFields);
+            // Build the query
+            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.USER_PROFILES, updateFields, searchQueryFields);
+            // Execute the query
+            return await this.executeQuery<User>(query, params, client);
+    }
+
     private createSearchFields(userFields: Partial<UserSearchOptions>, tableSearch?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userFields).forEach(([key, value]) => {

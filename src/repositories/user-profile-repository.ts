@@ -70,7 +70,7 @@ class UserProfileRepository extends BaseRepository {
             const userFields = this.fetchUserFieldsFromUserProfieFields(userProfileFields);
 
             const userProfileSearchQueryFields: QueryFields = this.createSearchFields(userProfileFields, userProfileTableAlias);
-            const userSearchQueryFields: QueryFields = this.createSearchFields(userFields, userTableAlias);
+            const userSearchQueryFields: QueryFields = this.createSearchFields(userFields, userTableAlias, DbTable.USERS);
             const searchQueryFields: QueryFields = { ...userProfileSearchQueryFields, ...userSearchQueryFields };
     
             const joins: JoinClause[] = [];
@@ -188,10 +188,10 @@ class UserProfileRepository extends BaseRepository {
             // Build the query
             const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.USER_PROFILES, updateFields, searchQueryFields);
             // Execute the query
-            return await this.executeQuery<UserProfile>(query, params);
+            return await this.executeQuery<UserProfile>(query, params, client);
     }
 
-    private createSearchFields(userProfileFields: Partial<UserProfileSearchOptions>, tableAlias?: string): QueryFields {
+    private createSearchFields(userProfileFields: Partial<UserProfileSearchOptions>, tableAlias?: string, table: DbTable = DbTable.USER_PROFILES): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(userProfileFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -215,7 +215,7 @@ class UserProfileRepository extends BaseRepository {
             {
                 operation = QueryOperation.EQUALS;
             }
-            let keyToUse = SchemaMapper.toDbField(DbTable.USER_PROFILES, key);
+            let keyToUse = SchemaMapper.toDbField(table, key);
             if(tableAlias) 
             {
                 keyToUse = `${tableAlias}.${keyToUse}`;

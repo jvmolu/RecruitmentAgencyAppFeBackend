@@ -192,6 +192,35 @@ export class UserService {
         return await UserService.userRepository.findByParams(validationResult.data, searchParamsValidationResult.data as UserSearchParams);
     }
 
+    public static async updateByParams(userSearchFields: Partial<UserSearchOptions>, userUpdateFields: Partial<UserType>, client?: PoolClient): Promise<GeneralAppResponse<UserType[]>> {
+        
+        const searchValidationResult = UserSearchSchema.partial().safeParse(userSearchFields);
+        if (!searchValidationResult.success) {
+            let zodError: ZodParsingError = searchValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid search parameters',
+                success: false
+            };
+        }
+
+        const updateValidationResult = UserSchema.partial().safeParse(userUpdateFields);
+        if (!updateValidationResult.success) {
+            let zodError: ZodParsingError = updateValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid update data',
+                success: false
+            };
+        }
+
+        return await UserService.userRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
+    }
+
     public static async findUserByToken(token: string | undefined): Promise<GeneralAppResponse<Omit<UserAuthDataWithProfileData, "password">>> {
 
         if(!token) {
