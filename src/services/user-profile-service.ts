@@ -12,6 +12,7 @@ import { UserEducationService } from "./user-education-service";
 import { UserExperienceService } from "./user-experiences-service";
 import { BadRequestError } from "../types/error/bad-request-error";
 import S3Service from "./aws-service";
+import { UserSearchOptions, UserType } from "../types/zod/user-entity";
 
 export class UserProfileService {
 
@@ -78,8 +79,8 @@ export class UserProfileService {
         };
     }
 
-    public static async updateUserProfileWithDetails(profileSearchFields: Partial<UserProfileSearchOptions>, profileUpdateFields: Partial<UserProfileType>, educationData: Partial<UserEducationType>[], experienceData: Partial<UserExperienceType>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
-        
+    public static async updateUserProfileWithDetails(profileSearchFields: Partial<UserProfileSearchOptions>, userUpdateFields: Partial<UserType>, profileUpdateFields: Partial<UserProfileType>, educationData: Partial<UserEducationType>[], experienceData: Partial<UserExperienceType>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
+
         // Validate profile search fields
         const searchValidationResult = UserProfileSearchSchema.partial().safeParse(profileSearchFields);
         if (!searchValidationResult.success) {
@@ -137,9 +138,16 @@ export class UserProfileService {
 
         // Hence fetching the first record
         const userProfileId: string = userProfileResult.data[0].id;
+        const userId: string = userProfileResult.data[0].userId;
+
+        // Update user data using UserService
+        const userProfileSearchFields: Partial<UserSearchOptions> = { id: userProfileId };
+        const userUpdateResult = await this.userProfileRepository.updateByParams(userProfileSearchFields, userUpdateFields, client);
+        if (isGeneralAppFailureResponse(userUpdateResult)) {
+            return userUpdateResult;
+        }
 
         // Updating Education Data
-
         // Segregate Records to be created vs updated
         let newEducationHistories: any[] = []; // Education history parsing errors are handled in the service
         let educationDataToBeUpdated: Partial<UserEducationType>[] = [];

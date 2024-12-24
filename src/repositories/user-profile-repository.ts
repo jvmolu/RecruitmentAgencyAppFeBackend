@@ -207,11 +207,15 @@ class UserProfileRepository extends BaseRepository {
             {
                 operation = QueryOperation.EQUALS;
             }
+            else if(Array.isArray(value))
+            {
+                operation = QueryOperation.ARRAY_INTERSECTS;
+            }
             else if (typeof value === 'string')
             {
                 operation = QueryOperation.ILIKE;
-            } 
-            else 
+            }
+            else
             {
                 operation = QueryOperation.EQUALS;
             }

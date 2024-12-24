@@ -64,7 +64,7 @@ export class UserProfileController {
     public static async updateUserProfile(req: Request, res: Response): Promise<any> {
         try {
 
-            const { profileSearchFields, profileUpdateFields, educationData, experienceData } = req.body;
+            const { profileSearchFields, profileUpdateFields, educationData, experienceData, userFields } = req.body;
 
             // Now Upload Resume (if any)
             if(req.file) {
@@ -101,7 +101,7 @@ export class UserProfileController {
                 profileUpdateFields.resumeLink = fileUploadResult.data;
             }
 
-            const result = await UserProfileService.updateUserProfileWithDetails(profileSearchFields, profileUpdateFields, educationData, experienceData);
+            const result = await UserProfileService.updateUserProfileWithDetails(profileSearchFields, userFields, profileUpdateFields, educationData, experienceData);
 
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
