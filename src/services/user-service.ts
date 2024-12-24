@@ -195,7 +195,7 @@ export class UserService {
     public static async updateByParams(userSearchFields: Partial<UserSearchOptions>, userUpdateFields: Partial<UserType>, client?: PoolClient): Promise<GeneralAppResponse<UserType[]>> {
         
         const searchValidationResult = UserSearchSchema.partial().safeParse(userSearchFields);
-        if (!searchValidationResult.success) {
+        if (!userSearchFields || !searchValidationResult.success) {
             let zodError: ZodParsingError = searchValidationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';
             return {
@@ -207,7 +207,7 @@ export class UserService {
         }
 
         const updateValidationResult = UserSchema.partial().safeParse(userUpdateFields);
-        if (!updateValidationResult.success) {
+        if (!userUpdateFields || !updateValidationResult.success) {
             let zodError: ZodParsingError = updateValidationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';
             return {
