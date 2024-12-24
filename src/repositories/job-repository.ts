@@ -181,6 +181,8 @@ class JobRepository extends BaseRepository {
             else if(Array.isArray(value))
             {
                 operation = QueryOperation.ARRAY_INTERSECTS;
+                // Check if the array is empty -> Do not add the field to the queryFields object
+                if(value.length === 0) return;
             }
             else if (typeof value === 'string')
             {
