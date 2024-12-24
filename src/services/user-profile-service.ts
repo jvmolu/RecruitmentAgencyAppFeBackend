@@ -13,6 +13,7 @@ import { UserExperienceService } from "./user-experiences-service";
 import { BadRequestError } from "../types/error/bad-request-error";
 import S3Service from "./aws-service";
 import { UserSearchOptions, UserType } from "../types/zod/user-entity";
+import { UserService } from "./user-service";
 
 export class UserProfileService {
 
@@ -141,8 +142,8 @@ export class UserProfileService {
         const userId: string = userProfileResult.data[0].userId;
 
         // Update user data using UserService
-        const userProfileSearchFields: Partial<UserSearchOptions> = { id: userId };
-        const userUpdateResult = await this.userProfileRepository.updateByParams(userProfileSearchFields, userUpdateFields, client);
+        const userSearchFields: Partial<UserSearchOptions> = { id: userId };
+        const userUpdateResult = await UserService.updateByParams(userSearchFields, userUpdateFields, client);
         if (isGeneralAppFailureResponse(userUpdateResult)) {
             return userUpdateResult;
         }
@@ -249,7 +250,8 @@ export class UserProfileService {
             data: {
                 userProfile: userProfileResult.data,
                 education: educationUpdatedData,
-                experience: experienceUpdatedData
+                experience: experienceUpdatedData,
+                user: userUpdateResult.data
             }
         };
     }
