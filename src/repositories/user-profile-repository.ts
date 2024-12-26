@@ -196,6 +196,9 @@ class UserProfileRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(userProfileFields).forEach(([key, value]) => {
             
+            if(key.includes('Range')) {
+                key = key.replace('Range', '');
+            }
             let keyToUse = SchemaMapper.toDbField(table, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
             let operation: QueryOperation;

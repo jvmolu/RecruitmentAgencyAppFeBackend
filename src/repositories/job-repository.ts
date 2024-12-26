@@ -165,8 +165,12 @@ class JobRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(jobFields).forEach(([key, value]) => {
           
+            if(key.includes('Range')) {
+                key = key.replace('Range', '');
+            }
             let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
+
             let operation: QueryOperation;
             let valueToUse: any = value;
 
@@ -188,8 +192,6 @@ class JobRepository extends BaseRepository {
                // need to use queryOperation based on if we have both min and max or only one of them
                // value needs to be an array of two elements or a single element
                const { min, max } = value;
-               keyToUse = keyToUse.replace('Range', '');
-               keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
 
                if(min && max) 
                {
