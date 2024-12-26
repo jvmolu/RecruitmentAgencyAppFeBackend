@@ -23,4 +23,30 @@ export class QuestionController {
 			});
 		}
 	}
+
+	public static async getQuestionByNumber(
+		req: Request,
+		res: Response
+	): Promise<any> {
+		try {
+			const { questionNumber } = req.params;
+			const result = await QuestionService.getQuestionByNumber(
+				parseInt(questionNumber, 10)
+			);
+			if (isGeneralAppFailureResponse(result)) {
+				return res.status(result.statusCode).json({
+					success: false,
+					message: result.businessMessage,
+					error: result.error,
+				});
+			}
+			return res.status(HttpStatusCode.OK).json(result.data);
+		} catch (error) {
+			console.error(error);
+			return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+				success: false,
+				message: "Internal server error",
+			});
+		}
+	}
 }

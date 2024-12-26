@@ -10,4 +10,10 @@ export class QuestionService {
 	> {
 		return await this.questionRepository.findAll();
 	}
+
+	public static async getQuestionByNumber(
+		questionNumber: number
+	): Promise<GeneralAppResponse<QuestionType>> {
+		return await this.questionRepository.findOne(questionNumber);
+	}
 }
