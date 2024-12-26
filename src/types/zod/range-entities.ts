@@ -3,18 +3,18 @@ import { z } from "zod";
 // Define Zod Entities for Range (min, max) which can be used for different data types
 
 const NumberRange = z.object({
-    min: z.number(),
-    max: z.number()
+    min: z.number().optional(),
+    max: z.number().optional()
 });
 
 const DateRange = z.object({
-    min: z.string().datetime(),
-    max: z.string().datetime()
+    min: z.string().datetime().optional(),
+    max: z.string().datetime().optional()
 });
 
 const StringRange = z.object({
-    min: z.string(),
-    max: z.string()
+    min: z.string().optional(),
+    max: z.string().optional()
 });
 
 type NumberRangeType = z.infer<typeof NumberRange>;
