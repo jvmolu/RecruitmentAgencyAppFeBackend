@@ -189,6 +189,7 @@ class JobRepository extends BaseRepository {
                // value needs to be an array of two elements or a single element
                const { min, max } = value;
                keyToUse = keyToUse.replace('Range', '');
+               keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
 
                if(min && max) 
                {
