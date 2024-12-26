@@ -193,17 +193,17 @@ class JobRepository extends BaseRepository {
                // value needs to be an array of two elements or a single element
                const { min, max } = value;
 
-               if(min && max) 
+               if(min !== undefined && max !== undefined) 
                {
                   operation = QueryOperation.BETWEEN;
                   valueToUse = [min, max];
                }
-               else if(min) 
+               else if(min !== undefined) 
                {
                   operation = QueryOperation.GREATER_THAN_EQUALS;
                   valueToUse = min;
                }
-               else if(max)
+               else if(max !== undefined)
                {
                   operation = QueryOperation.LESS_THAN_EQUALS;
                   valueToUse = max;
