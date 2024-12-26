@@ -221,17 +221,17 @@ class UserProfileRepository extends BaseRepository {
                 keyToUse = keyToUse.replace('Range', '');
                 keyToUse = SchemaMapper.toDbField(table, key);
                 
-                if(min && max)
+                if(min !== undefined && max !== undefined)
                 {
                     operation = QueryOperation.BETWEEN;
                     valueToUse = [min, max];
                 }
-                else if(min) 
+                else if(min !== undefined) 
                 {
                     operation = QueryOperation.GREATER_THAN_EQUALS;
                     valueToUse = min;
                 }
-                else if(max)
+                else if(max !== undefined)
                 {
                     operation = QueryOperation.LESS_THAN_EQUALS;
                     valueToUse = max;
