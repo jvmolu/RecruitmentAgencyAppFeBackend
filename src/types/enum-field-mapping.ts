@@ -25,6 +25,8 @@ export const ENUM_FIELD_MAP: Record<DbTable, string[]> = {
 	],
 	[DbTable.APPLICATIONS_LIFECYCLE]: ["status"],
 	[DbTable.QUESTIONS]: [],
+	[DbTable.INTERVIEWS]: ["status"],
+	[DbTable.INTERVIEW_QUESTIONS]: ["type"],
 };
 
 export const isEnumField = (tableName: DbTable, fieldName: string): boolean => {

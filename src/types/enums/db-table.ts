@@ -13,6 +13,8 @@ enum DbTable {
 	APPLICATIONS = "applications",
 	APPLICATIONS_LIFECYCLE = "applications_lifecycle",
 	QUESTIONS = "questions",
+	INTERVIEWS = "interviews",
+	INTERVIEW_QUESTIONS = "interview_questions",
 }
 
 export default DbTable;

@@ -11,6 +11,8 @@ import userExperienceSchemaMapping from "./table-entity-mismatch-mappings/user-e
 import userProfileSchemaMapping from "./table-entity-mismatch-mappings/user-profile-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
 import questionSchemaMapping from "./table-entity-mismatch-mappings/question-schema-mapping";
+import interviewSchemaMapping from "./table-entity-mismatch-mappings/interview-schema-mapping";
+import interviewQuestionSchemaMapping from "./table-entity-mismatch-mappings/interview-question-schema-mapping";
 
 export type FieldMapping = {
 	entityField: string;
@@ -31,6 +33,8 @@ export class SchemaMapper {
 		[DbTable.USER_EDUCATION]: userEducationSchemaMapping,
 		[DbTable.APPLICATIONS_LIFECYCLE]: applicationLifecycleSchemaMapping,
 		[DbTable.QUESTIONS]: questionSchemaMapping,
+		[DbTable.INTERVIEWS]: interviewSchemaMapping,
+		[DbTable.INTERVIEW_QUESTIONS]: interviewQuestionSchemaMapping,
 	};
 
 	static toEntity<T>(tableName: DbTable, dbRow: { [key: string]: any }): T {
