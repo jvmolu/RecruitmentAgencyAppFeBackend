@@ -5,6 +5,7 @@ import { isAuthError, isDatabaseError, isZodError } from "../types/error/general
 import { UserAuthData, UserAuthDataWithProfileData } from "../types/user-auth-data";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { User } from "../types/zod/user-entity";
+import { hashPassword } from "../common/hash-util";
 
 export class UserController {
 
@@ -162,8 +163,11 @@ export class UserController {
                 });
             }
 
+            // Hash Password
+            const hashedPassword = await hashPassword(password);
+
             // Reset the password
-            const userUpdateResult = await UserService.updateByParams({ email }, { password });
+            const userUpdateResult = await UserService.updateByParams({ email }, { password: hashedPassword });
             if (isGeneralAppFailureResponse(userUpdateResult)) {
                 return res.status(userUpdateResult.statusCode).json({
                     success: false,
