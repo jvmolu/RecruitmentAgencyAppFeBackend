@@ -163,7 +163,7 @@ class UserRepository extends BaseRepository {
             // Prepare the update fields
             const updateFields = SchemaMapper.toDbSchema(DbTable.USERS, userUpdateFields);
             // Build the query
-            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.USER_PROFILES, updateFields, searchQueryFields);
+            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.USERS, updateFields, searchQueryFields);
             // Execute the query
             return await this.executeQuery<User>(query, params, client);
     }
