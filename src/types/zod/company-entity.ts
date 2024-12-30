@@ -1,6 +1,7 @@
 import Status from "../enums/status";
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
+import { DateRange } from "./range-entities";
 
 // Define the schema for the Company model
 const CompanySchema = BaseSchema.merge(
@@ -21,6 +22,11 @@ const CompanySearchSchema = BaseSchema.merge(
     address: z.string().nullable(),
     isPartner: z.boolean().nullable(),
     status: z.nativeEnum(Status).nullable(),
+
+    // Min-Max Options - Handled in repository
+    // Range will be like: {min: 0, max: 10}
+    createdAtRange: DateRange.optional(),
+    updatedAtRange: DateRange.optional()
   })
 );
 

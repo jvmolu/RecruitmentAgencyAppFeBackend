@@ -9,6 +9,7 @@ import { ComapnySearchParams, Company, CompanySearchOptions, CompanyType, Compan
 import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
+import { isDateRange, isNumberRange } from "../types/zod/range-entities";
 
 class CompanyRepository extends BaseRepository {
 
@@ -137,24 +138,57 @@ class CompanyRepository extends BaseRepository {
     private createSearchFields(companyFields: Partial<CompanySearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(companyFields).forEach(([key, value]) => {
+
+            if(key.includes('Range')) {
+                key = key.replace('Range', '');
+            }
+            let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
+
             let operation: QueryOperation;
+            let valueToUse: any = value;
+
             if(value === null) {
                 operation = QueryOperation.IS_NULL;
             } else if(key == 'id') {
                 operation = QueryOperation.EQUALS;
             } else if (isEnumField(this.tableName, key)) {
                 operation = QueryOperation.EQUALS;
-            } else if (typeof value === 'string') {
+            } else if (isNumberRange(value) || isDateRange(value)) {
+                 // value is like: { min: 10, max: 20 }
+                 // need to use queryOperation based on if we have both min and max or only one of them
+                 // value needs to be an array of two elements or a single element
+                 const { min, max } = value;
+  
+                 if(min !== undefined && max !== undefined) 
+                 {
+                    operation = QueryOperation.BETWEEN;
+                    valueToUse = [min, max];
+                 }
+                 else if(min !== undefined) 
+                 {
+                    operation = QueryOperation.GREATER_THAN_EQUALS;
+                    valueToUse = min;
+                 }
+                 else if(max !== undefined)
+                 {
+                    operation = QueryOperation.LESS_THAN_EQUALS;
+                    valueToUse = max;
+                 }
+                 else 
+                 {
+                   // INVALID RANGE
+                   return;
+                 }
+              }
+            else if (typeof value === 'string') {
                 operation = QueryOperation.ILIKE;
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            let keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
-            if(tableAlias) {
-                keyToUse = `${tableAlias}.${keyToUse}`;
-            }
+
             // Add the field to the queryFields object
-            queryFields[keyToUse] = { value, operation };
+            queryFields[keyToUse] = { value:valueToUse, operation };
         });
         return queryFields;
     }

@@ -60,8 +60,8 @@ const JobSearchSchema = BaseSchema.merge(
         // Range will be like: {min: 0, max: 10}
         experienceRequiredRange: NumberRange.optional(),
         budgetAmountRange: NumberRange.optional(),
-        createdDateRange: DateRange.optional(),
-        updatedDateRange: DateRange.optional()
+        createdAtRange: DateRange.optional(),
+        updatedAtRange: DateRange.optional()
     })
 );
 
