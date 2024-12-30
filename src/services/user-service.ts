@@ -218,6 +218,9 @@ export class UserService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         return await UserService.userRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
     }
 

@@ -120,6 +120,9 @@ export class ApplicationService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         const updateApplicationRes = await this.applicationRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
         if (isGeneralAppFailureResponse(updateApplicationRes)) {
             return updateApplicationRes;

@@ -108,6 +108,9 @@ export class UserProfileService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         // Validate and update user profile
         const userProfileResult = await this.userProfileRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
         if (isGeneralAppFailureResponse(userProfileResult)) {

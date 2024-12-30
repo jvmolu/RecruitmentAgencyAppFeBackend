@@ -99,6 +99,10 @@ export class JobService {
                 success: false
             };
         }
+
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         jobUpdateFields = updateValidationResult.data;
 
         return await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields);
