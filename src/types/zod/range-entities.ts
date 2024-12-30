@@ -22,15 +22,15 @@ type DateRangeType = z.infer<typeof DateRange>;
 type StringRangeType = z.infer<typeof StringRange>;
 
 function isNumberRange(value: any): value is NumberRangeType {
-    return NumberRange.partial().safeParse(value).success;
+    return NumberRange.safeParse(value).success;
 }
 
 function isDateRange(value: any): value is DateRangeType {
-    return DateRange.partial().safeParse(value).success;
+    return DateRange.safeParse(value).success;
 }
 
 function isStringRange(value: any): value is StringRangeType {
-    return StringRange.partial().safeParse(value).success;
+    return StringRange.safeParse(value).success;
 }
 
 export { 
