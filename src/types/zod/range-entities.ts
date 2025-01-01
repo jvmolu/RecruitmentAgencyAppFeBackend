@@ -7,9 +7,30 @@ const NumberRange = z.object({
     max: z.number().optional()
 });
 
+// const DateRange = z.object({
+//     min: z.string().datetime().optional(),
+//     max: z.string().datetime().optional()
+// });
+
+// How to take date in a different format than the default one?
+// Need to also transform the date to the default format
 const DateRange = z.object({
-    min: z.string().datetime().optional(),
-    max: z.string().datetime().optional()
+    min: z.string().refine((val) => {
+        try {
+            const date = new Date(val);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }).transform((val) => new Date(val).toISOString()).optional(),
+    max: z.string().refine((val) => {
+        try {
+            const date = new Date(val);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }).transform((val) => new Date(val).toISOString()).optional()
 });
 
 const StringRange = z.object({
