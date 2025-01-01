@@ -20,6 +20,10 @@ export class UserProfileService {
     private static userProfileRepository: UserProfileRepository = new UserProfileRepository();
     private static s3Service: S3Service = S3Service.getInstance();
 
+    public static async downloadFile(bucketName: string, fileUrl: string): Promise<GeneralAppResponse<Buffer>> {
+        return await this.s3Service.downloadFile(bucketName, fileUrl);
+    }
+
     @Transactional()
     public static async createUserProfileWithDetails(profileData: Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, educationData: Omit<UserEducationType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], experienceData: Omit<UserExperienceType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
         

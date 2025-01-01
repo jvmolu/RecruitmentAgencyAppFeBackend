@@ -11,4 +11,7 @@ UserProfileRouter.post('/', MulterRequestParser, Authenticate, IsPdfFile, UserPr
 UserProfileRouter.post('/findByParams', Authenticate, UserProfileController.findByParams);
 UserProfileRouter.put('/', MulterRequestParser, Authenticate, IsPdfFile, AuthorizeSelf, UserProfileController.updateUserProfile);
 
+// File Download Route
+UserProfileRouter.get('/download', Authenticate, UserProfileController.downloadFile);
+
 export default UserProfileRouter;
