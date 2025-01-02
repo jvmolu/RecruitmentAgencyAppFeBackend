@@ -127,6 +127,12 @@ class JobRepository extends BaseRepository {
             offset = (jobSearchParams.page - 1) * jobSearchParams.limit;
           }
 
+          // Order by
+          jobSearchParams.orderBy = SchemaMapper.toDbField(DbTable.JOBS, jobSearchParams.orderBy);
+          if(jobSearchParams.orderBy == 'companyName') {
+            jobSearchParams.orderBy = `${companyTableAlias}.name`;
+          }
+
           const { query, params } = QueryBuilder.buildSelectQuery(
             DbTable.JOBS,
             searchQueryFields,

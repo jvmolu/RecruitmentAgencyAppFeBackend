@@ -75,6 +75,9 @@ class CompanyRepository extends BaseRepository {
           if (companySearchParams.page && companySearchParams.limit) {
             offset = (companySearchParams.page - 1) * companySearchParams.limit;
           }
+
+          // Order by
+          companySearchParams.orderBy = SchemaMapper.toDbField(DbTable.COMPANIES, companySearchParams.orderBy);
       
           const { query, params } = QueryBuilder.buildSelectQuery(
             DbTable.COMPANIES,

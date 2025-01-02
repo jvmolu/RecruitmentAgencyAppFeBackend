@@ -124,6 +124,9 @@ class UserProfileRepository extends BaseRepository {
             if (userProfileSearchParams.page && userProfileSearchParams.limit) {
                 offset = (userProfileSearchParams.page - 1) * userProfileSearchParams.limit;
             }
+
+            // Order by
+            userProfileSearchParams.orderBy = SchemaMapper.toDbField(DbTable.USER_PROFILES, userProfileSearchParams.orderBy);
     
             const { query, params } = QueryBuilder.buildSelectQuery(
                 DbTable.USER_PROFILES,

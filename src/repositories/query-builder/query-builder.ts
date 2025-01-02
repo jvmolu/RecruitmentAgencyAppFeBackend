@@ -98,7 +98,9 @@ export class QueryBuilder {
 
     // ORDER_BY
     if (orderBy) {
-      query += ` ORDER BY ${baseTableAlias}.${orderBy} ${sortOrder}`;
+      // If the orderBy field is not fully qualified, add the baseTableAlias
+      orderBy = orderBy.includes('.') ? orderBy : `${baseTableAlias}.${orderBy}`;
+      query += ` ORDER BY ${orderBy} ${sortOrder}`;
     }
 
     // Add LIMIT and OFFSET

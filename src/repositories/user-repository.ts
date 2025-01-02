@@ -104,6 +104,9 @@ class UserRepository extends BaseRepository {
             offset = (userSearchParams.page - 1) * userSearchParams.limit;
           }
 
+          // Order by
+          userSearchParams.orderBy = SchemaMapper.toDbField(DbTable.USERS, userSearchParams.orderBy);
+
           const { query, params } = QueryBuilder.buildSelectQuery(
             DbTable.USERS,
             searchQueryFields,
