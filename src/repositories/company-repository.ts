@@ -142,7 +142,7 @@ class CompanyRepository extends BaseRepository {
             if(key.includes('Range')) {
                 key = key.replace('Range', '');
             }
-            let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.COMPANIES, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
 
             let operation: QueryOperation;
