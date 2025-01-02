@@ -9,5 +9,9 @@ InterviewRouter.post(
 	Authenticate,
 	InterviewController.startInterview
 );
-
+InterviewRouter.post(
+	"/generate-question",
+	Authenticate,
+	InterviewController.generateQuestion
+);
 export default InterviewRouter;
