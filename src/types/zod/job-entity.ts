@@ -77,7 +77,7 @@ const JobSearchParamsSchema = BaseSearchParams.merge(
 
 type JobType = z.infer<typeof JobSchema>
 type JobSearchOptions = z.infer<typeof JobSearchSchema>
-type JobWithCompanyData = (Job & { company: Partial<CompanyType> | undefined, partner: Partial<CompanyType> | undefined, appliesCount: number | undefined, matchesCount: number | undefined });
+type JobWithCompanyData = (Partial<Job> & { company: Partial<CompanyType> | undefined, partner: Partial<CompanyType> | undefined, appliesCount: number | undefined, matchesCount: number | undefined });
 type JobSearchParams = z.infer<typeof JobSearchParamsSchema>
 
 class Job implements JobType {
