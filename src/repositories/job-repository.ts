@@ -81,7 +81,20 @@ class JobRepository extends BaseRepository {
             { field: `${companyTableAlias}.website`, alias: 'company_website' }, // Not selected by jobTableAlias.*
           ]
 
-          let groupByFields: string[] = [`${jobTableAlias}.id`, `${companyTableAlias}.id`];
+          const partnerTableAlias = 'pc';
+          joins.push({
+            joinType: JoinType.LEFT,
+            tableName: DbTable.COMPANIES,
+            alias: partnerTableAlias,
+            onCondition: `${jobTableAlias}.partner_id = ${partnerTableAlias}.id`,
+          });
+
+          selectFieldsAndAlias.push({
+            field: `${partnerTableAlias}.name`,
+            alias: 'partner_name',
+          });
+
+          let groupByFields: string[] = [`${jobTableAlias}.id`, `${companyTableAlias}.id`, `${partnerTableAlias}.id`];
 
           if(jobSearchParams.isShowAppliesCount) {
             joins.push({
@@ -135,7 +148,7 @@ class JobRepository extends BaseRepository {
 
           // Map the result to include company data
           const data: JobWithCompanyData[] = response.data.map((row) => {
-            const { applies_count, matches_count, company_name, company_website, ...jobFields } = row;
+            const { applies_count, matches_count, partner_name, company_name, company_website, ...jobFields } = row;
             return {
               ...jobFields,
               company: jobSearchParams.isShowCompanyData ? {
@@ -143,6 +156,12 @@ class JobRepository extends BaseRepository {
                 name: company_name,
                 website: company_website,
               } : undefined,
+              partner: (jobFields.partnerId && jobSearchParams.isShowPartnerData)
+              ? {
+                  id: jobFields.partnerId,
+                  name: partner_name,
+                }
+              : undefined,
               appliesCount: jobSearchParams.isShowAppliesCount ? applies_count : undefined,
               matchesCount: jobSearchParams.isShowMatchesCount ? matches_count : undefined,
             };
