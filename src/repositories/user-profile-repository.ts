@@ -245,7 +245,7 @@ class UserProfileRepository extends BaseRepository {
                     return;
                 }
             }
-            else if (isEnumField(this.tableName, key)) 
+            else if (isEnumField(table, key)) 
             {
                 operation = QueryOperation.EQUALS;
             }
