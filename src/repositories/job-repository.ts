@@ -155,14 +155,6 @@ class JobRepository extends BaseRepository {
           // Map the result to include company data
           const data: JobWithCompanyData[] = response.data.map((row) => {
             const { applies_count, matches_count, partner_name, company_name, company_website, ...jobFields } = row;
-
-            let hiddenColumns: string[] = jobFields.hiddenColumns;
-            delete(jobFields.hiddenColumns);
-
-            (hiddenColumns || []).forEach((column) => {
-              delete(jobFields[column]);
-            });
-
             return {
               ...jobFields,
               company: jobSearchParams.isShowCompanyData ? {
