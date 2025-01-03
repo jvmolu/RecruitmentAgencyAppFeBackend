@@ -1,5 +1,5 @@
 import { JobRepository } from "../repositories/job-repository";
-import { GeneralAppResponse } from "../types/response/general-app-response";
+import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { v4 as uuidv4 } from 'uuid';
 import { JobSchema, JobSearchOptions, JobSearchSchema, JobType, Job, JobWithCompanyData, JobSearchParams, JobSearchParamsSchema } from "../types/zod/job-entity";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -68,7 +68,22 @@ export class JobService {
 
         console.log(jobFields, jobSearchParams);
 
-        return await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
+        const jobs: GeneralAppResponse<JobWithCompanyData[]> = await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
+        if(isGeneralAppFailureResponse(jobs)) {
+            return jobs;
+        }
+
+        for(let i = 0; i < jobs.data.length; i++) {
+            let hiddenColumns: string[] | undefined = jobs.data[i].hiddenColumns;
+            if(hiddenColumns) {
+                delete(jobs.data[i].hiddenColumns);
+                (hiddenColumns || []).forEach((column) => {
+                  delete((jobs.data[i] as any)[column]);
+                });
+            }
+        }
+
+        return jobs;
       }
 
     public static async updateJobs(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<JobType[]>> {
