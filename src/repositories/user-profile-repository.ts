@@ -220,9 +220,6 @@ class UserProfileRepository extends BaseRepository {
                 // need to use queryOperation based on if we have both min and max or only one of them
                 // value needs to be an array of two elements or a single element
                 const { min, max } = value;
-                keyToUse = keyToUse.replace('Range', '');
-                keyToUse = SchemaMapper.toDbField(table, key);
-                if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
                 
                 if(min !== undefined && max !== undefined)
                 {
