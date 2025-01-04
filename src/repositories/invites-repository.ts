@@ -7,6 +7,7 @@ import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import DbTable from "../types/enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import QueryOperation from "../types/enums/query-operation";
+import { PoolClient } from "pg";
 
 class InviteRepository extends BaseRepository {
 
@@ -33,11 +34,11 @@ class InviteRepository extends BaseRepository {
         }
     }
 
-    async findByParams(inviteFields: Partial<InviteSearchOptions>): Promise<GeneralAppResponse<Invite[]>> {
+    async findByParams(inviteFields: Partial<InviteSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<Invite[]>> {
         try {
             const searchFields = this.createSearchFields(inviteFields);
             const { query, params } = QueryBuilder.buildSelectQuery(this.tableName, searchFields);
-            return await this.executeQuery<Invite>(query, params);
+            return await this.executeQuery<Invite>(query, params, client);
         } catch (error: any) {
             return {
                 error: error,
@@ -45,6 +46,22 @@ class InviteRepository extends BaseRepository {
                 statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
                 success: false
             }
+        }
+    }
+
+    async updateByParams(inviteSearchFields: Partial<InviteSearchOptions>, inviteUpdateFields: Partial<InviteType>, client?: PoolClient): Promise<GeneralAppResponse<Invite[]>> {
+        try {
+            const searchQueryFields: QueryFields = this.createSearchFields(inviteSearchFields);
+            const updateFields = SchemaMapper.toDbSchema(DbTable.INVITES, inviteUpdateFields);
+            const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.INVITES, updateFields, searchQueryFields);
+            return await this.executeQuery<Invite>(query, params, client);
+        } catch (error: any) {
+            return {
+                error,
+                businessMessage: 'Internal server error',
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+                success: false
+            };
         }
     }
 

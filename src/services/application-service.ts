@@ -9,14 +9,20 @@ import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-ent
 import { v4 as uuidv4 } from "uuid";
 import { Transactional } from "../decorators/transactional";
 import { BadRequestError } from "../types/error/bad-request-error";
+import { InviteRepository } from "../repositories/invites-repository";
+import ApplicationStages from "../types/enums/application-stages";
+import InviteStatus from "../types/enums/invite-status";
+import { InviteType } from "../types/zod/invite-entity";
 
 export class ApplicationService {
 
     private static applicationRepository: ApplicationRepository = new ApplicationRepository();
+    private static inviteRepository: InviteRepository = new InviteRepository();
     private static s3Service: S3Service = S3Service.getInstance();
 
     @Transactional()
     public static async createApplication(applicationData: Omit<ApplicationType, 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<ApplicationType>> {
+        
         const application: ApplicationType = {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -35,22 +41,49 @@ export class ApplicationService {
             };
         }
 
+        const lifecycleData: ApplicationLifecycleType[] = [];
+
+        // Check if candidate has invited
+        const inviteRes = await this.inviteRepository.findByParams({candidateId: applicationData.candidateId, jobId: applicationData.jobId}, client);
+        if (isGeneralAppFailureResponse(inviteRes)) {
+            return inviteRes;
+        }
+
+        if(inviteRes.data.length > 0) {
+            application.inviteId = inviteRes.data[0].id;
+            // Update the status of this invite to Accepted
+            const updateInviteRes = await this.inviteRepository.updateByParams({id: inviteRes.data[0].id}, {status: InviteStatus.ACCEPTED}, client);
+            if (isGeneralAppFailureResponse(updateInviteRes)) {
+                return updateInviteRes;
+            }
+        }
+
         const applicationRes = await this.applicationRepository.create(validationResult.data, client);
         if (isGeneralAppFailureResponse(applicationRes)) {
             return applicationRes;
         }
 
-        // Insert application lifecycle data
-        const lifecycleData: ApplicationLifecycleType = {
+        if(inviteRes.data.length > 0) {
+            lifecycleData.push({
+                id: uuidv4(),
+                createdAt: inviteRes.data[0].createdAt,
+                updatedAt: inviteRes.data[0].updatedAt,
+                applicationId: applicationRes.data.id,
+                status: ApplicationStages.INVITED,
+                notes: 'Candidate Invited',
+            });
+        }
+        
+        lifecycleData.push({
             id: uuidv4(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             applicationId: applicationRes.data.id,
             status: applicationRes.data.stage,
             notes: 'Application created',
-        };
+        });
 
-        const insertStatusRes = await this.applicationRepository.insertLifecycles([lifecycleData], client);
+        const insertStatusRes = await this.applicationRepository.insertLifecycles(lifecycleData, client);
         if (isGeneralAppFailureResponse(insertStatusRes)) {
             return insertStatusRes;
         }
@@ -61,7 +94,7 @@ export class ApplicationService {
     public static async findByParams(
         applicationFields: Partial<ApplicationSearchOptions>,
         applicationSearchParams: Partial<ApplicationSearchParams>
-    ) : Promise<GeneralAppResponse<ApplicationWithRelatedData[]>> {
+    ) : Promise<GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}>> {
 
         const validationResult = ApplicationSearchSchema.partial().safeParse(applicationFields);
         if (!validationResult.success) {
@@ -87,7 +120,38 @@ export class ApplicationService {
             };
         }
 
-        return await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams);
+        const applicationsRes = await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams);
+        if (isGeneralAppFailureResponse(applicationsRes)) {
+            return applicationsRes;
+        }
+
+        let invitesRes: GeneralAppResponse<InviteType[]> = {success: true, data: []};      
+
+        // If searching applications for a specific user, also send the pending invites
+        if(applicationSearchParams.isShowPendingInvites) {
+            if(applicationFields.candidateId === undefined) {
+                let badRequestError: BadRequestError = new Error('CandidateId is required to get pending invites') as BadRequestError;
+                badRequestError.errorType = 'BadRequestError';
+                return {
+                    error: badRequestError,
+                    statusCode: HttpStatusCode.BAD_REQUEST,
+                    businessMessage: 'Invalid search parameters',
+                    success: false
+                };
+            }
+            invitesRes = await this.inviteRepository.findByParams({candidateId: applicationFields.candidateId, status: InviteStatus.PENDING});
+            if (isGeneralAppFailureResponse(invitesRes)) {
+                return invitesRes;
+            }
+        }
+
+        return {
+            success: true,
+            data: {
+                applications: applicationsRes.data,
+                pendingInvites: invitesRes.data
+            }
+        };
     }
 
     @Transactional()

@@ -4,6 +4,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/respon
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { ApplicationType, ApplicationWithRelatedData } from "../types/zod/application-entity";
 import { v4 as uuidv4 } from 'uuid';
+import { InviteType } from "../types/zod/invite-entity";
 
 export class ApplicationController {
 
@@ -21,7 +22,7 @@ export class ApplicationController {
                 });
             }
 
-            const existingApplication: GeneralAppResponse<ApplicationType[]> = await ApplicationService.findByParams({candidateId, jobId}, {});
+            const existingApplication: GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}> = await ApplicationService.findByParams({candidateId, jobId}, {});
             if(isGeneralAppFailureResponse(existingApplication)) {
                 return res.status(existingApplication.statusCode).json({
                     success: false,
@@ -30,7 +31,7 @@ export class ApplicationController {
                 });
             }
 
-            if(existingApplication.data.length > 0) {
+            if(existingApplication.data.applications.length > 0) {
                 return res.status(HttpStatusCode.CONFLICT).json({
                     success: false,
                     message: 'Application already exists for this candidate and job'
@@ -83,7 +84,7 @@ export class ApplicationController {
 
     public static async findByParams(req: Request, res: Response): Promise<any> {
         try {
-            const result: GeneralAppResponse<ApplicationWithRelatedData[]> = await ApplicationService.findByParams(req.body, req.query);
+            const result: GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}> = await ApplicationService.findByParams(req.body, req.query);
             if (isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

@@ -97,4 +97,35 @@ export class InviteService {
         return await InviteService.inviteRepository.findByParams(inviteFields);
     }
 
+    public static async updateInvites(inviteSearchFields: Partial<InviteSearchOptions>, inviteUpdateFields: Partial<InviteType>): Promise<GeneralAppResponse<InviteType[]>> {
+        // Validate invite search data
+        const validationResult = InviteSearchSchema.partial().safeParse(inviteSearchFields);
+        if (!validationResult.success) {
+            let zodError: ZodParsingError = validationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid invite search data',
+                success: false
+            };
+        }
+        inviteSearchFields = validationResult.data;
+
+        // Validate invite update data
+        const updateValidationResult = InviteSchema.partial().safeParse(inviteUpdateFields);
+        if (!updateValidationResult.success) {
+            let zodError: ZodParsingError = updateValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid invite update data',
+                success: false
+            };
+        }
+        inviteUpdateFields = updateValidationResult.data;
+
+        return await InviteService.inviteRepository.updateByParams(inviteSearchFields, inviteUpdateFields);
+    }
 }
