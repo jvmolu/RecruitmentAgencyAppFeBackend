@@ -68,22 +68,7 @@ export class JobService {
 
         console.log(jobFields, jobSearchParams);
 
-        const jobs: GeneralAppResponse<JobWithCompanyData[]> = await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
-        if(isGeneralAppFailureResponse(jobs)) {
-            return jobs;
-        }
-
-        for(let i = 0; i < jobs.data.length; i++) {
-            let hiddenColumns: string[] | undefined = jobs.data[i].hiddenColumns;
-            if(hiddenColumns) {
-                delete(jobs.data[i].hiddenColumns);
-                (hiddenColumns || []).forEach((column) => {
-                  delete((jobs.data[i] as any)[column]);
-                });
-            }
-        }
-
-        return jobs;
+        return await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
       }
 
     public static async updateJobs(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<JobType[]>> {
