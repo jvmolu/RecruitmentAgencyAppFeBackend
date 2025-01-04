@@ -179,7 +179,6 @@ class UserProfileRepository extends BaseRepository {
             };
         }
     }
-    
 
     async updateByParams(userProfileFields: Partial<UserProfileSearchOptions>,
         userProfileUpdatedFields: Partial<UserProfileType>,
@@ -223,6 +222,7 @@ class UserProfileRepository extends BaseRepository {
                 const { min, max } = value;
                 keyToUse = keyToUse.replace('Range', '');
                 keyToUse = SchemaMapper.toDbField(table, key);
+                if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
                 
                 if(min !== undefined && max !== undefined)
                 {
@@ -245,7 +245,7 @@ class UserProfileRepository extends BaseRepository {
                     return;
                 }
             }
-            else if (isEnumField(table, key)) 
+            else if (isEnumField(table, key))
             {
                 operation = QueryOperation.EQUALS;
             }

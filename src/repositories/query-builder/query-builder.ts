@@ -77,9 +77,7 @@ export class QueryBuilder {
       // return { conditionStrings, params };
       let paramIndex = 1;
       Object.entries(conditions).forEach(([key, condition], index) => {
-        const paramPlaceholder = `$${index + 1}`;
         const { value, operation } = condition;
-        const qualifiedField = `${baseTableAlias}.${key}`;
         const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
         query += queryPart;
         params.push(...newParams);
