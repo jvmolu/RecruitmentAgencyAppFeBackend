@@ -9,6 +9,10 @@ import { User } from "../types/zod/user-entity";
 import { UserService } from "./user-service";
 import { DataNotFoundError } from "../types/error/data-not-found-error";
 import { emailInviteTemplate } from "../templates/email-invite";
+import InviteStatus from "../types/enums/invite-status";
+import { BadRequestError } from "../types/error/bad-request-error";
+import { Application } from "../types/zod/application-entity";
+import { ApplicationService } from "./application-service";
 
 export class InviteService {
 
@@ -37,6 +41,41 @@ export class InviteService {
             };
         }
         invite = validationResult.data;
+
+
+        // Validate if user has already been invited
+        const existingInvite: GeneralAppResponse<InviteType[]> = await InviteService.findByParams({candidateId: invite.candidateId, jobId: invite.jobId, status: InviteStatus.PENDING});
+        if(isGeneralAppFailureResponse(existingInvite)) {
+            return existingInvite;
+        }
+
+        if(existingInvite.data.length > 0) {
+            let badRequestError: BadRequestError = new Error('Candidate has already been invited') as BadRequestError;
+            badRequestError.errorType = 'BadRequestError';
+            return {
+                error: badRequestError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Candidate Already Invited',
+                success: false
+            };
+        }
+
+        // Check if candidate has already applied for the job
+        const existingApplication = await ApplicationService.findByParams({candidateId: invite.candidateId, jobId: invite.jobId}, {});
+        if(isGeneralAppFailureResponse(existingApplication)) {
+            return existingApplication;
+        }
+
+        if(existingApplication.data.applications.length > 0) {
+            let badRequestError: BadRequestError = new Error('Candidate has already applied for the job') as BadRequestError;
+            badRequestError.errorType = 'BadRequestError';
+            return {
+                error: badRequestError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Candidate Already Applied',
+                success: false
+            };
+        }
 
         // SEND EMAIL INVITE
         let emailResponse: GeneralAppResponse<void> = await InviteService.sendEmailInvite(invite);

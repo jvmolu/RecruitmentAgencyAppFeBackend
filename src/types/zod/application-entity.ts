@@ -49,7 +49,7 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
       isShowJobData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowCandidateData: z.string().default('true').transform((val) => val === 'true'), // boolean
       isShowLifeCycleData: z.string().default('true').transform((val) => val === 'true'), // boolean
-      isShowPendingInvites: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowPendingInvites: z.string().default('false').transform((val) => val === 'true'), // boolean
   })
 );
 
