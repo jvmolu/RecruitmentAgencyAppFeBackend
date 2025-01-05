@@ -1,7 +1,6 @@
 import { InterviewRepository } from "../repositories/interview-repository";
 import {
 	InterviewQuestionType,
-	InterviewStatus,
 	InterviewType,
 } from "../types/zod/interview-entity";
 import {
@@ -18,6 +17,7 @@ import {
 	AIServiceResponse,
 } from "../types/response/ai-service-response";
 import { GeneralAppError } from "../types/error/general-app-error";
+import InterviewStatus from "../types/enums/interview-status";
 
 export class InterviewService {
 	private static interviewRepository = new InterviewRepository();
