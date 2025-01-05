@@ -11,7 +11,10 @@ import {
 } from "../types/zod/application-entity";
 import { v4 as uuidv4 } from "uuid";
 import { JobService } from "../services/job-service";
-import { AIEvaluateService } from "../services/ai-evaluate-service";
+import {
+	AIEvaluateService,
+	AnalysisRequestData,
+} from "../services/ai-evaluate-service";
 
 export class ApplicationController {
 	public static async createApplication(
@@ -160,21 +163,31 @@ export class ApplicationController {
 			const jobDetails = jobResponse.data[0];
 			const application = applicationResponse.data[0];
 
-			const analysisData = {
+			const analysisData: AnalysisRequestData = {
 				jobDescription: {
 					title: jobDetails.title,
-					description: jobDetails.jobDescription,
-					skills: jobDetails.skills,
-					experienceRequired: jobDetails.experienceRequired,
+					description: jobDetails.jobDescription || "",
+					skills: jobDetails.skills || [],
+					experienceRequired: jobDetails.experienceRequired || 0,
 				},
 				candidateProfile: {
 					skills: candidateData.skills,
 					experience: candidateData.experience,
 					resumeUrl: application.resumeLink,
-					noticePeriod: candidateData.noticePeriod,
-					expectedSalary: candidateData.expectedSalary,
+					noticePeriod: Number(candidateData.noticePeriod) || 0,
+					expectedSalary: Number(candidateData.expectedSalary) || 0,
 				},
 			};
+
+			if (
+				!analysisData.jobDescription.title ||
+				!analysisData.candidateProfile.resumeUrl
+			) {
+				return res.status(HttpStatusCode.BAD_REQUEST).json({
+					success: false,
+					message: "Missing required fields for analysis",
+				});
+			}
 
 			const aiEvaluation = await AIEvaluateService.evaluateMatch(analysisData);
 

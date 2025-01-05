@@ -7,6 +7,7 @@ export enum InterviewStatus {
 	COMPLETED = "COMPLETED",
 }
 
+//change max
 const InterviewQuestionSchema = BaseSchema.merge(
 	z.object({
 		interviewId: z.string().uuid(),
