@@ -1,6 +1,6 @@
 // src/services/match-service.ts
 import { MatchRepository } from "../repositories/match-repository";
-import { MatchType, MatchSchema, MatchSearchOptions, MatchSearchSchema } from "../types/zod/match-entity";
+import { MatchType, MatchSchema, MatchSearchOptions, MatchSearchSchema, MatchSearchParams, MatchSearchParamsSchema, MatchWithRelatedData } from "../types/zod/match-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -32,8 +32,12 @@ export class MatchService {
     return await this.repository.create(validationResult.data);
   }
 
-  public static async findByParams(params: Partial<MatchSearchOptions>): Promise<GeneralAppResponse<MatchType[]>> {
-    const validationResult = MatchSearchSchema.safeParse(params);
+  public static async findByParams(
+    matchSearchOptions: Partial<MatchSearchOptions>,
+    matchSearchParams: Partial<MatchSearchParams>
+  ): Promise<GeneralAppResponse<MatchWithRelatedData[]>> {
+
+    const validationResult = MatchSearchSchema.safeParse(matchSearchOptions);
     if (!validationResult.success) {
       const error = validationResult.error as ZodParsingError;
       error.errorType = 'ZodParsingError';
@@ -45,6 +49,18 @@ export class MatchService {
       };
     }
 
-    return await this.repository.findByParams(validationResult.data);
+    const searchParamsValidationResult = MatchSearchParamsSchema.safeParse(matchSearchParams);
+    if (!searchParamsValidationResult.success) {
+      const error = searchParamsValidationResult.error as ZodParsingError;
+      error.errorType = 'ZodParsingError';
+      return {
+        error,
+        statusCode: HttpStatusCode.BAD_REQUEST,
+        businessMessage: 'Invalid search parameters',
+        success: false,
+      };
+    }
+
+    return await this.repository.findByParams(validationResult.data, searchParamsValidationResult.data as MatchSearchParams);
   }
 }
