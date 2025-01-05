@@ -147,7 +147,6 @@ class JobRepository extends BaseRepository {
           );
 
           const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
-
           if (isGeneralAppFailureResponse(response)) {
             return response;
           }

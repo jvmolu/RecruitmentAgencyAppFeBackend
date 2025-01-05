@@ -1,6 +1,10 @@
 // src/types/zod/match-entity.ts
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
+import { UserProfileWithRelatedData } from "./user-profile-entity";
+import { JobWithCompanyData } from "./job-entity";
+import { MatchReportType } from "./match-report-entity";
+import { UserWithProfileData } from "./user-entity";
 
 const MatchSchema = BaseSchema.merge(
   z.object({
@@ -30,6 +34,7 @@ const MatchSearchParamsSchema = BaseSearchParams.merge(
 type MatchType = z.infer<typeof MatchSchema>;
 type MatchSearchOptions = z.infer<typeof MatchSearchSchema>;
 type MatchSearchParams = z.infer<typeof MatchSearchParamsSchema>;
+type MatchWithRelatedData = MatchType & { job : Partial<JobWithCompanyData> | undefined, candidate: Partial<UserWithProfileData> | undefined, report: MatchReportType | undefined }
 
 class Match implements MatchType {
   id: string;
@@ -50,4 +55,4 @@ class Match implements MatchType {
   }
 }
 
-export { MatchSchema, MatchType, Match, MatchSearchSchema, MatchSearchOptions, MatchSearchParamsSchema, MatchSearchParams };
+export { MatchSchema, MatchType, Match, MatchSearchSchema, MatchSearchOptions, MatchSearchParamsSchema, MatchSearchParams, MatchWithRelatedData };

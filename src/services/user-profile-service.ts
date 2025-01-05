@@ -1,7 +1,19 @@
 import { UserProfileRepository } from "../repositories/user-profile-repository";
-import { UserProfileType, UserProfileSchema, UserProfileSearchOptions, UserProfileSearchSchema, UserProfile, UserProfileSearchParams, UserProfileWithRelatedData, UserProfileSearchParamsSchema } from "../types/zod/user-profile-entity";
-import { v4 as uuidv4 } from 'uuid';
-import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
+import {
+	UserProfileType,
+	UserProfileSchema,
+	UserProfileSearchOptions,
+	UserProfileSearchSchema,
+	UserProfile,
+	UserProfileSearchParams,
+	UserProfileWithRelatedData,
+	UserProfileSearchParamsSchema,
+} from "../types/zod/user-profile-entity";
+import { v4 as uuidv4 } from "uuid";
+import {
+	GeneralAppResponse,
+	isGeneralAppFailureResponse,
+} from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { Transactional } from "../decorators/transactional";
@@ -14,90 +26,126 @@ import { BadRequestError } from "../types/error/bad-request-error";
 import S3Service from "./aws-service";
 import { UserSearchOptions, UserType } from "../types/zod/user-entity";
 import { UserService } from "./user-service";
+import axios from "axios";
 
 export class UserProfileService {
 
     private static userProfileRepository: UserProfileRepository = new UserProfileRepository();
     private static s3Service: S3Service = S3Service.getInstance();
+	private static AI_SERVICE_URL =
+		process.env.AI_SERVICE_URL || "http://localhost:8000";
 
     public static async downloadFile(bucketName: string, fileUrl: string): Promise<GeneralAppResponse<Buffer>> {
         return await this.s3Service.downloadFile(bucketName, fileUrl);
     }
 
-    @Transactional()
-    public static async createUserProfileWithDetails(profileData: Omit<UserProfileType, 'id' | 'createdAt' | 'updatedAt'>, educationData: Omit<UserEducationType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], experienceData: Omit<UserExperienceType, 'id' | 'userProfileId' | 'createdAt' | 'updatedAt'>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
-        
-        const userProfile: UserProfileType = {
-            id: uuidv4(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            ...profileData
-        };
+	@Transactional()
+	public static async createUserProfileWithDetails(
+		profileData: Omit<UserProfileType, "id" | "createdAt" | "updatedAt">,
+		educationData: Omit<
+			UserEducationType,
+			"id" | "userProfileId" | "createdAt" | "updatedAt"
+		>[],
+		experienceData: Omit<
+			UserExperienceType,
+			"id" | "userProfileId" | "createdAt" | "updatedAt"
+		>[],
+		client?: PoolClient
+	): Promise<GeneralAppResponse<any>> {
+		const userProfile: UserProfileType = {
+			id: uuidv4(),
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			...profileData,
+		};
 
-        const validationResult = UserProfileSchema.safeParse(userProfile);
-        if (!validationResult.success) {
-            let zodError: ZodParsingError = validationResult.error as ZodParsingError;
-            zodError.errorType = 'ZodParsingError';
-            return {
-                error: zodError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid user profile data',
-                success: false
-            };
-        }
+		const validationResult = UserProfileSchema.safeParse(userProfile);
+		if (!validationResult.success) {
+			let zodError: ZodParsingError = validationResult.error as ZodParsingError;
+			zodError.errorType = "ZodParsingError";
+			return {
+				error: zodError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: "Invalid user profile data",
+				success: false,
+			};
+		}
 
-        const userProfileResult: GeneralAppResponse<UserProfile> = await this.userProfileRepository.create(validationResult.data, client);
-        if (isGeneralAppFailureResponse(userProfileResult)) {
-            return userProfileResult;
-        }
+		const userProfileResult: GeneralAppResponse<UserProfile> =
+			await this.userProfileRepository.create(validationResult.data, client);
+		if (isGeneralAppFailureResponse(userProfileResult)) {
+			return userProfileResult;
+		}
 
-        const userProfileId: string = userProfileResult.data.id;
-        const educationHistoriesToCreate: Omit<UserEducationType, 'id' | 'createdAt' | 'updatedAt'>[] = educationData.map(education => {
-            return {
-                ...education,
-                userProfileId
-            };
-        });
-        const experienceHistoriesToCreate: Omit<UserExperienceType, 'id' | 'createdAt' | 'updatedAt'>[] = experienceData.map(experience => {
-            return {
-                ...experience,
-                userProfileId
-            };
-        });
+		const userProfileId: string = userProfileResult.data.id;
+		const educationHistoriesToCreate: Omit<
+			UserEducationType,
+			"id" | "createdAt" | "updatedAt"
+		>[] = educationData.map((education) => {
+			return {
+				...education,
+				userProfileId,
+			};
+		});
+		const experienceHistoriesToCreate: Omit<
+			UserExperienceType,
+			"id" | "createdAt" | "updatedAt"
+		>[] = experienceData.map((experience) => {
+			return {
+				...experience,
+				userProfileId,
+			};
+		});
 
-        const educationResults: GeneralAppResponse<UserEducationType[]> = await UserEducationService.createUserEducationBulk(educationHistoriesToCreate, client);
-        if (isGeneralAppFailureResponse(educationResults)) {
-            return educationResults;
-        }
-        const experienceResults: GeneralAppResponse<UserExperienceType[]> = await UserExperienceService.createUserExperienceBulk(experienceHistoriesToCreate, client);
-        if (isGeneralAppFailureResponse(experienceResults)) {
-            return experienceResults;
-        }
+		const educationResults: GeneralAppResponse<UserEducationType[]> =
+			await UserEducationService.createUserEducationBulk(
+				educationHistoriesToCreate,
+				client
+			);
+		if (isGeneralAppFailureResponse(educationResults)) {
+			return educationResults;
+		}
+		const experienceResults: GeneralAppResponse<UserExperienceType[]> =
+			await UserExperienceService.createUserExperienceBulk(
+				experienceHistoriesToCreate,
+				client
+			);
+		if (isGeneralAppFailureResponse(experienceResults)) {
+			return experienceResults;
+		}
 
-        return {
-            success: true,
-            data: {
-                userProfile: userProfileResult.data,
-                education: educationResults.data,
-                experience: experienceResults.data
-            }
-        };
-    }
+		return {
+			success: true,
+			data: {
+				userProfile: userProfileResult.data,
+				education: educationResults.data,
+				experience: experienceResults.data,
+			},
+		};
+	}
 
-    public static async updateUserProfileWithDetails(profileSearchFields: Partial<UserProfileSearchOptions>, userUpdateFields: Partial<UserType>, profileUpdateFields: Partial<UserProfileType>, educationData: Partial<UserEducationType>[], experienceData: Partial<UserExperienceType>[], client?: PoolClient): Promise<GeneralAppResponse<any>> {
-
-        // Validate profile search fields
-        const searchValidationResult = UserProfileSearchSchema.partial().safeParse(profileSearchFields);
-        if (!searchValidationResult.success) {
-            let zodError: ZodParsingError = searchValidationResult.error as ZodParsingError;
-            zodError.errorType = 'ZodParsingError';
-            return {
-                error: zodError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid search parameters',
-                success: false
-            };
-        }
+	public static async updateUserProfileWithDetails(
+		profileSearchFields: Partial<UserProfileSearchOptions>,
+		userUpdateFields: Partial<UserType>,
+		profileUpdateFields: Partial<UserProfileType>,
+		educationData: Partial<UserEducationType>[],
+		experienceData: Partial<UserExperienceType>[],
+		client?: PoolClient
+	): Promise<GeneralAppResponse<any>> {
+		// Validate profile search fields
+		const searchValidationResult =
+			UserProfileSearchSchema.partial().safeParse(profileSearchFields);
+		if (!searchValidationResult.success) {
+			let zodError: ZodParsingError =
+				searchValidationResult.error as ZodParsingError;
+			zodError.errorType = "ZodParsingError";
+			return {
+				error: zodError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: "Invalid search parameters",
+				success: false,
+			};
+		}
 
         // Validate profile update fields
         const updateValidationResult = UserProfileSchema.partial().safeParse(profileUpdateFields);
@@ -115,211 +163,288 @@ export class UserProfileService {
         // Update updatedAt as well
         updateValidationResult.data.updatedAt = new Date().toISOString();
 
-        // Validate and update user profile
-        const userProfileResult = await this.userProfileRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
-        if (isGeneralAppFailureResponse(userProfileResult)) {
-            return userProfileResult;
-        }
+		// Validate and update user profile
+		const userProfileResult = await this.userProfileRepository.updateByParams(
+			searchValidationResult.data,
+			updateValidationResult.data,
+			client
+		);
+		if (isGeneralAppFailureResponse(userProfileResult)) {
+			return userProfileResult;
+		}
 
-        if(userProfileResult.data.length === 0) {
-            const notFoundError: BadRequestError = new Error('No user profile found for the given search parameters') as BadRequestError;
-            notFoundError.errorType = 'BadRequestError';
-            return {
-                success: false,
-                error: notFoundError,
-                statusCode: HttpStatusCode.NOT_FOUND,
-                businessMessage: 'No user profile found for the given search parameters'
-            };
-        }
+		if (userProfileResult.data.length === 0) {
+			const notFoundError: BadRequestError = new Error(
+				"No user profile found for the given search parameters"
+			) as BadRequestError;
+			notFoundError.errorType = "BadRequestError";
+			return {
+				success: false,
+				error: notFoundError,
+				statusCode: HttpStatusCode.NOT_FOUND,
+				businessMessage:
+					"No user profile found for the given search parameters",
+			};
+		}
 
-        // If Education and Experience data is provided, then ONLY 1 User Profile record should be updated
-        if(userProfileResult.data.length > 1) {
-            const badRequestError: BadRequestError = new Error('Multiple user profiles found for the given search parameters, ambiguity in updating education and experience records') as BadRequestError;
-            badRequestError.errorType = 'BadRequestError';
-            return {
-                success: false,
-                error: badRequestError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Multiple user profiles found for the given search parameters, ambiguity in updating education and experience records'
-            };
-        }
+		// If Education and Experience data is provided, then ONLY 1 User Profile record should be updated
+		if (userProfileResult.data.length > 1) {
+			const badRequestError: BadRequestError = new Error(
+				"Multiple user profiles found for the given search parameters, ambiguity in updating education and experience records"
+			) as BadRequestError;
+			badRequestError.errorType = "BadRequestError";
+			return {
+				success: false,
+				error: badRequestError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage:
+					"Multiple user profiles found for the given search parameters, ambiguity in updating education and experience records",
+			};
+		}
 
-        // Hence fetching the first record
-        const userProfileId: string = userProfileResult.data[0].id;
-        const userId: string = userProfileResult.data[0].userId;
+		// Hence fetching the first record
+		const userProfileId: string = userProfileResult.data[0].id;
+		const userId: string = userProfileResult.data[0].userId;
 
-        // Update user data using UserService
-        const userSearchFields: Partial<UserSearchOptions> = { id: userId };
-        const userUpdateResult = await UserService.updateByParams(userSearchFields, userUpdateFields, client);
-        if (isGeneralAppFailureResponse(userUpdateResult)) {
-            return userUpdateResult;
-        }
+		// Update user data using UserService
+		const userSearchFields: Partial<UserSearchOptions> = { id: userId };
+		const userUpdateResult = await UserService.updateByParams(
+			userSearchFields,
+			userUpdateFields,
+			client
+		);
+		if (isGeneralAppFailureResponse(userUpdateResult)) {
+			return userUpdateResult;
+		}
 
-        // Updating Education Data
-        // Segregate Records to be created vs updated
-        let newEducationHistories: any[] = []; // Education history parsing errors are handled in the service
-        let educationDataToBeUpdated: Partial<UserEducationType>[] = [];
-        educationData.map(education => {
-            if (education.id) {
-                educationDataToBeUpdated.push(education);
-            } else {
-                newEducationHistories.push({
-                    ...education,
-                    userProfileId
-                });
-            }
-        });
+		// Updating Education Data
+		// Segregate Records to be created vs updated
+		let newEducationHistories: any[] = []; // Education history parsing errors are handled in the service
+		let educationDataToBeUpdated: Partial<UserEducationType>[] = [];
+		educationData.map((education) => {
+			if (education.id) {
+				educationDataToBeUpdated.push(education);
+			} else {
+				newEducationHistories.push({
+					...education,
+					userProfileId,
+				});
+			}
+		});
 
-        let educationUpdatedData: UserEducationType[] = [];
+		let educationUpdatedData: UserEducationType[] = [];
 
-        // Create new records
-        let educationResults: GeneralAppResponse<UserEducationType[]>;
-        if (newEducationHistories.length > 0) {
-            educationResults = await UserEducationService.createUserEducationBulk(newEducationHistories, client);
-            if (isGeneralAppFailureResponse(educationResults)) {
-                return educationResults;
-            }
-            educationUpdatedData.push(...educationResults.data);
-        }
+		// Create new records
+		let educationResults: GeneralAppResponse<UserEducationType[]>;
+		if (newEducationHistories.length > 0) {
+			educationResults = await UserEducationService.createUserEducationBulk(
+				newEducationHistories,
+				client
+			);
+			if (isGeneralAppFailureResponse(educationResults)) {
+				return educationResults;
+			}
+			educationUpdatedData.push(...educationResults.data);
+		}
 
-        // Update existing records
-        if (educationDataToBeUpdated.length > 0) {
-            const educationUpdatePromises: Promise<GeneralAppResponse<UserEducationType[]>>[] = educationDataToBeUpdated.map(education => {
-                return UserEducationService.updateUserEducations({ id: education.id }, education, client);
-            });
-            const educationUpdateResults = await Promise.all(educationUpdatePromises);
-            educationUpdateResults.forEach(result => {
-                if (isGeneralAppFailureResponse(result)) {
-                    return result;
-                }
-                educationUpdatedData.push(...result.data);
-            });
-        }
-        
-        // Delete Education Records 
-        let allPresentEducationIds : string[] = educationUpdatedData.map(edu => edu.id);
-        let deleteResponse = await UserEducationService.deleteUserEducations({ userProfileId: userProfileId, idNotIn: allPresentEducationIds }, client);
-        if(isGeneralAppFailureResponse(deleteResponse)) {
-            return deleteResponse;
-        }
+		// Update existing records
+		if (educationDataToBeUpdated.length > 0) {
+			const educationUpdatePromises: Promise<
+				GeneralAppResponse<UserEducationType[]>
+			>[] = educationDataToBeUpdated.map((education) => {
+				return UserEducationService.updateUserEducations(
+					{ id: education.id },
+					education,
+					client
+				);
+			});
+			const educationUpdateResults = await Promise.all(educationUpdatePromises);
+			educationUpdateResults.forEach((result) => {
+				if (isGeneralAppFailureResponse(result)) {
+					return result;
+				}
+				educationUpdatedData.push(...result.data);
+			});
+		}
 
-        // Update experience records
+		// Delete Education Records
+		let allPresentEducationIds: string[] = educationUpdatedData.map(
+			(edu) => edu.id
+		);
+		let deleteResponse = await UserEducationService.deleteUserEducations(
+			{ userProfileId: userProfileId, idNotIn: allPresentEducationIds },
+			client
+		);
+		if (isGeneralAppFailureResponse(deleteResponse)) {
+			return deleteResponse;
+		}
 
-        // Segregate Records to be created vs updated
-        let newExperienceHistories: any[] = []; // Experience history parsing errors are handled in the service
-        let experienceDataToBeUpdated: Partial<UserExperienceType>[] = [];
-        experienceData.map(experience => {
-            if (experience.id) {
-                experienceDataToBeUpdated.push(experience);
-            } else {
-                newExperienceHistories.push({
-                    ...experience,
-                    userProfileId
-                });
-            }
-        });
+		// Update experience records
 
-        let experienceUpdatedData: UserExperienceType[] = [];
+		// Segregate Records to be created vs updated
+		let newExperienceHistories: any[] = []; // Experience history parsing errors are handled in the service
+		let experienceDataToBeUpdated: Partial<UserExperienceType>[] = [];
+		experienceData.map((experience) => {
+			if (experience.id) {
+				experienceDataToBeUpdated.push(experience);
+			} else {
+				newExperienceHistories.push({
+					...experience,
+					userProfileId,
+				});
+			}
+		});
 
-        // Create new records
-        let experienceResults: GeneralAppResponse<UserExperienceType[]>;
-        if (newExperienceHistories.length > 0) {
-            experienceResults = await UserExperienceService.createUserExperienceBulk(newExperienceHistories, client);
-            if (isGeneralAppFailureResponse(experienceResults)) {
-                return experienceResults;
-            }
-            experienceUpdatedData.push(...experienceResults.data);
-        }
+		let experienceUpdatedData: UserExperienceType[] = [];
 
-        // Update existing records
-        if (experienceDataToBeUpdated.length > 0) {
-            const experienceUpdatePromises: Promise<GeneralAppResponse<UserExperienceType[]>>[] = experienceDataToBeUpdated.map(experience => {
-                return UserExperienceService.updateUserExperiences({ id: experience.id }, experience, client);
-            });
-            const experienceUpdateResults = await Promise.all(experienceUpdatePromises);
-            experienceUpdateResults.forEach(result => {
-                if (isGeneralAppFailureResponse(result)) {
-                    return result;
-                }
-                experienceUpdatedData.push(...result.data);
-            });
-        }
+		// Create new records
+		let experienceResults: GeneralAppResponse<UserExperienceType[]>;
+		if (newExperienceHistories.length > 0) {
+			experienceResults = await UserExperienceService.createUserExperienceBulk(
+				newExperienceHistories,
+				client
+			);
+			if (isGeneralAppFailureResponse(experienceResults)) {
+				return experienceResults;
+			}
+			experienceUpdatedData.push(...experienceResults.data);
+		}
 
-        // Delete Experience Records
-        let allPresentExperienceIds : string[] = experienceUpdatedData.map(exp => exp.id);
-        let deleteExperienceResponse = await UserExperienceService.deleteUserExperiences({ userProfileId: userProfileId, idNotIn: allPresentExperienceIds }, client);
-        if(isGeneralAppFailureResponse(deleteExperienceResponse)) {
-            return deleteExperienceResponse;
-        }
+		// Update existing records
+		if (experienceDataToBeUpdated.length > 0) {
+			const experienceUpdatePromises: Promise<
+				GeneralAppResponse<UserExperienceType[]>
+			>[] = experienceDataToBeUpdated.map((experience) => {
+				return UserExperienceService.updateUserExperiences(
+					{ id: experience.id },
+					experience,
+					client
+				);
+			});
+			const experienceUpdateResults = await Promise.all(
+				experienceUpdatePromises
+			);
+			experienceUpdateResults.forEach((result) => {
+				if (isGeneralAppFailureResponse(result)) {
+					return result;
+				}
+				experienceUpdatedData.push(...result.data);
+			});
+		}
 
-        return {
-            success: true,
-            data: {
-                userProfile: userProfileResult.data,
-                education: educationUpdatedData,
-                experience: experienceUpdatedData,
-                user: userUpdateResult.data
-            }
-        };
-    }
+		// Delete Experience Records
+		let allPresentExperienceIds: string[] = experienceUpdatedData.map(
+			(exp) => exp.id
+		);
+		let deleteExperienceResponse =
+			await UserExperienceService.deleteUserExperiences(
+				{ userProfileId: userProfileId, idNotIn: allPresentExperienceIds },
+				client
+			);
+		if (isGeneralAppFailureResponse(deleteExperienceResponse)) {
+			return deleteExperienceResponse;
+		}
 
-    public static async findByParams(
-        profileFields: Partial<UserProfileSearchOptions>,
-        profileSearchParams: Partial<UserProfileSearchParams>
-    ): Promise<GeneralAppResponse<UserProfileWithRelatedData[]>> {
-        
-        const validationResult = UserProfileSearchSchema.partial().safeParse(profileFields);
-        if (!validationResult.success) {
-            let zodError: ZodParsingError = validationResult.error as ZodParsingError;
-            zodError.errorType = 'ZodParsingError';
-            return {
-                error: zodError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid search parameters',
-                success: false
-            };
-        }
+		return {
+			success: true,
+			data: {
+				userProfile: userProfileResult.data,
+				education: educationUpdatedData,
+				experience: experienceUpdatedData,
+				user: userUpdateResult.data,
+			},
+		};
+	}
 
-        const searchParams = UserProfileSearchParamsSchema.safeParse(profileSearchParams);
-        if(!searchParams.success) {
-            let zodError: ZodParsingError = searchParams.error as ZodParsingError;
-            zodError.errorType = 'ZodParsingError';
-            return {
-                error: zodError,
-                statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid search parameters',
-                success: false
-            };
-        }
+	public static async findByParams(
+		profileFields: Partial<UserProfileSearchOptions>,
+		profileSearchParams: Partial<UserProfileSearchParams>
+	): Promise<GeneralAppResponse<UserProfileWithRelatedData[]>> {
+		const validationResult =
+			UserProfileSearchSchema.partial().safeParse(profileFields);
+		if (!validationResult.success) {
+			let zodError: ZodParsingError = validationResult.error as ZodParsingError;
+			zodError.errorType = "ZodParsingError";
+			return {
+				error: zodError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: "Invalid search parameters",
+				success: false,
+			};
+		}
 
-        return await this.userProfileRepository.findByParams(validationResult.data, searchParams.data as UserProfileSearchParams);
-    }
+		const searchParams =
+			UserProfileSearchParamsSchema.safeParse(profileSearchParams);
+		if (!searchParams.success) {
+			let zodError: ZodParsingError = searchParams.error as ZodParsingError;
+			zodError.errorType = "ZodParsingError";
+			return {
+				error: zodError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: "Invalid search parameters",
+				success: false,
+			};
+		}
 
-    /**
-     * @method uploadResume
-     * @description Handles the upload of a resume file to DigitalOcean Spaces.
-     * @param file - The file to be uploaded.
-     * @param bucketName - The name of the bucket to upload the file to.
-     * @param userId - The identifier for the user.
-     * @returns Promise resolving to a GeneralAppResponse containing the file URL or an error.
-    **/
-    public static async uploadResume(bucketName: string, userId: string, file: Express.Multer.File): Promise<GeneralAppResponse<string>> {
+		return await this.userProfileRepository.findByParams(
+			validationResult.data,
+			searchParams.data as UserProfileSearchParams
+		);
+	}
 
-        const fileUrl: string = `/cand/user-profiles/${userId}/resume.pdf`;
-        const uploadResult: GeneralAppResponse<void> = await this.s3Service.uploadFile(bucketName, fileUrl, file.buffer);
+	/**
+	 * @method uploadResume
+	 * @description Handles the upload of a resume file to DigitalOcean Spaces.
+	 * @param file - The file to be uploaded.
+	 * @param bucketName - The name of the bucket to upload the file to.
+	 * @param userId - The identifier for the user.
+	 * @returns Promise resolving to a GeneralAppResponse containing the file URL or an error.
+	 **/
+	public static async uploadResume(
+		bucketName: string,
+		userId: string,
+		file: Express.Multer.File
+	): Promise<GeneralAppResponse<string>> {
+		const fileUrl: string = `/cand/user-profiles/${userId}/resume.pdf`;
 
-        if(isGeneralAppFailureResponse(uploadResult)) {
-            return {
-                success: false,
-                businessMessage: uploadResult.businessMessage,
-                error: uploadResult.error,
-                statusCode: uploadResult.statusCode
-            };
-        }
+		// Upload to DigitalOcean
+		const uploadResult: GeneralAppResponse<void> =
+			await this.s3Service.uploadFile(bucketName, fileUrl, file.buffer);
 
-        return {
-            success: true,
-            data: fileUrl
-        };
-    }
+		if (isGeneralAppFailureResponse(uploadResult)) {
+			return {
+				success: false,
+				businessMessage: uploadResult.businessMessage,
+				error: uploadResult.error,
+				statusCode: uploadResult.statusCode,
+			};
+		}
+
+		// Send to AI backend
+		try {
+			const formData = new FormData();
+			const blob = new Blob([file.buffer], { type: "application/pdf" });
+			formData.append("file", blob, "resume.pdf");
+			formData.append("userId", userId);
+
+			const aiResponse = await axios.post(
+				`${this.AI_SERVICE_URL}/process-resume`,
+				formData,
+				{
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+				}
+			);
+
+			console.log("AI Processing Success:", aiResponse.data);
+		} catch (error) {
+			console.error("AI Processing Error:", error);
+		}
+
+		return {
+			success: true,
+			data: fileUrl,
+		};
+	}
 }
