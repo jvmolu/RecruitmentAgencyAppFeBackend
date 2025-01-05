@@ -170,7 +170,7 @@ export class ApplicationController {
 
 			const analysisData: AnalysisRequestData = {
 				jobDescription: {
-					title: jobDetails.title,
+					title: jobDetails.title || "",
 					description: jobDetails.jobDescription || "",
 					skills: jobDetails.skills || [],
 					experienceRequired: jobDetails.experienceRequired || 0,
