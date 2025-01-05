@@ -29,11 +29,15 @@ import { UserService } from "./user-service";
 import axios from "axios";
 
 export class UserProfileService {
-	private static userProfileRepository: UserProfileRepository =
-		new UserProfileRepository();
-	private static s3Service: S3Service = S3Service.getInstance();
+
+    private static userProfileRepository: UserProfileRepository = new UserProfileRepository();
+    private static s3Service: S3Service = S3Service.getInstance();
 	private static AI_SERVICE_URL =
 		process.env.AI_SERVICE_URL || "http://localhost:8000";
+
+    public static async downloadFile(bucketName: string, fileUrl: string): Promise<GeneralAppResponse<Buffer>> {
+        return await this.s3Service.downloadFile(bucketName, fileUrl);
+    }
 
 	@Transactional()
 	public static async createUserProfileWithDetails(
@@ -143,20 +147,21 @@ export class UserProfileService {
 			};
 		}
 
-		// Validate profile update fields
-		const updateValidationResult =
-			UserProfileSchema.partial().safeParse(profileUpdateFields);
-		if (!updateValidationResult.success) {
-			let zodError: ZodParsingError =
-				updateValidationResult.error as ZodParsingError;
-			zodError.errorType = "ZodParsingError";
-			return {
-				error: zodError,
-				statusCode: HttpStatusCode.BAD_REQUEST,
-				businessMessage: "Invalid update data",
-				success: false,
-			};
-		}
+        // Validate profile update fields
+        const updateValidationResult = UserProfileSchema.partial().safeParse(profileUpdateFields);
+        if (!updateValidationResult.success) {
+            let zodError: ZodParsingError = updateValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid update data',
+                success: false
+            };
+        }
+
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
 
 		// Validate and update user profile
 		const userProfileResult = await this.userProfileRepository.updateByParams(

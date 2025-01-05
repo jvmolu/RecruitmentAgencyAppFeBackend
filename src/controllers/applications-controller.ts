@@ -12,6 +12,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { JobService } from "../services/job-service";
 import { AIEvaluateService } from "../services/ai-evaluate-service";
+import { InviteType } from "../types/zod/invite-entity";
 
 export class ApplicationController {
 	public static async createApplication(
@@ -30,22 +31,21 @@ export class ApplicationController {
 				});
 			}
 
-			const existingApplication: GeneralAppResponse<ApplicationType[]> =
-				await ApplicationService.findByParams({ candidateId, jobId }, {});
-			if (isGeneralAppFailureResponse(existingApplication)) {
-				return res.status(existingApplication.statusCode).json({
-					success: false,
-					message: existingApplication.businessMessage,
-					error: existingApplication.error,
-				});
-			}
+            const existingApplication: GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}> = await ApplicationService.findByParams({candidateId, jobId}, {});
+            if(isGeneralAppFailureResponse(existingApplication)) {
+                return res.status(existingApplication.statusCode).json({
+                    success: false,
+                    message: existingApplication.businessMessage,
+                    error: existingApplication.error
+                });
+            }
 
-			if (existingApplication.data.length > 0) {
-				return res.status(HttpStatusCode.CONFLICT).json({
-					success: false,
-					message: "Application already exists for this candidate and job",
-				});
-			}
+            if(existingApplication.data.applications.length > 0) {
+                return res.status(HttpStatusCode.CONFLICT).json({
+                    success: false,
+                    message: 'Application already exists for this candidate and job'
+                });
+            }
 
 			// Create a uuid
 			const applicationId: string = uuidv4();
@@ -94,27 +94,26 @@ export class ApplicationController {
 		}
 	}
 
-	public static async findByParams(req: Request, res: Response): Promise<any> {
-		try {
-			const result: GeneralAppResponse<ApplicationWithRelatedData[]> =
-				await ApplicationService.findByParams(req.body, req.query);
-			if (isGeneralAppFailureResponse(result)) {
-				return res.status(result.statusCode).json({
-					success: false,
-					message: result.businessMessage,
-					error: result.error,
-				});
-			}
-			return res.status(HttpStatusCode.OK).json(result);
-		} catch (error) {
-			console.error(error);
-			return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-				success: false,
-				message: "Internal server error",
-				error,
-			});
-		}
-	}
+    public static async findByParams(req: Request, res: Response): Promise<any> {
+        try {
+            const result: GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}> = await ApplicationService.findByParams(req.body, req.query);
+            if (isGeneralAppFailureResponse(result)) {
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
+            }
+            return res.status(HttpStatusCode.OK).json(result);
+        } catch (error) {
+            console.error(error);
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error',
+                error
+            });
+        }
+    }
 
 	public static async getRequirementsMatch(
 		req: Request,
@@ -149,7 +148,7 @@ export class ApplicationController {
 			);
 			if (
 				isGeneralAppFailureResponse(applicationResponse) ||
-				!applicationResponse.data.length
+				!applicationResponse.data.applications.length
 			) {
 				return res.status(HttpStatusCode.NOT_FOUND).json({
 					success: false,
@@ -158,7 +157,7 @@ export class ApplicationController {
 			}
 
 			const jobDetails = jobResponse.data[0];
-			const application = applicationResponse.data[0];
+			const application = applicationResponse.data.applications[0];
 
 			const analysisData = {
 				jobDescription: {

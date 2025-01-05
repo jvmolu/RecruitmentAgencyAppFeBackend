@@ -81,7 +81,20 @@ class JobRepository extends BaseRepository {
             { field: `${companyTableAlias}.website`, alias: 'company_website' }, // Not selected by jobTableAlias.*
           ]
 
-          let groupByFields: string[] = [`${jobTableAlias}.id`, `${companyTableAlias}.id`];
+          const partnerTableAlias = 'pc';
+          joins.push({
+            joinType: JoinType.LEFT,
+            tableName: DbTable.COMPANIES,
+            alias: partnerTableAlias,
+            onCondition: `${jobTableAlias}.partner_id = ${partnerTableAlias}.id`,
+          });
+
+          selectFieldsAndAlias.push({
+            field: `${partnerTableAlias}.name`,
+            alias: 'partner_name',
+          });
+
+          let groupByFields: string[] = [`${jobTableAlias}.id`, `${companyTableAlias}.id`, `${partnerTableAlias}.id`];
 
           if(jobSearchParams.isShowAppliesCount) {
             joins.push({
@@ -114,6 +127,12 @@ class JobRepository extends BaseRepository {
             offset = (jobSearchParams.page - 1) * jobSearchParams.limit;
           }
 
+          // Order by
+          jobSearchParams.orderBy = SchemaMapper.toDbField(DbTable.JOBS, jobSearchParams.orderBy);
+          if(jobSearchParams.orderBy == 'companyName') {
+            jobSearchParams.orderBy = `${companyTableAlias}.name`;
+          }
+
           const { query, params } = QueryBuilder.buildSelectQuery(
             DbTable.JOBS,
             searchQueryFields,
@@ -135,7 +154,7 @@ class JobRepository extends BaseRepository {
 
           // Map the result to include company data
           const data: JobWithCompanyData[] = response.data.map((row) => {
-            const { applies_count, matches_count, company_name, company_website, ...jobFields } = row;
+            const { applies_count, matches_count, partner_name, company_name, company_website, ...jobFields } = row;
             return {
               ...jobFields,
               company: jobSearchParams.isShowCompanyData ? {
@@ -143,6 +162,12 @@ class JobRepository extends BaseRepository {
                 name: company_name,
                 website: company_website,
               } : undefined,
+              partner: (jobFields.partnerId && jobSearchParams.isShowPartnerData)
+              ? {
+                  id: jobFields.partnerId,
+                  name: partner_name,
+                }
+              : undefined,
               appliesCount: jobSearchParams.isShowAppliesCount ? applies_count : undefined,
               matchesCount: jobSearchParams.isShowMatchesCount ? matches_count : undefined,
             };
@@ -165,8 +190,12 @@ class JobRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(jobFields).forEach(([key, value]) => {
           
+            if(key.includes('Range')) {
+                key = key.replace('Range', '');
+            }
             let keyToUse = SchemaMapper.toDbField(DbTable.JOBS, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
+
             let operation: QueryOperation;
             let valueToUse: any = value;
 
@@ -188,19 +217,18 @@ class JobRepository extends BaseRepository {
                // need to use queryOperation based on if we have both min and max or only one of them
                // value needs to be an array of two elements or a single element
                const { min, max } = value;
-               keyToUse = keyToUse.replace('Range', '');
 
-               if(min && max) 
+               if(min !== undefined && max !== undefined) 
                {
                   operation = QueryOperation.BETWEEN;
                   valueToUse = [min, max];
                }
-               else if(min) 
+               else if(min !== undefined) 
                {
                   operation = QueryOperation.GREATER_THAN_EQUALS;
                   valueToUse = min;
                }
-               else if(max)
+               else if(max !== undefined)
                {
                   operation = QueryOperation.LESS_THAN_EQUALS;
                   valueToUse = max;

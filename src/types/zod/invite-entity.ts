@@ -1,4 +1,5 @@
 // src/types/zod/invite-entity.ts
+import InviteStatus from "../enums/invite-status";
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 
@@ -6,6 +7,7 @@ const InviteSchema = BaseSchema.merge(
   z.object({
     jobId: z.string().uuid(),
     candidateId: z.string().uuid(),
+    status: z.nativeEnum(InviteStatus).default(InviteStatus.PENDING),
   })
 );
 
@@ -14,6 +16,7 @@ const InviteSearchSchema = BaseSchema.merge(
   z.object({
     jobId: z.string().uuid().nullable(),
     candidateId: z.string().uuid().nullable(),
+    status: z.nativeEnum(InviteStatus).nullable(),
   })
 );
 
@@ -34,6 +37,7 @@ class Invite implements InviteType {
   id: string;
   jobId: string;
   candidateId: string;
+  status: InviteStatus;
   createdAt: string;
   updatedAt: string;
 
@@ -42,6 +46,7 @@ class Invite implements InviteType {
     this.id = validatedInvite.id;
     this.jobId = validatedInvite.jobId;
     this.candidateId = validatedInvite.candidateId;
+    this.status = validatedInvite.status;
     this.createdAt = validatedInvite.createdAt;
     this.updatedAt = validatedInvite.updatedAt;
   }

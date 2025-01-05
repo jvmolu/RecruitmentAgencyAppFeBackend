@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import { UserProfileService } from '../services/user-profile-service';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from '../types/response/general-app-response';
 import HttpStatusCode from '../types/enums/http-status-codes';
+import dotenv from 'dotenv';
 
+dotenv.config({path: './../../.env'});
 
 export class UserProfileController {
     
@@ -51,6 +53,77 @@ export class UserProfileController {
                 success: true,
                 data: result.data
             });
+        } catch (error) {
+            console.error(error);
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error',
+                error
+            });
+        }
+    }
+
+    public static async downloadFile(req: Request, res: Response): Promise<any> {
+        try {
+
+            let { fileUrl } = req.query;
+            const bucketName = process.env.DIGITAL_OCEAN_BUCKET_NAME;
+
+            if(!bucketName) {
+                return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                    success: false,
+                    message: 'Internal server error',
+                    error: 'Bucket name not found in environment variables'
+                });
+            }
+
+            if(!fileUrl) {
+                return res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: 'Invalid request',
+                    error: 'fileUrl is required'
+                });
+            }
+
+            fileUrl = fileUrl as string;
+
+            const downloadResult: GeneralAppResponse<Buffer> = await UserProfileService.downloadFile(bucketName, fileUrl);
+            if (isGeneralAppFailureResponse(downloadResult)) {
+                return res.status(downloadResult.statusCode).json({
+                    success: false,
+                    message: downloadResult.businessMessage,
+                    error: downloadResult.error
+                });
+            }
+
+            if(!downloadResult.data) {
+                return res.status(HttpStatusCode.NOT_FOUND).json({
+                    success: false,
+                    message: 'File not found',
+                    error: 'File not found'
+                });
+            }
+
+            // Check MIME Type
+            const extension = fileUrl.split('.').pop();
+            let mimeType = 'image/jpeg';
+            if (extension === 'png') {
+                mimeType = 'image/png';
+            } else if (extension === 'jpg') {
+                mimeType = 'image/jpg';
+            } else if (extension === 'mp4') {
+                mimeType = 'video/mp4';
+            } else if (extension === 'pdf') {
+                mimeType = 'application/pdf';
+            }
+
+            const fileName = fileUrl.split('/').pop();
+
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+            res.setHeader('Content-Length', downloadResult.data.length);
+            res.send(downloadResult.data);
+            
         } catch (error) {
             console.error(error);
             return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({

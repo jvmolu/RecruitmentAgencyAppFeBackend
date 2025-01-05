@@ -60,8 +60,8 @@ const JobSearchSchema = BaseSchema.merge(
         // Range will be like: {min: 0, max: 10}
         experienceRequiredRange: NumberRange.optional(),
         budgetAmountRange: NumberRange.optional(),
-        createdDateRange: DateRange.optional(),
-        updatedDateRange: DateRange.optional()
+        createdAtRange: DateRange.optional(),
+        updatedAtRange: DateRange.optional()
     })
 );
 
@@ -69,6 +69,7 @@ const JobSearchParamsSchema = BaseSearchParams.merge(
     z.object({
         // I will recieve strings and hence I need transformations which will convert the string to boolean
         isShowCompanyData: z.string().default('true').transform((val) => val === 'true'), // boolean
+        isShowPartnerData: z.string().default('true').transform((val) => val === 'true'), // boolean
         isShowAppliesCount: z.string().default('false').transform((val) => val === 'true'), // boolean
         isShowMatchesCount: z.string().default('false').transform((val) => val === 'true') // boolean
     })
@@ -76,7 +77,7 @@ const JobSearchParamsSchema = BaseSearchParams.merge(
 
 type JobType = z.infer<typeof JobSchema>
 type JobSearchOptions = z.infer<typeof JobSearchSchema>
-type JobWithCompanyData = (Job & { company: Partial<CompanyType> | undefined, appliesCount: number | undefined, matchesCount: number | undefined });
+type JobWithCompanyData = (Partial<Job> & { company: Partial<CompanyType> | undefined, partner: Partial<CompanyType> | undefined, appliesCount: number | undefined, matchesCount: number | undefined });
 type JobSearchParams = z.infer<typeof JobSearchParamsSchema>
 
 class Job implements JobType {

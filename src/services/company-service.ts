@@ -97,6 +97,9 @@ export class CompanyService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         return await this.companyRepository.updateByParams(searchValidationResult.data, updateValidationResult.data);
     }
 }

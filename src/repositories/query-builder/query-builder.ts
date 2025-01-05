@@ -28,7 +28,7 @@ export class QueryBuilder {
     [QueryOperation.NOT_IN]: (key) => `${key} NOT IN ($)`,
     [QueryOperation.IS_NULL]: (key) => `${key} IS NULL`,
     [QueryOperation.IS_NOT_NULL]: (key) => `${key} IS NOT NULL`,
-    [QueryOperation.BETWEEN]: (key) => `${key} BETWEEN $ AND $`,
+    [QueryOperation.BETWEEN]: (key) => `${key} BETWEEN `,
     [QueryOperation.ARRAY_INTERSECTS]: (key) => `${key} && ARRAY[$]`
   };
 
@@ -77,9 +77,7 @@ export class QueryBuilder {
       // return { conditionStrings, params };
       let paramIndex = 1;
       Object.entries(conditions).forEach(([key, condition], index) => {
-        const paramPlaceholder = `$${index + 1}`;
         const { value, operation } = condition;
-        const qualifiedField = `${baseTableAlias}.${key}`;
         const { queryPart, newParams, incrementIndex } = this.handleOperation(key, value, operation, paramIndex);
         query += queryPart;
         params.push(...newParams);
@@ -98,7 +96,9 @@ export class QueryBuilder {
 
     // ORDER_BY
     if (orderBy) {
-      query += ` ORDER BY ${baseTableAlias}.${orderBy} ${sortOrder}`;
+      // If the orderBy field is not fully qualified, add the baseTableAlias
+      orderBy = orderBy.includes('.') ? orderBy : `${baseTableAlias}.${orderBy}`;
+      query += ` ORDER BY ${orderBy} ${sortOrder}`;
     }
 
     // Add LIMIT and OFFSET
@@ -261,7 +261,7 @@ export class QueryBuilder {
 
       case QueryOperation.BETWEEN:
         return {
-          queryPart: ` ${this.operationHandlers[operation](key)}${startIndex} AND $${startIndex + 1}`,
+          queryPart: ` ${this.operationHandlers[operation](key)} $${startIndex} AND $${startIndex + 1}`,
           newParams: [value[0], value[1]],
           incrementIndex: 2
         };
