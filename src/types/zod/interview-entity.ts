@@ -2,6 +2,7 @@ import { z } from "zod";
 import BaseSchema from "./base-entity";
 import InterviewStatus from "../enums/interview-status";
 
+//change max
 const InterviewQuestionSchema = BaseSchema.merge(
 	z.object({
 		interviewId: z.string().uuid(),
