@@ -1,9 +1,4 @@
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'interview_status') THEN
-        CREATE TYPE interview_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
-    END IF;
-END $$;
+CREATE TYPE interview_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
 
 CREATE TABLE IF NOT EXISTS interviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -124,6 +124,9 @@ class UserProfileRepository extends BaseRepository {
             if (userProfileSearchParams.page && userProfileSearchParams.limit) {
                 offset = (userProfileSearchParams.page - 1) * userProfileSearchParams.limit;
             }
+
+            // Order by
+            userProfileSearchParams.orderBy = SchemaMapper.toDbField(DbTable.USER_PROFILES, userProfileSearchParams.orderBy);
     
             const { query, params } = QueryBuilder.buildSelectQuery(
                 DbTable.USER_PROFILES,
@@ -176,7 +179,6 @@ class UserProfileRepository extends BaseRepository {
             };
         }
     }
-    
 
     async updateByParams(userProfileFields: Partial<UserProfileSearchOptions>,
         userProfileUpdatedFields: Partial<UserProfileType>,
@@ -196,6 +198,9 @@ class UserProfileRepository extends BaseRepository {
         const queryFields: QueryFields = {};
         Object.entries(userProfileFields).forEach(([key, value]) => {
             
+            if(key.includes('Range')) {
+                key = key.replace('Range', '');
+            }
             let keyToUse = SchemaMapper.toDbField(table, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
             let operation: QueryOperation;
@@ -215,19 +220,18 @@ class UserProfileRepository extends BaseRepository {
                 // need to use queryOperation based on if we have both min and max or only one of them
                 // value needs to be an array of two elements or a single element
                 const { min, max } = value;
-                keyToUse = keyToUse.replace('Range', '');
                 
-                if(min && max)
+                if(min !== undefined && max !== undefined)
                 {
                     operation = QueryOperation.BETWEEN;
                     valueToUse = [min, max];
                 }
-                else if(min) 
+                else if(min !== undefined) 
                 {
                     operation = QueryOperation.GREATER_THAN_EQUALS;
                     valueToUse = min;
                 }
-                else if(max)
+                else if(max !== undefined)
                 {
                     operation = QueryOperation.LESS_THAN_EQUALS;
                     valueToUse = max;
@@ -238,7 +242,7 @@ class UserProfileRepository extends BaseRepository {
                     return;
                 }
             }
-            else if (isEnumField(this.tableName, key)) 
+            else if (isEnumField(table, key))
             {
                 operation = QueryOperation.EQUALS;
             }

@@ -74,6 +74,9 @@ export class UserEducationService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         return await this.userEducationRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
     }
 

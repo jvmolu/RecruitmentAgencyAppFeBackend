@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";
 import { Job, JobSearchParams, JobType, JobWithCompanyData } from "../types/zod/job-entity";
+import Role from "../types/enums/role";
 
 export class JobController {
 
@@ -36,6 +37,17 @@ export class JobController {
                 message: result.businessMessage,
                 error: result.error,
                 });
+            }
+            if(!req.body.user || req.body.user.role !== Role.ADMIN) {
+                for(let i = 0; i < result.data.length; i++) {
+                    let hiddenColumns: string[] | undefined = result.data[i].hiddenColumns;
+                    if(hiddenColumns) {
+                        delete(result.data[i].hiddenColumns);
+                        (hiddenColumns || []).forEach((column) => {
+                        delete((result.data[i] as any)[column]);
+                        });
+                    }
+                }
             }
             return res.status(HttpStatusCode.OK).json(result);
         } catch (error) {

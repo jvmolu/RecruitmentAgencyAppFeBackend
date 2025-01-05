@@ -8,7 +8,7 @@ export class InterviewController {
 		req: Request,
 		res: Response
 	): Promise<any> {
-		try {
+		try {			
 			const { candidateId, jobId, cvData, jobDescription } = req.body;
 
 			// Validate required fields
@@ -42,6 +42,7 @@ export class InterviewController {
 			});
 		}
 	}
+	
 	public static async generateQuestion(
 		req: Request,
 		res: Response

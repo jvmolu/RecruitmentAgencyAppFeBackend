@@ -152,6 +152,9 @@ class ApplicationRepository extends BaseRepository {
           if (applicationSearchParams.page && applicationSearchParams.limit) {
             offset = (applicationSearchParams.page - 1) * applicationSearchParams.limit;
           }
+
+          // Order by
+          applicationSearchParams.orderBy = SchemaMapper.toDbField(DbTable.APPLICATIONS, applicationSearchParams.orderBy);
       
           const { query, params } = QueryBuilder.buildSelectQuery(
             DbTable.APPLICATIONS,

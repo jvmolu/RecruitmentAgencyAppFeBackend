@@ -5,6 +5,7 @@ import { isAuthError, isDatabaseError, isZodError } from "../types/error/general
 import { UserAuthData, UserAuthDataWithProfileData } from "../types/user-auth-data";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { User } from "../types/zod/user-entity";
+import { hashPassword } from "../common/hash-util";
 
 export class UserController {
 
@@ -143,7 +144,7 @@ export class UserController {
 
     public static async verifyOTP(req: Request, res: Response): Promise<any> {
         try {
-            const { email, otp } = req.body;
+            const { email, password, otp } = req.body;
         
             // Validate the OTP is between 100000 and 999999 and is a number
             if (!/^\d{6}$/.test(otp)) {
@@ -161,7 +162,20 @@ export class UserController {
                     error: result.error,
                 });
             }
-            
+
+            // Hash Password
+            const hashedPassword = await hashPassword(password);
+
+            // Reset the password
+            const userUpdateResult = await UserService.updateByParams({ email }, { password: hashedPassword });
+            if (isGeneralAppFailureResponse(userUpdateResult)) {
+                return res.status(userUpdateResult.statusCode).json({
+                    success: false,
+                    message: userUpdateResult.businessMessage,
+                    error: userUpdateResult.error,
+                });
+            }
+
             return res.status(HttpStatusCode.OK).json({
                 success: true,
                 message: 'OTP verified successfully',

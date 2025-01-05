@@ -15,6 +15,7 @@ import {
 	AIEvaluateService,
 	AnalysisRequestData,
 } from "../services/ai-evaluate-service";
+import { InviteType } from "../types/zod/invite-entity";
 
 export class ApplicationController {
 	public static async createApplication(
@@ -33,8 +34,10 @@ export class ApplicationController {
 				});
 			}
 
-			const existingApplication: GeneralAppResponse<ApplicationType[]> =
-				await ApplicationService.findByParams({ candidateId, jobId }, {});
+			const existingApplication: GeneralAppResponse<{
+				applications: ApplicationWithRelatedData[];
+				pendingInvites: InviteType[];
+			}> = await ApplicationService.findByParams({ candidateId, jobId }, {});
 			if (isGeneralAppFailureResponse(existingApplication)) {
 				return res.status(existingApplication.statusCode).json({
 					success: false,
@@ -43,7 +46,7 @@ export class ApplicationController {
 				});
 			}
 
-			if (existingApplication.data.length > 0) {
+			if (existingApplication.data.applications.length > 0) {
 				return res.status(HttpStatusCode.CONFLICT).json({
 					success: false,
 					message: "Application already exists for this candidate and job",
@@ -99,8 +102,10 @@ export class ApplicationController {
 
 	public static async findByParams(req: Request, res: Response): Promise<any> {
 		try {
-			const result: GeneralAppResponse<ApplicationWithRelatedData[]> =
-				await ApplicationService.findByParams(req.body, req.query);
+			const result: GeneralAppResponse<{
+				applications: ApplicationWithRelatedData[];
+				pendingInvites: InviteType[];
+			}> = await ApplicationService.findByParams(req.body, req.query);
 			if (isGeneralAppFailureResponse(result)) {
 				return res.status(result.statusCode).json({
 					success: false,
@@ -152,7 +157,7 @@ export class ApplicationController {
 			);
 			if (
 				isGeneralAppFailureResponse(applicationResponse) ||
-				!applicationResponse.data.length
+				!applicationResponse.data.applications.length
 			) {
 				return res.status(HttpStatusCode.NOT_FOUND).json({
 					success: false,
@@ -161,7 +166,7 @@ export class ApplicationController {
 			}
 
 			const jobDetails = jobResponse.data[0];
-			const application = applicationResponse.data[0];
+			const application = applicationResponse.data.applications[0];
 
 			const analysisData: AnalysisRequestData = {
 				jobDescription: {

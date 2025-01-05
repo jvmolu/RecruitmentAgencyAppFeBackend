@@ -1,11 +1,6 @@
 import { z } from "zod";
 import BaseSchema from "./base-entity";
-
-export enum InterviewStatus {
-	PENDING = "PENDING",
-	IN_PROGRESS = "IN_PROGRESS",
-	COMPLETED = "COMPLETED",
-}
+import InterviewStatus from "../enums/interview-status";
 
 //change max
 const InterviewQuestionSchema = BaseSchema.merge(

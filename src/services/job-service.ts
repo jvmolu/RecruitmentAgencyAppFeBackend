@@ -1,5 +1,5 @@
 import { JobRepository } from "../repositories/job-repository";
-import { GeneralAppResponse } from "../types/response/general-app-response";
+import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { v4 as uuidv4 } from 'uuid';
 import { JobSchema, JobSearchOptions, JobSearchSchema, JobType, Job, JobWithCompanyData, JobSearchParams, JobSearchParamsSchema } from "../types/zod/job-entity";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
@@ -99,6 +99,10 @@ export class JobService {
                 success: false
             };
         }
+
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         jobUpdateFields = updateValidationResult.data;
 
         return await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields);

@@ -218,6 +218,9 @@ export class UserService {
             };
         }
 
+        // Update updatedAt as well
+        updateValidationResult.data.updatedAt = new Date().toISOString();
+
         return await UserService.userRepository.updateByParams(searchValidationResult.data, updateValidationResult.data, client);
     }
 
@@ -303,8 +306,8 @@ export class UserService {
         // Generate OTP
         const otp = randomInt(100000, 999999).toString();
     
-        // Store OTP in Redis with expiry of 180 seconds
-        const redisRes: GeneralAppResponse<void> = await RedisService.set(`otp:${email}`, otp, { expiresInMillis: 180000 });
+        // Store OTP in Redis with expiry of 300 seconds
+        const redisRes: GeneralAppResponse<void> = await RedisService.set(`otp:${email}`, otp, { expiresInMillis: 300000 });
         if (isGeneralAppFailureResponse(redisRes)) {
           return redisRes;
         }
