@@ -20,15 +20,14 @@ import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-ent
 import { v4 as uuidv4 } from "uuid";
 import { Transactional } from "../decorators/transactional";
 import { BadRequestError } from "../types/error/bad-request-error";
-import { InviteRepository } from "../repositories/invites-repository";
 import ApplicationStages from "../types/enums/application-stages";
 import InviteStatus from "../types/enums/invite-status";
-import { InviteType } from "../types/zod/invite-entity";
+import { InviteType, InviteWithRelatedData } from "../types/zod/invite-entity";
+import { InviteService } from "./invite-service";
 
 export class ApplicationService {
 
     private static applicationRepository: ApplicationRepository = new ApplicationRepository();
-    private static inviteRepository: InviteRepository = new InviteRepository();
     private static s3Service: S3Service = S3Service.getInstance();
 
     @Transactional()
@@ -55,7 +54,7 @@ export class ApplicationService {
         const lifecycleData: ApplicationLifecycleType[] = [];
 
         // Check if candidate has invited
-        const inviteRes = await this.inviteRepository.findByParams({candidateId: applicationData.candidateId, jobId: applicationData.jobId}, client);
+        const inviteRes: GeneralAppResponse<InviteWithRelatedData[]> = await InviteService.findByParams({candidateId: applicationData.candidateId, jobId: applicationData.jobId}, {}, client);
         if (isGeneralAppFailureResponse(inviteRes)) {
             return inviteRes;
         }
@@ -63,7 +62,7 @@ export class ApplicationService {
         if(inviteRes.data.length > 0) {
             application.inviteId = inviteRes.data[0].id;
             // Update the status of this invite to Accepted
-            const updateInviteRes = await this.inviteRepository.updateByParams({id: inviteRes.data[0].id}, {status: InviteStatus.ACCEPTED}, client);
+            const updateInviteRes = await InviteService.updateByParams({id: inviteRes.data[0].id}, {status: InviteStatus.ACCEPTED}, client);
             if (isGeneralAppFailureResponse(updateInviteRes)) {
                 return updateInviteRes;
             }
@@ -122,11 +121,9 @@ export class ApplicationService {
             };
         }
 
-		const searchParamsValidationResult =
-			ApplicationSearchParamsSchema.safeParse(applicationSearchParams);
+		const searchParamsValidationResult = ApplicationSearchParamsSchema.partial().safeParse(applicationSearchParams);
 		if (!searchParamsValidationResult.success) {
-			const zodError: ZodParsingError =
-				searchParamsValidationResult.error as ZodParsingError;
+			const zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
 			zodError.errorType = "ZodParsingError";
 			return {
 				error: zodError,
@@ -141,7 +138,7 @@ export class ApplicationService {
             return applicationsRes;
         }
 
-        let invitesRes: GeneralAppResponse<InviteType[]> = {success: true, data: []};      
+        let invitesRes: GeneralAppResponse<InviteWithRelatedData[]> = {success: true, data: []};      
 
         // If searching applications for a specific user, also send the pending invites
         if(applicationSearchParams.isShowPendingInvites) {
@@ -155,7 +152,7 @@ export class ApplicationService {
                     success: false
                 };
             }
-            invitesRes = await this.inviteRepository.findByParams({candidateId: applicationFields.candidateId, status: InviteStatus.PENDING});
+            invitesRes = await InviteService.findByParams({candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {});
             if (isGeneralAppFailureResponse(invitesRes)) {
                 return invitesRes;
             }

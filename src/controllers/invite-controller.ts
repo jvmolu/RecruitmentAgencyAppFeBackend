@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import { GeneralAppResponse, isGeneralAppFailureResponse } from '../types/response/general-app-response';
-import { InviteType } from '../types/zod/invite-entity';
+import { InviteType, InviteWithRelatedData } from '../types/zod/invite-entity';
 import { InviteService } from '../services/invite-service';
 import HttpStatusCode from '../types/enums/http-status-codes';
 
@@ -30,7 +30,7 @@ export class InviteController {
 
     public static async findByParams(req: Request, res: Response) : Promise<any> {
         try {
-            const result: GeneralAppResponse<InviteType[]> = await InviteService.findByParams(req.body);
+            const result: GeneralAppResponse<InviteWithRelatedData[]> = await InviteService.findByParams(req.body, req.query);
             if(isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

@@ -1,6 +1,6 @@
 // src/repositories/invite-repository.ts
 import { BaseRepository } from "./base-repository";
-import { Invite, InviteType, InviteSearchOptions } from "../types/zod/invite-entity";
+import { Invite, InviteType, InviteSearchOptions, InviteSearchParams, InviteWithRelatedData } from "../types/zod/invite-entity";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
@@ -8,6 +8,10 @@ import DbTable from "../types/enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import QueryOperation from "../types/enums/query-operation";
 import { PoolClient } from "pg";
+import { JoinClause, JoinType } from "../types/enums/join-type";
+import { User } from "../types/zod/user-entity";
+import { UserProfile } from "../types/zod/user-profile-entity";
+import { Job } from "../types/zod/job-entity";
 
 class InviteRepository extends BaseRepository {
 
@@ -34,11 +38,104 @@ class InviteRepository extends BaseRepository {
         }
     }
 
-    async findByParams(inviteFields: Partial<InviteSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<Invite[]>> {
+    async findByParams(
+        inviteFields: Partial<InviteSearchOptions>,
+        searchParams: InviteSearchParams,
+        client?: PoolClient
+    ): Promise<GeneralAppResponse<InviteWithRelatedData[]>> {
         try {
+            
+            const tableAlias = 'i';
+            const userTableAlias = 'u';
+            const jobTableAlias = 'j';
+            const userProfileTableAlias = 'up';
+
             const searchFields = this.createSearchFields(inviteFields);
-            const { query, params } = QueryBuilder.buildSelectQuery(this.tableName, searchFields);
-            return await this.executeQuery<Invite>(query, params, client);
+
+            const joins: JoinClause[] = [];
+            const selectFieldsAndAlias: { field: string; alias?: string }[] = [{ field: `${tableAlias}.*` }];
+      
+            const groupByFields: string[] = [`${tableAlias}.id`];
+      
+            // Example: join with users on candidate_id
+            if (searchParams.isShowCandidateData) {
+              
+              joins.push({
+                joinType: JoinType.LEFT,
+                tableName: DbTable.USERS,
+                alias: userTableAlias,
+                onCondition: `${tableAlias}.candidate_id = ${userTableAlias}.id`,
+              });
+      
+              joins.push({
+                joinType: JoinType.LEFT,
+                tableName: DbTable.USER_PROFILES,
+                alias: userProfileTableAlias,
+                onCondition: `${tableAlias}.candidate_id = ${userProfileTableAlias}.user_id`,
+              });
+      
+              selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${userTableAlias}.*)`, alias: 'candidate_data' });
+              selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${userProfileTableAlias}.*)`, alias: 'user_profile_data' });
+            }
+
+            if(searchParams.isShowJobData) {
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.JOBS,
+                    alias: jobTableAlias,
+                    onCondition: `${tableAlias}.job_id = ${jobTableAlias}.id`
+                });
+                selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${jobTableAlias}.*)`, alias: 'job_data' });
+            }
+      
+            let offset = 0;
+            if (searchParams.page && searchParams.limit) {
+              offset = (searchParams.page - 1) * searchParams.limit;
+            }
+      
+            // Order by
+            searchParams.orderBy = SchemaMapper.toDbField(DbTable.INVITES, searchParams.orderBy);
+            
+            const { query, params } = QueryBuilder.buildSelectQuery(
+                DbTable.INVITES,
+                searchFields,
+                tableAlias,
+                selectFieldsAndAlias,
+                joins,
+                groupByFields,
+                searchParams.limit,
+                offset,
+                searchParams.orderBy,
+                searchParams.order
+            );
+
+            const dbRes = await this.executeQuery<any>(query, params, client);
+            if(isGeneralAppFailureResponse(dbRes)) {
+                return dbRes;
+            }
+
+            const invitesWithRelatedData: InviteWithRelatedData[] = dbRes.data.map((row) => {
+                let { candidate_data, user_profile_data, job_data, ...inviteData } = row;
+
+                user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
+                candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
+                job_data = job_data && job_data.length > 0 && job_data[0] !== null ? job_data[0] : [];
+                
+                candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
+                user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
+                job_data = SchemaMapper.toEntity<Job>(DbTable.JOBS, job_data);
+
+                return {
+                    ...inviteData,
+                    candidateData: searchParams.isShowCandidateData ? {
+                        ...candidate_data,
+                        profile: user_profile_data
+                    } : undefined,
+                    jobData: searchParams.isShowJobData ? job_data : undefined
+                };
+            });
+
+            return { data: invitesWithRelatedData, success: true };
         } catch (error: any) {
             return {
                 error: error,

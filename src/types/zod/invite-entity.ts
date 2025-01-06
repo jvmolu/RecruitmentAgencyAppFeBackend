@@ -2,6 +2,8 @@
 import InviteStatus from "../enums/invite-status";
 import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
+import { JobWithCompanyData } from "./job-entity";
+import { UserWithProfileData } from "./user-entity";
 
 const InviteSchema = BaseSchema.merge(
   z.object({
@@ -31,6 +33,7 @@ const InviteSearchParamsSchema = BaseSearchParams.merge(
 type InviteType = z.infer<typeof InviteSchema>
 type InviteSearchOptions = z.infer<typeof InviteSearchSchema>
 type InviteSearchParams = z.infer<typeof InviteSearchParamsSchema>
+type InviteWithRelatedData = InviteType & { jobData: Partial<JobWithCompanyData> | undefined, candidateData: Partial<UserWithProfileData> | undefined };
 
 class Invite implements InviteType {
   
@@ -52,4 +55,4 @@ class Invite implements InviteType {
   }
 }
 
-export { InviteSchema, InviteType, Invite, InviteSearchSchema, InviteSearchOptions, InviteSearchParamsSchema, InviteSearchParams };
+export { InviteSchema, InviteType, Invite, InviteSearchSchema, InviteSearchOptions, InviteSearchParamsSchema, InviteSearchParams, InviteWithRelatedData };

@@ -2,7 +2,7 @@ import { InviteRepository } from "../repositories/invites-repository";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import { InviteSchema, InviteSearchOptions, InviteSearchSchema, InviteType } from "../types/zod/invite-entity";
+import { InviteSchema, InviteSearchOptions, InviteSearchParams, InviteSearchParamsSchema, InviteSearchSchema, InviteType, InviteWithRelatedData } from "../types/zod/invite-entity";
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from "./email-service";
 import { User } from "../types/zod/user-entity";
@@ -13,6 +13,7 @@ import InviteStatus from "../types/enums/invite-status";
 import { BadRequestError } from "../types/error/bad-request-error";
 import { Application } from "../types/zod/application-entity";
 import { ApplicationService } from "./application-service";
+import { PoolClient } from "pg";
 
 export class InviteService {
 
@@ -44,7 +45,7 @@ export class InviteService {
 
 
         // Validate if user has already been invited
-        const existingInvite: GeneralAppResponse<InviteType[]> = await InviteService.findByParams({candidateId: invite.candidateId, jobId: invite.jobId, status: InviteStatus.PENDING});
+        const existingInvite: GeneralAppResponse<InviteWithRelatedData[]> = await InviteService.findByParams({candidateId: invite.candidateId, jobId: invite.jobId, status: InviteStatus.PENDING}, {});
         if(isGeneralAppFailureResponse(existingInvite)) {
             return existingInvite;
         }
@@ -118,7 +119,7 @@ export class InviteService {
         return { data: userResponse.data[0], success: true };
     }
 
-    public static async findByParams(inviteFields: Partial<InviteSearchOptions>): Promise<GeneralAppResponse<InviteType[]>> {
+    public static async findByParams(inviteFields: Partial<InviteSearchOptions>, inviteSearchParams: Partial<InviteSearchParams>, client?: PoolClient): Promise<GeneralAppResponse<InviteWithRelatedData[]>> {
         
         const validationResult = InviteSearchSchema.partial().safeParse(inviteFields);
         if(!validationResult.success) {
@@ -132,11 +133,24 @@ export class InviteService {
             };
         }
 
+        const searchParamsValidationResult = InviteSearchParamsSchema.partial().safeParse(inviteSearchParams);
+        if(!searchParamsValidationResult.success) {
+            let zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
+            zodError.errorType = 'ZodParsingError';
+            return {
+                error: zodError,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid invite search params',
+                success: false
+            };
+        }
+
         inviteFields = validationResult.data;
-        return await InviteService.inviteRepository.findByParams(inviteFields);
+        inviteSearchParams = searchParamsValidationResult.data;
+        return await InviteService.inviteRepository.findByParams(inviteFields, inviteSearchParams as InviteSearchParams, client);
     }
 
-    public static async updateInvites(inviteSearchFields: Partial<InviteSearchOptions>, inviteUpdateFields: Partial<InviteType>): Promise<GeneralAppResponse<InviteType[]>> {
+    public static async updateByParams(inviteSearchFields: Partial<InviteSearchOptions>, inviteUpdateFields: Partial<InviteType>, client?: PoolClient): Promise<GeneralAppResponse<InviteType[]>> {
         // Validate invite search data
         const validationResult = InviteSearchSchema.partial().safeParse(inviteSearchFields);
         if (!validationResult.success) {
@@ -165,6 +179,6 @@ export class InviteService {
         }
         inviteUpdateFields = updateValidationResult.data;
 
-        return await InviteService.inviteRepository.updateByParams(inviteSearchFields, inviteUpdateFields);
+        return await InviteService.inviteRepository.updateByParams(inviteSearchFields, inviteUpdateFields, client);
     }
 }
