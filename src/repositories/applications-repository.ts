@@ -281,7 +281,7 @@ class ApplicationRepository extends BaseRepository {
                 operation = QueryOperation.IS_NULL;
             } else if(key === 'id' || key === 'candidateId' || key === 'jobId' || key === 'inviteId') {
                 operation = QueryOperation.EQUALS;
-            } else if (isEnumField(this.tableName, key)) {
+            } else if (isEnumField(table, key)) {
                 operation = QueryOperation.EQUALS;
             } else if (typeof value === 'string') {
                 operation = QueryOperation.ILIKE;
