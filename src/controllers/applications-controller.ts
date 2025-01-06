@@ -119,7 +119,7 @@ export class ApplicationController {
 				for(let i = 0; i < result.data.applications.length; i++) {
 					JobService.hideJobDataBasedOnHiddenColumns(result.data.applications[i].job);
 				}
-			}		
+			}
 
 			return res.status(HttpStatusCode.OK).json(result);
 		} catch (error) {

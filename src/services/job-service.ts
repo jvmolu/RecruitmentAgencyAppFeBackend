@@ -5,6 +5,7 @@ import { JobSchema, JobSearchOptions, JobSearchSchema, JobType, Job, JobWithComp
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { Company, CompanyType } from "../types/zod/company-entity";
+import { ApplicationSearchOptions } from "../types/zod/application-entity";
 
 export class JobService {
 
@@ -106,6 +107,18 @@ export class JobService {
         jobUpdateFields = updateValidationResult.data;
 
         return await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields);
+    }
+
+    public static fetchAndRemoveJobFields(sourceFields: any): Partial<JobSearchOptions> {
+        const jobCols: string[] = ['workModel', 'jobType', 'location', 'title'];
+        const jobFields: { [key: string]: any } = {};
+        jobCols.forEach((col: string) => {
+            if(sourceFields[col]) {
+                jobFields[col] = sourceFields[col];
+                delete sourceFields[col];
+            }
+        });
+        return jobFields as Partial<JobSearchOptions>;
     }
 
     public static hideJobDataBasedOnHiddenColumns(job: Partial<JobWithCompanyData> | undefined): void {

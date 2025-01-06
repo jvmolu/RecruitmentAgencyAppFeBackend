@@ -33,7 +33,6 @@ const ApplicationSchema = BaseSchema.merge(
 
 const ApplicationSearchSchema = BaseSchema.merge(
     z.object({
-      
       candidateId: z.string().uuid().nullable(),
       jobId: z.string().uuid().nullable(),
       generalWorkExp: z.string().nullable(),

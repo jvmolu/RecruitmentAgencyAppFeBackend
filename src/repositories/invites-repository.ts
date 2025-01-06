@@ -14,6 +14,7 @@ import { UserProfile } from "../types/zod/user-profile-entity";
 import { Job } from "../types/zod/job-entity";
 import { Company } from "../types/zod/company-entity";
 import { join } from "path";
+import { JobService } from "../services/job-service";
 
 class InviteRepository extends BaseRepository {
 
@@ -54,7 +55,11 @@ class InviteRepository extends BaseRepository {
             const companyTableAlias = 'c';
             const partnerTableAlias = 'p';
 
-            const searchFields = this.createSearchFields(inviteFields, tableAlias);
+            const jobFields = JobService.fetchAndRemoveJobFields(inviteFields);
+
+            const jobSearchFields = this.createSearchFields(jobFields, jobTableAlias, DbTable.JOBS);
+            const inviteSearchFields = this.createSearchFields(inviteFields, tableAlias);
+            const searchFields = { ...inviteSearchFields, ...jobSearchFields };
 
             const joins: JoinClause[] = [];
             const selectFieldsAndAlias: { field: string; alias?: string }[] = [{ field: `${tableAlias}.*` }];
@@ -82,7 +87,7 @@ class InviteRepository extends BaseRepository {
               selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${userProfileTableAlias}.*)`, alias: 'user_profile_data' });
             }
 
-            if(searchParams.isShowJobData) {
+            if(searchParams.isShowJobData || Object.keys(jobFields).length > 0) {
                 joins.push({
                     joinType: JoinType.LEFT,
                     tableName: DbTable.JOBS,
@@ -191,7 +196,7 @@ class InviteRepository extends BaseRepository {
         }
     }
 
-    private createSearchFields(inviteFields: Partial<InviteSearchOptions>, tableAlias?: string): QueryFields {
+    private createSearchFields(inviteFields: any, tableAlias?: string, table: DbTable = DbTable.INVITES): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(inviteFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -200,7 +205,7 @@ class InviteRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            let keyToUse = SchemaMapper.toDbField(DbTable.INVITES, key);
+            let keyToUse = SchemaMapper.toDbField(table, key);
             if(tableAlias) {
                 keyToUse = `${tableAlias}.${keyToUse}`;
             }

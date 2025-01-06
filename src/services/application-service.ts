@@ -24,6 +24,7 @@ import ApplicationStages from "../types/enums/application-stages";
 import InviteStatus from "../types/enums/invite-status";
 import { InviteType, InviteWithRelatedData } from "../types/zod/invite-entity";
 import { InviteService } from "./invite-service";
+import { JobService } from "./job-service";
 
 export class ApplicationService {
 
@@ -152,7 +153,9 @@ export class ApplicationService {
                     success: false
                 };
             }
-            invitesRes = await InviteService.findByParams({candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {});
+
+			const jobFields = JobService.fetchAndRemoveJobFields(applicationFields);
+            invitesRes = await InviteService.findByParams({...jobFields, candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {});
             if (isGeneralAppFailureResponse(invitesRes)) {
                 return invitesRes;
             }

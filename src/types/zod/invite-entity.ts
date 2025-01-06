@@ -4,6 +4,8 @@ import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 import { JobWithCompanyData } from "./job-entity";
 import { UserWithProfileData } from "./user-entity";
+import WorkModel from "../enums/work-model";
+import JobsType from "../enums/job-type";
 
 const InviteSchema = BaseSchema.merge(
   z.object({
@@ -19,6 +21,12 @@ const InviteSearchSchema = BaseSchema.merge(
     jobId: z.string().uuid().nullable(),
     candidateId: z.string().uuid().nullable(),
     status: z.nativeEnum(InviteStatus).nullable(),
+
+    // Job Table related fields
+    workModel: z.nativeEnum(WorkModel).nullable(),
+    jobType: z.nativeEnum(JobsType).nullable(),
+    location: z.string().nullable(),
+    title: z.string().nullable(),
   })
 );
 

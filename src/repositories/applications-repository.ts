@@ -14,6 +14,8 @@ import { UserProfile } from "../types/zod/user-profile-entity";
 import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
 import { v4 as uuidv4 } from "uuid";
 import { JobSearchOptions } from "../types/zod/job-entity";
+import { ApplicationService } from "../services/application-service";
+import { JobService } from "../services/job-service";
 
 class ApplicationRepository extends BaseRepository {
     constructor() {
@@ -33,18 +35,6 @@ class ApplicationRepository extends BaseRepository {
       }
       return { success: true, data: response.data };
     }
-
-    private fetchJobFieldsFromApplicationFields(applicationFields: Partial<ApplicationSearchOptions>): Partial<JobSearchOptions> {
-      const jobCols: string[] = ['workModel', 'jobType', 'location', 'title'];
-      const jobFields: { [key: string]: any } = {};
-      jobCols.forEach((col: string) => {
-          if(applicationFields[col as keyof ApplicationSearchOptions]) {
-              jobFields[col] = applicationFields[col as keyof ApplicationSearchOptions];
-              delete applicationFields[col as keyof ApplicationSearchOptions];
-          }
-      });
-      return jobFields as Partial<JobSearchOptions>;
-  }
 
     /**
      * Create a new application
@@ -89,7 +79,7 @@ class ApplicationRepository extends BaseRepository {
           const lifecycleTableAlias = 'l';
 
           // Fetch job fields from application fields
-          const jobFields = this.fetchJobFieldsFromApplicationFields(applicationFields);
+          const jobFields = JobService.fetchAndRemoveJobFields(applicationFields);
 
           const applicationSearchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
           const jobSearchQueryFields: QueryFields = this.createSearchFields(jobFields, jobTableAlias, DbTable.JOBS);
@@ -273,7 +263,7 @@ class ApplicationRepository extends BaseRepository {
     /**
      * Create search fields for query building
     **/
-    private createSearchFields(applicationFields: Partial<ApplicationSearchOptions>, tableAlias?: string, table: DbTable = DbTable.APPLICATIONS): QueryFields {
+    private createSearchFields(applicationFields: any, tableAlias?: string, table: DbTable = DbTable.APPLICATIONS): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(applicationFields).forEach(([key, value]) => {
             let operation: QueryOperation;
