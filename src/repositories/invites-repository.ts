@@ -50,7 +50,7 @@ class InviteRepository extends BaseRepository {
             const jobTableAlias = 'j';
             const userProfileTableAlias = 'up';
 
-            const searchFields = this.createSearchFields(inviteFields);
+            const searchFields = this.createSearchFields(inviteFields, tableAlias);
 
             const joins: JoinClause[] = [];
             const selectFieldsAndAlias: { field: string; alias?: string }[] = [{ field: `${tableAlias}.*` }];
@@ -162,7 +162,7 @@ class InviteRepository extends BaseRepository {
         }
     }
 
-    private createSearchFields(inviteFields: Partial<InviteSearchOptions>): QueryFields {
+    private createSearchFields(inviteFields: Partial<InviteSearchOptions>, tableAlias?: string): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(inviteFields).forEach(([key, value]) => {
             let operation: QueryOperation;
@@ -171,7 +171,10 @@ class InviteRepository extends BaseRepository {
             } else {
                 operation = QueryOperation.EQUALS;
             }
-            const keyToUse = SchemaMapper.toDbField(DbTable.INVITES, key);
+            let keyToUse = SchemaMapper.toDbField(DbTable.INVITES, key);
+            if(tableAlias) {
+                keyToUse = `${tableAlias}.${keyToUse}`;
+            }
             queryFields[keyToUse] = { value, operation };
         });
         return queryFields;
