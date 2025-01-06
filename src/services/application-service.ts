@@ -141,7 +141,7 @@ export class ApplicationService {
         let invitesRes: GeneralAppResponse<InviteWithRelatedData[]> = {success: true, data: []};      
 
         // If searching applications for a specific user, also send the pending invites
-        if(applicationSearchParams.isShowPendingInvites) {
+        if(searchParamsValidationResult.data.isShowPendingInvites) {
             if(applicationFields.candidateId === undefined) {
                 let badRequestError: BadRequestError = new Error('CandidateId is required to get pending invites') as BadRequestError;
                 badRequestError.errorType = 'BadRequestError';
