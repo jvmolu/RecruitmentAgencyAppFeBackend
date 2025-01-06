@@ -37,7 +37,7 @@ export class MatchService {
     matchSearchParams: Partial<MatchSearchParams>
   ): Promise<GeneralAppResponse<MatchWithRelatedData[]>> {
 
-    const validationResult = MatchSearchSchema.safeParse(matchSearchOptions);
+    const validationResult = MatchSearchSchema.partial().safeParse(matchSearchOptions);
     if (!validationResult.success) {
       const error = validationResult.error as ZodParsingError;
       error.errorType = 'ZodParsingError';
