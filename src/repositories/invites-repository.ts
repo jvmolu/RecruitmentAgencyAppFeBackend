@@ -127,11 +127,11 @@ class InviteRepository extends BaseRepository {
 
                 return {
                     ...inviteData,
-                    candidateData: searchParams.isShowCandidateData ? {
+                    candidate: searchParams.isShowCandidateData ? {
                         ...candidate_data,
                         profile: user_profile_data
                     } : undefined,
-                    jobData: searchParams.isShowJobData ? job_data : undefined
+                    job: searchParams.isShowJobData ? job_data : undefined
                 };
             });
 

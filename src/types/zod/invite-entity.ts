@@ -33,7 +33,7 @@ const InviteSearchParamsSchema = BaseSearchParams.merge(
 type InviteType = z.infer<typeof InviteSchema>
 type InviteSearchOptions = z.infer<typeof InviteSearchSchema>
 type InviteSearchParams = z.infer<typeof InviteSearchParamsSchema>
-type InviteWithRelatedData = InviteType & { jobData: Partial<JobWithCompanyData> | undefined, candidateData: Partial<UserWithProfileData> | undefined };
+type InviteWithRelatedData = InviteType & { job: Partial<JobWithCompanyData> | undefined, candidate: Partial<UserWithProfileData> | undefined };
 
 class Invite implements InviteType {
   
