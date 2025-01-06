@@ -273,7 +273,7 @@ class ApplicationRepository extends BaseRepository {
     /**
      * Create search fields for query building
     **/
-    private createSearchFields(applicationFields: Partial<ApplicationSearchOptions>, tableAlias?: string, table?: DbTable = DbTable.APPLICATIONS): QueryFields {
+    private createSearchFields(applicationFields: Partial<ApplicationSearchOptions>, tableAlias?: string, table: DbTable = DbTable.APPLICATIONS): QueryFields {
         const queryFields: QueryFields = {};
         Object.entries(applicationFields).forEach(([key, value]) => {
             let operation: QueryOperation;
