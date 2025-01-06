@@ -12,6 +12,8 @@ import { JoinClause, JoinType } from "../types/enums/join-type";
 import { User } from "../types/zod/user-entity";
 import { UserProfile } from "../types/zod/user-profile-entity";
 import { Job } from "../types/zod/job-entity";
+import { Company } from "../types/zod/company-entity";
+import { join } from "path";
 
 class InviteRepository extends BaseRepository {
 
@@ -49,6 +51,8 @@ class InviteRepository extends BaseRepository {
             const userTableAlias = 'u';
             const jobTableAlias = 'j';
             const userProfileTableAlias = 'up';
+            const companyTableAlias = 'c';
+            const partnerTableAlias = 'p';
 
             const searchFields = this.createSearchFields(inviteFields, tableAlias);
 
@@ -85,7 +89,24 @@ class InviteRepository extends BaseRepository {
                     alias: jobTableAlias,
                     onCondition: `${tableAlias}.job_id = ${jobTableAlias}.id`
                 });
+
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.COMPANIES,
+                    alias: 'c',
+                    onCondition: `${jobTableAlias}.company_id = ${companyTableAlias}.id`
+                });
+
+                joins.push({
+                    joinType: JoinType.LEFT,
+                    tableName: DbTable.COMPANIES,
+                    alias: partnerTableAlias,
+                    onCondition: `${jobTableAlias}.partner_id = ${partnerTableAlias}.id`
+                });
+
                 selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${jobTableAlias}.*)`, alias: 'job_data' });
+                selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${companyTableAlias}.*)`, alias: 'company_data' });
+                selectFieldsAndAlias.push({ field: `json_agg(DISTINCT ${partnerTableAlias}.*)`, alias: 'partner_data' });
             }
       
             let offset = 0;
@@ -115,15 +136,19 @@ class InviteRepository extends BaseRepository {
             }
 
             const invitesWithRelatedData: InviteWithRelatedData[] = dbRes.data.map((row) => {
-                let { candidate_data, user_profile_data, job_data, ...inviteData } = row;
+                let { candidate_data, user_profile_data, job_data, company_data, partner_data, ...inviteData } = row;
 
                 user_profile_data = user_profile_data && user_profile_data.length > 0 && user_profile_data[0] !== null ? user_profile_data[0] : [];
                 candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
                 job_data = job_data && job_data.length > 0 && job_data[0] !== null ? job_data[0] : [];
+                company_data = company_data && company_data.length > 0 && company_data[0] !== null ? company_data[0] : [];
+                partner_data = partner_data && partner_data.length > 0 && partner_data[0] !== null ? partner_data[0] : [];
                 
                 candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
                 user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
                 job_data = SchemaMapper.toEntity<Job>(DbTable.JOBS, job_data);
+                company_data = SchemaMapper.toEntity<Company>(DbTable.COMPANIES, company_data);
+                partner_data = SchemaMapper.toEntity<Company>(DbTable.COMPANIES, partner_data);
 
                 return {
                     ...inviteData,
@@ -131,7 +156,11 @@ class InviteRepository extends BaseRepository {
                         ...candidate_data,
                         profile: user_profile_data
                     } : undefined,
-                    job: searchParams.isShowJobData ? job_data : undefined
+                    job: searchParams.isShowJobData ? {
+                        ...job_data,
+                        company: company_data,
+                        partner: partner_data
+                    } : undefined
                 };
             });
 
