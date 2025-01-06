@@ -38,17 +38,13 @@ export class JobController {
                 error: result.error,
                 });
             }
+            
             if(!req.body.user || req.body.user.role !== Role.ADMIN) {
                 for(let i = 0; i < result.data.length; i++) {
-                    let hiddenColumns: string[] | undefined = result.data[i].hiddenColumns;
-                    if(hiddenColumns) {
-                        delete(result.data[i].hiddenColumns);
-                        (hiddenColumns || []).forEach((column) => {
-                        delete((result.data[i] as any)[column]);
-                        });
-                    }
+                    JobService.hideJobDataBasedOnHiddenColumns(result.data[i]);
                 }
             }
+
             return res.status(HttpStatusCode.OK).json(result);
         } catch (error) {
             console.log(error);

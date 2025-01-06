@@ -16,6 +16,7 @@ import {
 	AnalysisRequestData,
 } from "../services/ai-evaluate-service";
 import { InviteType } from "../types/zod/invite-entity";
+import Role from "../types/enums/role";
 
 export class ApplicationController {
 	public static async createApplication(
@@ -113,6 +114,13 @@ export class ApplicationController {
 					error: result.error,
 				});
 			}
+
+            if(!req.body.user || req.body.user.role !== Role.ADMIN) {
+				for(let i = 0; i < result.data.applications.length; i++) {
+					JobService.hideJobDataBasedOnHiddenColumns(result.data.applications[i].job);
+				}
+			}		
+
 			return res.status(HttpStatusCode.OK).json(result);
 		} catch (error) {
 			console.error(error);

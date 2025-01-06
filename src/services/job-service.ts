@@ -107,4 +107,17 @@ export class JobService {
 
         return await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields);
     }
+
+    public static hideJobDataBasedOnHiddenColumns(job: Partial<JobWithCompanyData> | undefined): void {
+        if(!job) {
+            return;
+        }
+        let hiddenColumns: string[] | undefined = job.hiddenColumns;
+        if(hiddenColumns) {
+            delete(job.hiddenColumns);
+            (hiddenColumns || []).forEach((column) => {
+                delete((job as any)[column]);
+            });
+        }
+    }
 }
