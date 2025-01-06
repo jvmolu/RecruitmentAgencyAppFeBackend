@@ -121,7 +121,7 @@ export class ApplicationService {
             };
         }
 
-		const searchParamsValidationResult = ApplicationSearchParamsSchema.partial().safeParse(applicationSearchParams);
+		const searchParamsValidationResult = ApplicationSearchParamsSchema.safeParse(applicationSearchParams);
 		if (!searchParamsValidationResult.success) {
 			const zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
 			zodError.errorType = "ZodParsingError";

@@ -133,7 +133,7 @@ export class InviteService {
             };
         }
 
-        const searchParamsValidationResult = InviteSearchParamsSchema.partial().safeParse(inviteSearchParams);
+        const searchParamsValidationResult = InviteSearchParamsSchema.safeParse(inviteSearchParams);
         if(!searchParamsValidationResult.success) {
             let zodError: ZodParsingError = searchParamsValidationResult.error as ZodParsingError;
             zodError.errorType = 'ZodParsingError';
