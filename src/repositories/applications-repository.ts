@@ -13,6 +13,7 @@ import { User } from "../types/zod/user-entity";
 import { UserProfile } from "../types/zod/user-profile-entity";
 import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
 import { v4 as uuidv4 } from "uuid";
+import { JobSearchOptions } from "../types/zod/job-entity";
 
 class ApplicationRepository extends BaseRepository {
     constructor() {
@@ -32,6 +33,18 @@ class ApplicationRepository extends BaseRepository {
       }
       return { success: true, data: response.data };
     }
+
+    private fetchJobFieldsFromApplicationFields(applicationFields: Partial<ApplicationSearchOptions>): Partial<JobSearchOptions> {
+      const jobCols: string[] = ['workModel', 'jobType', 'location', 'title'];
+      const jobFields: { [key: string]: any } = {};
+      jobCols.forEach((col: string) => {
+          if(applicationFields[col as keyof ApplicationSearchOptions]) {
+              jobFields[col] = applicationFields[col as keyof ApplicationSearchOptions];
+              delete applicationFields[col as keyof ApplicationSearchOptions];
+          }
+      });
+      return jobFields as Partial<JobSearchOptions>;
+  }
 
     /**
      * Create a new application
@@ -74,8 +87,14 @@ class ApplicationRepository extends BaseRepository {
           const userProfileTableAlias = 'up';
           const experienceTable = 'ex';
           const lifecycleTableAlias = 'l';
-          const searchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
-      
+
+          // Fetch job fields from application fields
+          const jobFields = this.fetchJobFieldsFromApplicationFields(applicationFields);
+
+          const applicationSearchQueryFields: QueryFields = this.createSearchFields(applicationFields, applicationTableAlias);
+          const jobSearchQueryFields: QueryFields = this.createSearchFields(jobFields, jobTableAlias);
+          const searchQueryFields: QueryFields = { ...applicationSearchQueryFields, ...jobSearchQueryFields };
+
           const joins: JoinClause[] = [];
           const selectFieldsAndAlias: {field: string, alias?: string}[] = [
             { field: `${applicationTableAlias}.*` },
@@ -83,7 +102,7 @@ class ApplicationRepository extends BaseRepository {
 
           let groupByFields = [`${applicationTableAlias}.id`];
       
-          if (applicationSearchParams.isShowJobData) {
+          if (applicationSearchParams.isShowJobData || Object.keys(jobFields).length > 0) {
             
             joins.push({
               joinType: JoinType.LEFT,

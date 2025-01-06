@@ -7,6 +7,10 @@ import PaymentPer from "../enums/payment-per";
 import { JobType, JobWithCompanyData } from "./job-entity";
 import { UserWithProfileData } from "./user-entity";
 import { ApplicationLifecycleType } from "./application-lifecycle-entity";
+import { DateRange, NumberRange } from "./range-entities";
+import WorkModel from "../enums/work-model";
+import JobsType from "../enums/job-type";
+import { title } from "process";
 
 const ApplicationSchema = BaseSchema.merge(
     z.object({
@@ -29,6 +33,7 @@ const ApplicationSchema = BaseSchema.merge(
 
 const ApplicationSearchSchema = BaseSchema.merge(
     z.object({
+      
       candidateId: z.string().uuid().nullable(),
       jobId: z.string().uuid().nullable(),
       generalWorkExp: z.string().nullable(),
@@ -39,7 +44,19 @@ const ApplicationSearchSchema = BaseSchema.merge(
       noticePeriod: z.number().int().nullable(),
       status: z.nativeEnum(Status).nullable(),
       stage: z.nativeEnum(ApplicationStages).nullable(),
-      inviteId: z.string().uuid().nullable()
+      inviteId: z.string().uuid().nullable(),
+
+      // Job Table related fields
+      workModel: z.nativeEnum(WorkModel).nullable(),
+      jobType: z.nativeEnum(JobsType).nullable(),
+      location: z.string().nullable(),
+      title: z.string().nullable(),
+
+      // Min-Max Options - Handled in repository
+      // Range will be like: {min: 0, max: 10}
+      createdAtRange: DateRange.optional(),
+      updatedAtRange: DateRange.optional()
+
     })
 );
 
