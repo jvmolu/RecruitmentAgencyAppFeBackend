@@ -81,6 +81,9 @@ export class ApplicationController {
 			req.body.id = applicationId;
 			req.body.resumeLink = fileUploadResult.data;
 
+			// Parse this pdf data and extract the text
+			// const pdfText = await PDFService.extractTextFromPDF(file.buffer);
+
 			const result: GeneralAppResponse<ApplicationType> =
 				await ApplicationService.createApplication(req.body);
 			if (isGeneralAppFailureResponse(result)) {

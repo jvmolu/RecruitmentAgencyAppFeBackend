@@ -2,50 +2,45 @@ import { BaseRepository } from "./base-repository";
 import { QueryBuilder, QueryFields } from "./query-builder/query-builder";
 import DbTable from "../types/enums/db-table";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
-import {InterviewSearchOptions, InterviewType} from "../types/zod/interview-entity";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { PoolClient } from "pg";
 import { DatabaseError } from "../types/error/database-error";
+import { InterviewQuestionSearchOptions, InterviewQuestionType } from "../types/zod/interview-question";
 import QueryOperation from "../types/enums/query-operation";
 import { isEnumField } from "../types/enum-field-mapping";
 import { isDateRange, isNumberRange } from "../types/zod/range-entities";
 
-export class InterviewRepository extends BaseRepository {
+export class InterviewQuestionRepository extends BaseRepository {
 	
 	constructor() {
-		super(DbTable.INTERVIEWS);
+		super(DbTable.INTERVIEW_QUESTIONS);
 	}
 
-	async createInterview(interviewData: InterviewType,client?: PoolClient): Promise<GeneralAppResponse<InterviewType>> {
+	async createInterviewQuestions(questionsData: InterviewQuestionType[],client?: PoolClient): Promise<GeneralAppResponse<InterviewQuestionType[]>> {
 		try {
-			const dbFields = SchemaMapper.toDbSchema(DbTable.INTERVIEWS,interviewData);
-			const { query, params } = QueryBuilder.buildInsertQuery(this.tableName,dbFields);
-			const result = await this.executeQuery<InterviewType>(query,params,client);
-			if(isGeneralAppFailureResponse(result)) {
-				return result;
-			}
-			return {
-				success: true,
-				data: result.data[0],
-			};
+			const questionsWithDbFields = questionsData.map((q) =>
+				SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, q)
+			);
+			const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.INTERVIEW_QUESTIONS,questionsWithDbFields);
+			return await this.executeQuery<InterviewQuestionType>(query,params,client);
 		} catch (error: any) {
 			const dbError: DatabaseError = error as DatabaseError;
 			dbError.errorType = "DatabaseError";
 			return {
 				error: dbError,
-				businessMessage: "Error creating interview",
+				businessMessage: "Error creating interview questions",
 				statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
 				success: false,
 			};
 		}
 	}
 
-	async findByParams(interviewFields: Partial<InterviewSearchOptions>,client?: PoolClient): Promise<GeneralAppResponse<InterviewType[]>> {
+    async findByParams(interviewQuestionFields: Partial<InterviewQuestionSearchOptions>,client?: PoolClient): Promise<GeneralAppResponse<InterviewQuestionType[]>> {
 		try {
-			const queryFields = this.createSearchFields(interviewFields);
+			const queryFields = this.createSearchFields(interviewQuestionFields);
 			const { query, params } = QueryBuilder.buildSelectQuery(this.tableName, queryFields);
-			const result = await this.executeQuery<InterviewType>(query, params,client);
+			const result = await this.executeQuery<InterviewQuestionType>(query, params,client);
 			if(isGeneralAppFailureResponse(result)) {
 				return result;
 			}
@@ -65,12 +60,12 @@ export class InterviewRepository extends BaseRepository {
 		}
 	}
 
-	async updateByParams(interviewSearchFields: Partial<InterviewSearchOptions>, interviewUpdateFields: Partial<InterviewType>,client?: PoolClient): Promise<GeneralAppResponse<InterviewType[]>> {
+	async updateByParams(interviewQuestionSearchFields: Partial<InterviewQuestionSearchOptions>, interviewQuestionUpdateFields: Partial<InterviewQuestionType>,client?: PoolClient): Promise<GeneralAppResponse<InterviewQuestionType[]>> {
 		try {
-			const queryFields = this.createSearchFields(interviewSearchFields);
-			const updateFields = SchemaMapper.toDbSchema(DbTable.INTERVIEWS, interviewUpdateFields);
+			const queryFields = this.createSearchFields(interviewQuestionSearchFields);
+			const updateFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, interviewQuestionUpdateFields);
 			const { query, params } = QueryBuilder.buildUpdateQuery(this.tableName, updateFields, queryFields);
-			const result = await this.executeQuery<InterviewType>(query, params,client);
+			const result = await this.executeQuery<InterviewQuestionType>(query, params,client);
 			if(isGeneralAppFailureResponse(result)) {
 				return result;
 			}
@@ -90,7 +85,7 @@ export class InterviewRepository extends BaseRepository {
 		}
 	}
 
-	private createSearchFields(interviewFields: Partial<InterviewSearchOptions>, tableAlias?: string): QueryFields {
+	private createSearchFields(interviewFields: Partial<InterviewQuestionSearchOptions>, tableAlias?: string): QueryFields {
 
 		const queryFields: QueryFields = {};
 
@@ -100,7 +95,7 @@ export class InterviewRepository extends BaseRepository {
                 key = key.replace('Range', '');
             }
 
-			let keyToUse = SchemaMapper.toDbField(DbTable.INTERVIEWS, key);
+			let keyToUse = SchemaMapper.toDbField(DbTable.INTERVIEW_QUESTIONS, key);
             if(tableAlias) keyToUse = `${tableAlias}.${keyToUse}`;
 
             let operation: QueryOperation;
@@ -159,37 +154,4 @@ export class InterviewRepository extends BaseRepository {
         });
         return queryFields;
     }
-
-	// async getMaxSequenceNumber(interviewId: string): Promise<GeneralAppResponse<{ max: number }>> {
-	// 	try {
-	// 		const query = `
-	// 			SELECT MAX(sequence_number) as max 
-	// 			FROM ${DbTable.INTERVIEW_QUESTIONS}
-	// 			WHERE interview_id = $1
-	// 		`;
-	// 		const result = await this.executeQuery<{ max: number }>(query, [
-	// 			interviewId,
-	// 		]);
-	// 		if (isGeneralAppFailureResponse(result)) {
-	// 			return result;
-	// 		}
-	// 		return {
-	// 			success: true,
-	// 			data: {
-	// 				max: result.data[0]?.max || 0,
-	// 			},
-	// 		};
-	// 	} catch (error) {
-	// 		return {
-	// 			success: false,
-	// 			error: error as DatabaseError,
-	// 			businessMessage: "Error getting max sequence number",
-	// 			statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-	// 		};
-	// 	}
-	// }
-
-	// Find by parameters
-
-	// Update by parameters
 }

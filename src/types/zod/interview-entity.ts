@@ -1,35 +1,44 @@
 import { z } from "zod";
 import BaseSchema from "./base-entity";
 import InterviewStatus from "../enums/interview-status";
-
-//change max
-const InterviewQuestionSchema = BaseSchema.merge(
-	z.object({
-		interviewId: z.string().uuid(),
-		questionText: z.string().min(1),
-		answer: z.string().optional(),
-		sequenceNumber: z.number().positive(),
-		isAiGenerated: z.boolean().default(true),
-		estimatedTimeMinutes: z.number().min(2).max(6).default(4),
-	})
-);
+import { InterviewQuestionType } from "./interview-question";
 
 const InterviewSchema = BaseSchema.merge(
 	z.object({
 		jobId: z.string().uuid(),
 		candidateId: z.string().uuid(),
+		applicationId: z.string().uuid(),
+		totalMarks: z.number().int().default(0),
+		obtainedMarks: z.number().int().default(0),
+		isChecked: z.boolean().default(false),
 		status: z.nativeEnum(InterviewStatus).default(InterviewStatus.PENDING),
 		startedAt: z.string().datetime().optional(),
 		completedAt: z.string().datetime().optional(),
 	})
 );
 
+const InterviewSearchSchema = BaseSchema.merge(
+	z.object({
+		jobId: z.string().uuid().nullable(),
+		candidateId: z.string().uuid().nullable(),
+		applicationId: z.string().uuid().nullable(),
+		totalMarks: z.number().int().nullable(),
+		obtainedMarks: z.number().int().nullable(),
+		isChecked: z.boolean().nullable(),
+		status: z.nativeEnum(InterviewStatus).nullable(),
+		startedAt: z.string().datetime().nullable(),
+		completedAt: z.string().datetime().nullable(),
+	})
+);
+
 type InterviewType = z.infer<typeof InterviewSchema>;
-type InterviewQuestionType = z.infer<typeof InterviewQuestionSchema>;
+type InterviewSearchOptions = z.infer<typeof InterviewSearchSchema>;
+type InterviewWithRelatedData = InterviewType & { questions: Partial<InterviewQuestionType>[] | undefined };
 
 export {
 	InterviewSchema,
-	InterviewQuestionSchema,
 	InterviewType,
-	InterviewQuestionType,
+	InterviewSearchSchema,
+	InterviewSearchOptions,
+	InterviewWithRelatedData,
 };

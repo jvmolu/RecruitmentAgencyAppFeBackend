@@ -127,6 +127,10 @@ class UserProfileRepository extends BaseRepository {
 
             // Order by
             userProfileSearchParams.orderBy = SchemaMapper.toDbField(DbTable.USER_PROFILES, userProfileSearchParams.orderBy);
+            // first name
+            if(userProfileSearchParams.orderBy === 'firstName') {
+                userProfileSearchParams.orderBy = `${userTableAlias}.first_name`;
+            }
     
             const { query, params } = QueryBuilder.buildSelectQuery(
                 DbTable.USER_PROFILES,
