@@ -8,6 +8,9 @@ const InterviewQuestionSchema = BaseSchema.merge(
 		answer: z.string().optional(),
 		videoLink: z.string().optional(),
 		sequenceNumber: z.number().positive(),
+        totalMarks: z.number().int().default(0),
+		obtainedMarks: z.number().int().default(0),
+		isChecked: z.boolean().default(false),
 		isAiGenerated: z.boolean().default(true),
 		estimatedTimeMinutes: z.number().default(4),
 	})
@@ -20,6 +23,9 @@ const InterviewQuestionSearchSchema = BaseSchema.merge(
         answer: z.string().nullable(),
         videoLink: z.string().nullable(),
         sequenceNumber: z.number().positive().nullable(),
+        totalMarks: z.number().int().nullable(),
+        obtainedMarks: z.number().int().nullable(),
+        isChecked: z.boolean().nullable(),
         isAiGenerated: z.boolean().nullable(),
         estimatedTimeMinutes: z.number().nullable(),
     })

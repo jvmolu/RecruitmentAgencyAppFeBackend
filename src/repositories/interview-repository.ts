@@ -149,7 +149,7 @@ export class InterviewRepository extends BaseRepository {
             else if (typeof value === 'string')
             {
                 operation = QueryOperation.ILIKE;
-            } 
+            }
             else 
             {
                 operation = QueryOperation.EQUALS;
@@ -159,37 +159,4 @@ export class InterviewRepository extends BaseRepository {
         });
         return queryFields;
     }
-
-	// async getMaxSequenceNumber(interviewId: string): Promise<GeneralAppResponse<{ max: number }>> {
-	// 	try {
-	// 		const query = `
-	// 			SELECT MAX(sequence_number) as max 
-	// 			FROM ${DbTable.INTERVIEW_QUESTIONS}
-	// 			WHERE interview_id = $1
-	// 		`;
-	// 		const result = await this.executeQuery<{ max: number }>(query, [
-	// 			interviewId,
-	// 		]);
-	// 		if (isGeneralAppFailureResponse(result)) {
-	// 			return result;
-	// 		}
-	// 		return {
-	// 			success: true,
-	// 			data: {
-	// 				max: result.data[0]?.max || 0,
-	// 			},
-	// 		};
-	// 	} catch (error) {
-	// 		return {
-	// 			success: false,
-	// 			error: error as DatabaseError,
-	// 			businessMessage: "Error getting max sequence number",
-	// 			statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-	// 		};
-	// 	}
-	// }
-
-	// Find by parameters
-
-	// Update by parameters
 }

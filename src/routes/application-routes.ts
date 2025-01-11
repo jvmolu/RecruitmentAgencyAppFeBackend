@@ -29,10 +29,10 @@ ApplicationRouter.put(
 	AuthorizeSelf,
 	ApplicationController.updateApplications
 );
-ApplicationRouter.post(
-	"/requirements/match/:jobId",
-	Authenticate,
-	ApplicationController.getRequirementsMatch
-);
+// ApplicationRouter.post(
+// 	"/requirements/match/:jobId",
+// 	Authenticate,
+// 	ApplicationController.getRequirementsMatch
+// );
 
 export default ApplicationRouter;

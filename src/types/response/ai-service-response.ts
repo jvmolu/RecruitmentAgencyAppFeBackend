@@ -1,15 +1,11 @@
+import { z } from "zod";
+
 export interface AIQuestion {
 	question: string;
-	estimated_time_minutes: number;
 }
 
-export interface AIServiceResponse {
+export interface AIGenerateQuestionResponse {
 	questions: AIQuestion[];
-}
-
-export interface AIFollowUpResponse {
-	question: string;
-	estimated_time_minutes: number;
 }
 
 export interface RequirementMatch {
@@ -23,3 +19,22 @@ export interface AIEvaluationResponse {
 	overallMatch: number;
 	requirements: RequirementMatch[];
 }
+
+export const AiQuestionZodSchema = z.object({
+	question: z.string()
+});
+
+export const AIGenerateQuestionResponseZodSchema = z.object({
+	questions: z.array(AiQuestionZodSchema)
+});
+
+export const AIEvaluationResponseZodSchema = z.object({
+	overallMatch: z.number(),
+	requirements: z.array(z.object({
+		requirement: z.string(),
+		expectation: z.string(),
+		candidateProfile: z.string(),
+		matchPercentage: z.number()
+	}))
+});
+

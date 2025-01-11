@@ -27,6 +27,8 @@ the error response creation code from services and controllers and use the error
 
 14. Implement fetching userIdToAccess in Authorise Self User Middleware for Application Routes and everywhere it is being used.
 
+15. Remove Code for File Parsed SQL Table and its repo and services and other files and also from DbTable Enum
+
 FE Changes:
 
 1. Add Delete Pop Up for all Delete Actions

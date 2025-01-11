@@ -15,6 +15,7 @@ enum DbTable {
 	QUESTIONS = "questions",
 	INTERVIEWS = "interviews",
 	INTERVIEW_QUESTIONS = "interview_questions",
+	FILE_PARSED = "file_parsed",
 }
 
 export default DbTable;

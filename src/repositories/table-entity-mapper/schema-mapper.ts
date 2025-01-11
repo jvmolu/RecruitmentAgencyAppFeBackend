@@ -13,6 +13,7 @@ import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-map
 import questionSchemaMapping from "./table-entity-mismatch-mappings/question-schema-mapping";
 import interviewSchemaMapping from "./table-entity-mismatch-mappings/interview-schema-mapping";
 import interviewQuestionSchemaMapping from "./table-entity-mismatch-mappings/interview-question-schema-mapping";
+import fileParsedSchemaMapping from "./table-entity-mismatch-mappings/file-parsed-schema-mapping";
 
 export type FieldMapping = {
 	entityField: string;
@@ -35,6 +36,7 @@ export class SchemaMapper {
 		[DbTable.QUESTIONS]: questionSchemaMapping,
 		[DbTable.INTERVIEWS]: interviewSchemaMapping,
 		[DbTable.INTERVIEW_QUESTIONS]: interviewQuestionSchemaMapping,
+		[DbTable.FILE_PARSED]: fileParsedSchemaMapping,
 	};
 
 	static toEntity<T>(tableName: DbTable, dbRow: { [key: string]: any }): T {
