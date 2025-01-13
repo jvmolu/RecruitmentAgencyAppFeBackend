@@ -14,6 +14,8 @@ const InterviewSchema = BaseSchema.merge(
 		status: z.nativeEnum(InterviewStatus).default(InterviewStatus.PENDING),
 		startedAt: z.string().datetime().optional(),
 		completedAt: z.string().datetime().optional(),
+		// Interview Config
+		totalQuestionsToAsk: z.number().int(),
 	})
 );
 
@@ -22,6 +24,7 @@ const InterviewSearchSchema = BaseSchema.merge(
 		jobId: z.string().uuid().nullable(),
 		candidateId: z.string().uuid().nullable(),
 		applicationId: z.string().uuid().nullable(),
+		totalQuestionsToAsk: z.number().int().nullable(),
 		totalMarks: z.number().int().nullable(),
 		obtainedMarks: z.number().int().nullable(),
 		isChecked: z.boolean().nullable(),

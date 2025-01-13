@@ -107,7 +107,8 @@ export class ApplicationService {
 
     public static async findByParams(
         applicationFields: Partial<ApplicationSearchOptions>,
-        applicationSearchParams: Partial<ApplicationSearchParams>
+        applicationSearchParams: Partial<ApplicationSearchParams>,
+		client?: PoolClient
     ) : Promise<GeneralAppResponse<{applications: ApplicationWithRelatedData[], pendingInvites: InviteType[]}>> {
 
         const validationResult = ApplicationSearchSchema.partial().safeParse(applicationFields);
@@ -134,7 +135,7 @@ export class ApplicationService {
 			};
 		}
 
-        const applicationsRes = await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams);
+        const applicationsRes = await this.applicationRepository.findByParams(validationResult.data, searchParamsValidationResult.data as ApplicationSearchParams, client);
         if (isGeneralAppFailureResponse(applicationsRes)) {
             return applicationsRes;
         }
@@ -155,7 +156,7 @@ export class ApplicationService {
             }
 
 			const jobFields = JobService.fetchAndRemoveJobFields(applicationFields);
-            invitesRes = await InviteService.findByParams({...jobFields, candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {});
+            invitesRes = await InviteService.findByParams({...jobFields, candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {}, client);
             if (isGeneralAppFailureResponse(invitesRes)) {
                 return invitesRes;
             }

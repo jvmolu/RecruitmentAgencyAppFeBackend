@@ -65,7 +65,8 @@ class ApplicationRepository extends BaseRepository {
     **/
     async findByParams(
         applicationFields: Partial<ApplicationSearchOptions>,
-        applicationSearchParams: ApplicationSearchParams
+        applicationSearchParams: ApplicationSearchParams,
+        client?: PoolClient
       ): Promise<GeneralAppResponse<ApplicationWithRelatedData[]>> {
         
         try {
@@ -178,7 +179,7 @@ class ApplicationRepository extends BaseRepository {
             applicationSearchParams.order
           );
 
-          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params);
+          const response: GeneralAppResponse<any[]> = await this.executeQuery<any>(query, params, client);
           if (isGeneralAppFailureResponse(response)) {
             return response;
           }

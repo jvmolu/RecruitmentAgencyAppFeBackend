@@ -5,6 +5,7 @@ const InterviewQuestionSchema = BaseSchema.merge(
 	z.object({
 		interviewId: z.string().uuid(),
 		questionText: z.string().min(1),
+        category: z.string().optional(),
 		answer: z.string().optional(),
 		videoLink: z.string().optional(),
 		sequenceNumber: z.number().positive(),
@@ -21,6 +22,7 @@ const InterviewQuestionSearchSchema = BaseSchema.merge(
         interviewId: z.string().uuid().nullable(),
         questionText: z.string().nullable(),
         answer: z.string().nullable(),
+        category: z.string().nullable(),
         videoLink: z.string().nullable(),
         sequenceNumber: z.number().positive().nullable(),
         totalMarks: z.number().int().nullable(),

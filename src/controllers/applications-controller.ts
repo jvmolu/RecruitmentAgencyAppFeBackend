@@ -13,6 +13,9 @@ import { v4 as uuidv4 } from "uuid";
 import { JobService } from "../services/job-service";
 import { InviteType } from "../types/zod/invite-entity";
 import Role from "../types/enums/role";
+import dotenv from 'dotenv';
+
+dotenv.config({path: './../../.env'});
 
 export class ApplicationController {
 	public static async createApplication(

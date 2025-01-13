@@ -16,19 +16,11 @@ export class UserController {
 
             if (isGeneralAppFailureResponse(result)) {
                 console.log('failure response');
-                if(isDatabaseError(result.error) || isZodError(result.error)) {
-                    return res.status(result.statusCode).json({
-                        success: false,
-                        message: result.businessMessage,
-                        error: result.error
-                    });
-                }
-                else {
-                    return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-                        success: false,
-                        message: 'Internal server error'
-                    });
-                }
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
             }
             
             // User created successfully

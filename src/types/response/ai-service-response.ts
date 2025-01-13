@@ -10,8 +10,8 @@ export interface AIGenerateQuestionResponse {
 
 export interface RequirementMatch {
 	requirement: string;
-	expectation: string;
-	candidateProfile: string;
+	expectation: string; // Important hardcoded
+	additionalComment: string;
 	matchPercentage: number;
 }
 

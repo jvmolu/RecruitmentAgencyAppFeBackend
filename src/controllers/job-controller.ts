@@ -5,6 +5,9 @@ import { JobService } from "../services/job-service";
 import { Job, JobSearchParams, JobType, JobWithCompanyData } from "../types/zod/job-entity";
 import Role from "../types/enums/role";
 
+// PSQL
+// ROUTE -> CONTROLLER (req/res) (business logic but we keep it minimal) -> SERVICE (Business Logic) -> (REPOSITORIES) -> SQL
+
 export class JobController {
 
     public static async createJob(req: Request, res: Response) : Promise<any> {

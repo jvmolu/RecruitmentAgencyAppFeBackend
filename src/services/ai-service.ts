@@ -10,13 +10,13 @@ class AiService {
 
     static async generateInterviewQuestions(
         cvParsedData: string,
-        jobDescription: string,
+        skillDescriptionMap: { [key: string]: string },
+        job: {title: string, objective: string, goals: string, jobDescription: string, skills: string[], experienceRequired: number},
         previousQuestions: { question: string; answer: string }[],
-        expectedQuestionsConfig: [{ 
-            question: string,
+        expectedQuestionsConfig: { 
             expectedTimeToAnswer: number,
             category: string
-        }]
+        }[]
     ) : Promise<GeneralAppResponse<AIQuestion[]>> {
 
         try {
@@ -25,7 +25,8 @@ class AiService {
                 `${AiService.AI_SERVICE_URL}/generate-questions`,
                 {
                     cv_data: cvParsedData,
-                    job_description: jobDescription,
+                    skill_description_map: skillDescriptionMap,
+                    job_data: job,
                     previous_questions: previousQuestions,
                     expected_questions_config: expectedQuestionsConfig
                 }
@@ -80,8 +81,8 @@ class AiService {
 
     public static async evaluateMatch(
         job: {title: string, objective: string, goals: string, jobDescription: string, skills: string[], experienceRequired: number},
-        userProfile: UserProfileWithRelatedData,
-        skillDescriptionMap: { [key: string]: string }
+        cvData: string,
+        skillDescriptionMap?: { [key: string]: string }
 	): Promise<GeneralAppResponse<AIEvaluationResponse>> {
 		try {
 			
@@ -89,8 +90,8 @@ class AiService {
                 `${AiService.AI_SERVICE_URL}/analyze-match`,
                 {
                     job,
-                    userProfile,
-                    skillDescriptionMap
+                    cvData,
+                    skillDescriptionMap: skillDescriptionMap || {}
                 }
             );
 

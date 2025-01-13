@@ -9,9 +9,11 @@
 // 	Authenticate,
 // 	InterviewController.startInterview
 // );
+
 // InterviewRouter.post(
-// 	"/generate-question",
+// 	"/submit-and-generate-question",
 // 	Authenticate,
 // 	InterviewController.generateQuestion
 // );
+
 // export default InterviewRouter;
