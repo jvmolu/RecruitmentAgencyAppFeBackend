@@ -1,8 +1,8 @@
+import axios from "axios";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { AIServiceError } from "../types/error/ai-service-error";
 import { AIEvaluationResponse, AIQuestion, AIGenerateQuestionResponse, AIGenerateQuestionResponseZodSchema, AIEvaluationResponseZodSchema } from "../types/response/ai-service-response";
 import { GeneralAppResponse } from "../types/response/general-app-response";
-import { UserProfileWithRelatedData } from "../types/zod/user-profile-entity";
 
 class AiService {
 
