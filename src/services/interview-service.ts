@@ -407,12 +407,14 @@ export class InterviewService {
       }
 
       // Reserve next question's sequence number
+      
+      const nextSequenceNumber = existingQuestions.length + 1;
       const nextQuestionConfig = {
         expectedTimeToAnswer: 5,
         category: "Technical",
-        totalMarks: 10
+        totalMarks: 10,
+        sequenceNumber: nextSequenceNumber
       };
-      const nextSequenceNumber = existingQuestions.length + 1;
       const placeholderQuestion: InterviewQuestionType = {
         id: uuidv4(),
         interviewId,
