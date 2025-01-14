@@ -33,6 +33,28 @@ export class InterviewService {
 	public static async startInterview(applicationId: string ,client?: PoolClient): Promise<GeneralAppResponse<InterviewWithRelatedData>> {
 		try {
 
+      // Check if interview already exists for this application
+      const existingInterview: GeneralAppResponse<InterviewWithRelatedData[]> = await this.findByParams({ applicationId, status: InterviewStatus.IN_PROGRESS }, {isShowQuestions: true}, client);
+      if(isGeneralAppFailureResponse(existingInterview)) {
+          return existingInterview;
+      }
+
+      if(existingInterview.data.length > 0) {
+        return {
+          success: true,
+          data: existingInterview.data[0]
+        }
+      }
+
+      if(existingInterview.data.length > 0) {
+          return {
+              success: false,
+              error: new Error("Interview already exists for this application") as GeneralAppError,
+              businessMessage: "Interview already exists for this application",
+              statusCode: HttpStatusCode.CONFLICT
+          };
+      }
+
       // Use ApplicationService to get application data
       const applicationWithRelatedData = await ApplicationService.findByParams({id: applicationId}, {isShowLifeCycleData: false}, client);
       if(isGeneralAppFailureResponse(applicationWithRelatedData)) {
