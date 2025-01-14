@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { QuestionController } from "../controllers/question-controller";
+// import { Router } from "express";
+// import { QuestionController } from "../controllers/question-controller";
 
-const QuestionRouter = Router();
+// const QuestionRouter = Router();
 
-QuestionRouter.get("/", QuestionController.getQuestions);
-QuestionRouter.get("/:questionNumber", QuestionController.getQuestionByNumber);
+// QuestionRouter.get("/", QuestionController.getQuestions);
+// QuestionRouter.get("/:questionNumber", QuestionController.getQuestionByNumber);
 
-export default QuestionRouter;
+// export default QuestionRouter;
