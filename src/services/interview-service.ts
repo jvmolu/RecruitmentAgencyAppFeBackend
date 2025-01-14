@@ -252,11 +252,9 @@ export class InterviewService {
     }
   }
 
-  // TODO. Make Interview Service return first when submitAndGenerateNext is called and later generate the next question.
   // Generate next question by calling AI Service after you have submitted the answer to the current question and returned the OK response to the user.
   // When sending the message to AI to generate a new question, reserve its sequenceNumber by saving a dummy question with the same sequenceNumber in the DB.
   // This way we will always know what the next question sequence number should be.
-  // Question Config things will also be there in AI Response. So, we can use that to save the question in the DB.
   @Transactional()
   public static async submitAndGenerateQuestion(
     questionId: string,
