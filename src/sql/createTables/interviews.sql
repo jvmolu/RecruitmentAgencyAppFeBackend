@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS interview_questions (
     video_link TEXT,
     sequence_number INTEGER NOT NULL,
     is_ai_generated BOOLEAN NOT NULL DEFAULT true,
-
+    category varchar(255) NOT NULL,
     total_marks INTEGER NOT NULL DEFAULT 0,
     obtained_marks INTEGER NOT NULL DEFAULT 0,
     is_checked BOOLEAN NOT NULL DEFAULT false,
