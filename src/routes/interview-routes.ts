@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { InterviewController } from "../controllers/interview-controller";
 import Authenticate from "../middlewares/auth/authenticate";
+import MulterRequestParser from "../middlewares/file-upload/multer-file-parser";
+import isMp4File from "../middlewares/file-upload/file-mp4";
 
 const InterviewRouter = Router();
 
@@ -26,7 +28,9 @@ InterviewRouter.post(
 
 InterviewRouter.post(
 	"/submitQuestion",
+    MulterRequestParser,
 	Authenticate,
+    isMp4File,
 	InterviewController.submitAndGenerateQuestion
 );
 

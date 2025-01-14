@@ -21,6 +21,7 @@ import { DataNotFoundError } from "../types/error/data-not-found-error";
 import { ApplicationType } from "../types/zod/application-entity";
 import { JobType } from "../types/zod/job-entity";
 import { Constants } from "../common/constants";
+import S3Service from "./aws-service";
 
 dotenv.config({path: './../../.env'});
 
@@ -28,6 +29,7 @@ export class InterviewService {
 
 	private static interviewRepository = new InterviewRepository();
   private static interviewQuestionRepository = new InterviewQuestionRepository();
+  private static s3Service: S3Service = S3Service.getInstance();
 
 	@Transactional()
 	public static async startInterview(applicationId: string ,client?: PoolClient): Promise<GeneralAppResponse<InterviewWithRelatedData>> {
@@ -281,6 +283,7 @@ export class InterviewService {
   public static async submitAndGenerateQuestion(
     questionId: string,
     answerText: string,
+    fileUrl: string,
     client?: PoolClient
   ): Promise<GeneralAppResponse<{questions: InterviewQuestionType[], interviewStatus: InterviewStatus}>> {
     try {
@@ -288,7 +291,7 @@ export class InterviewService {
       // 1. Update existing question in the DB with the given answer
       const updateResult = await this.interviewQuestionRepository.updateByParams(
         { id: questionId },
-        { answer: answerText, updatedAt: new Date().toISOString() },
+        { answer: answerText, videoLink: fileUrl, updatedAt: new Date().toISOString() },
         client
       );
       if (isGeneralAppFailureResponse(updateResult)) {
@@ -534,4 +537,38 @@ export class InterviewService {
       };
     }
   }
+
+
+  /**
+	 * @method uploadQuestionRecording
+	 * @description Handles the upload of a resume file to DigitalOcean Spaces.
+	 * @param file - The file to be uploaded.
+	 * @param bucketName - The name of the bucket to upload the file to.
+	 * @param questionId - The identifier for the question.
+	 * @returns Promise resolving to a GeneralAppResponse containing the file URL or an error.
+	 **/
+	public static async uploadQuestionRecording(
+		bucketName: string,
+		questionId: string,
+		file: Express.Multer.File
+	): Promise<GeneralAppResponse<string>> {
+
+		const fileUrl: string = `/question/${questionId}/recording/video.mp4`;
+		const uploadResult: GeneralAppResponse<void> = await this.s3Service.uploadFile(bucketName, fileUrl, file.buffer);
+
+		if (isGeneralAppFailureResponse(uploadResult)) {
+			return {
+				success: false,
+				businessMessage: uploadResult.businessMessage,
+				error: uploadResult.error,
+				statusCode: uploadResult.statusCode,
+			};
+		}
+
+		return {
+			success: true,
+			data: fileUrl,
+		};
+	}
+
 }

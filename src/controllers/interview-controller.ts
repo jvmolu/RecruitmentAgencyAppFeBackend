@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { InterviewService } from "../services/interview-service";
-import { isGeneralAppFailureResponse } from "../types/response/general-app-response";
+import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 
 export class InterviewController {
   public static async startInterview(req: Request, res: Response): Promise<any> {
@@ -71,14 +71,54 @@ export class InterviewController {
 
   public static async submitAndGenerateQuestion(req: Request, res: Response): Promise<any> {
     try {
+      
       const { questionId, answerText } = req.body;
+      
       if (!questionId || !answerText) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
         success: false,
         message: "Question ID and Answer Text are required",
         });
       }
-      const result = await InterviewService.submitAndGenerateQuestion(questionId, answerText);
+
+      if(!req.file) {
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
+          success: false,
+          message: "Recording Not Submitted",
+        });
+      }
+
+      let fileUrl = "";
+      if(req.file) {
+
+        // Upload the file
+        const file: Express.Multer.File = req.file as Express.Multer.File;
+        const bucketName: string | undefined = process.env.DIGITAL_OCEAN_BUCKET_NAME;
+        if (!bucketName) {
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: "Internal server error",
+                error: "Bucket name not found in environment variables",
+            });
+        }
+        const fileUploadResult: GeneralAppResponse<string> =
+            await InterviewService.uploadQuestionRecording(
+                bucketName,
+                questionId,
+                file
+            );
+        if (isGeneralAppFailureResponse(fileUploadResult)) {
+            return res.status(fileUploadResult.statusCode).json({
+                success: false,
+                message: fileUploadResult.businessMessage,
+                error: fileUploadResult.error,
+            });
+        }
+
+        fileUrl = fileUploadResult.data;
+      }
+
+      const result = await InterviewService.submitAndGenerateQuestion(questionId, answerText, fileUrl);
       if (isGeneralAppFailureResponse(result)) {
         return res.status(result.statusCode).json({
           success: false,

@@ -46,6 +46,8 @@ Generate next question by calling AI Service after you have submitted the answer
 Expected Flow:
 (Push Request in Message Queue -> AI Listens and responds in another Message Queue -> Listen to it and save response in DB)
 
+21. Lock start interview routes
+
 FE Changes:
 
 1. Add Delete Pop Up for all Delete Actions
