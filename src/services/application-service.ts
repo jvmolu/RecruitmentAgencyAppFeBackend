@@ -177,9 +177,7 @@ export class ApplicationService {
 		applicationUpdateFields: Partial<ApplicationType>,
 		client?: PoolClient
 	): Promise<GeneralAppResponse<ApplicationType[]>> {
-		const searchValidationResult = ApplicationSearchSchema.partial().safeParse(
-			applicationSearchFields
-		);
+		const searchValidationResult = ApplicationSearchSchema.partial().safeParse(applicationSearchFields);
 		if (!searchValidationResult.success) {
 			const zodError: ZodParsingError =
 				searchValidationResult.error as ZodParsingError;
@@ -187,7 +185,7 @@ export class ApplicationService {
 			return {
 				error: zodError,
 				statusCode: HttpStatusCode.BAD_REQUEST,
-				businessMessage: "Invalid search parameters",
+				businessMessage: "Invalid application search parameters",
 				success: false,
 			};
 		}
@@ -199,7 +197,7 @@ export class ApplicationService {
             return {
                 error: zodError,
                 statusCode: HttpStatusCode.BAD_REQUEST,
-                businessMessage: 'Invalid update data',
+                businessMessage: 'Invalid application update data',
                 success: false
             };
         }

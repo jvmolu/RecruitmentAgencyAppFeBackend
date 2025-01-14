@@ -1,7 +1,9 @@
 import { z } from "zod";
-import BaseSchema from "./base-entity";
+import BaseSchema, { BaseSearchParams } from "./base-entity";
 import InterviewStatus from "../enums/interview-status";
 import { InterviewQuestionType } from "./interview-question";
+import { ApplicationType } from "./application-entity";
+import { JobType } from "./job-entity";
 
 const InterviewSchema = BaseSchema.merge(
 	z.object({
@@ -34,9 +36,27 @@ const InterviewSearchSchema = BaseSchema.merge(
 	})
 );
 
+const InterviewSearchParamsSchema = BaseSearchParams.merge(
+	z.object({
+		// I will recieve strings and hence I need transformations which will convert the string to boolean
+		isShowQuestions: z.string().default('false').transform((val) => val === 'true'), // boolean
+		isShowApplicationData: z.string().default('false').transform((val) => val === 'true'), // boolean
+		isShowJobData: z.string().default('false').transform((val) => val === 'true'), // boolean
+	})
+);
+	
+
 type InterviewType = z.infer<typeof InterviewSchema>;
 type InterviewSearchOptions = z.infer<typeof InterviewSearchSchema>;
-type InterviewWithRelatedData = InterviewType & { questions: Partial<InterviewQuestionType>[] | undefined };
+type InterviewWithRelatedData = InterviewType & { 
+	// // Question Text will always be there
+	// questions?: (Partial<InterviewQuestionType> & {questionText: InterviewQuestionType['questionText']})[],
+	// Questions will be fetched as a whole (all fields will be fetched from DB)
+	questions?: InterviewQuestionType[],
+	application?: Partial<ApplicationType>,
+	job?: Partial<JobType> 
+};
+type InterviewSearchParams = z.infer<typeof InterviewSearchParamsSchema>;
 
 export {
 	InterviewSchema,
@@ -44,4 +64,6 @@ export {
 	InterviewSearchSchema,
 	InterviewSearchOptions,
 	InterviewWithRelatedData,
+	InterviewSearchParamsSchema,
+	InterviewSearchParams,
 };

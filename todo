@@ -29,6 +29,19 @@ the error response creation code from services and controllers and use the error
 
 15. Remove Code for File Parsed SQL Table and its repo and services and other files and also from DbTable Enum
 
+16. TTL for parsed resume should be same as the interview time limit + buffer
+
+17. For all entities:
+Convert:
+ type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobWithCompanyData> | undefined, candidate: Partial<UserWithProfileData> | undefined, lifecycle: ApplicationLifecycleType[] | undefined }
+TO
+ type ApplicationWithRelatedData = ApplicationType & { job? : Partial<JobWithCompanyData>, candidate?: Partial<UserWithProfileData>, lifecycle?: ApplicationLifecycleType[] }
+
+18. Add a check in Application Routes to check if the user is allowed to access the application data [Some similar authorisation middlewares seem to be missing, check it once in all routes] [BASICALLY ADD AUTHORIZATION LOGIC TO ALL ROUTES]
+
+19. Make Interview Service return first when submitAndGenerateNext is called and later generate the next question.
+Generate next question by calling AI Service after you have submitted the answer to the current question and returned the OK response to the user.
+
 FE Changes:
 
 1. Add Delete Pop Up for all Delete Actions
