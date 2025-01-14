@@ -1,7 +1,7 @@
 CREATE TYPE interview_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
 
 CREATE TABLE IF NOT EXISTS interviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY,
     job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     candidate_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     application_id UUID NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
@@ -12,13 +12,14 @@ CREATE TABLE IF NOT EXISTS interviews (
     total_marks INTEGER NOT NULL DEFAULT 0,
     obtained_marks INTEGER NOT NULL DEFAULT 0,
     is_checked BOOLEAN NOT NULL DEFAULT false,
+    total_questions_to_ask INTEGER NOT NULL DEFAULT 0,
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS interview_questions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY,
     interview_id UUID NOT NULL REFERENCES interviews(id) ON DELETE CASCADE,
     question_text TEXT NOT NULL,
     estimated_time_minutes INTEGER NOT NULL DEFAULT 4,
