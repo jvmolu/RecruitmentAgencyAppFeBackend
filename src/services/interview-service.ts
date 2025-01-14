@@ -360,6 +360,30 @@ export class InterviewService {
         };
       }
 
+      // Check if interview has been going on for more than 1 hour [Interview Time Limit]
+      const startedAt = new Date(existingInterview.data[0].startedAt as string);
+      const currentTime = new Date();
+      const timeDifference = currentTime.getTime() - startedAt.getTime();
+      const timeDifferenceInMinutes = timeDifference / 60000;
+      if(timeDifferenceInMinutes > 60) {
+        // CALL UPDATE BY PARAMS AND SET INTERVIEW STATUS TO COMPLETED
+        const updateInterviewResult = await this.updateByParams(
+          { id: interviewId },
+          { status: InterviewStatus.COMPLETED, updatedAt: new Date().toISOString(), completedAt: new Date().toISOString() },
+          client
+        );
+        if (isGeneralAppFailureResponse(updateInterviewResult)) {
+          return updateInterviewResult;
+        }
+        return {
+          success: true,
+          data: {
+            questions: existingQuestions,
+            interviewStatus: InterviewStatus.COMPLETED
+          }
+        };
+      }
+
       // Reserve next question's sequence number
       const nextQuestionConfig = {
         expectedTimeToAnswer: 5,
