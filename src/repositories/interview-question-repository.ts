@@ -65,14 +65,7 @@ export class InterviewQuestionRepository extends BaseRepository {
 			const queryFields = this.createSearchFields(interviewQuestionSearchFields);
 			const updateFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, interviewQuestionUpdateFields);
 			const { query, params } = QueryBuilder.buildUpdateQuery(this.tableName, updateFields, queryFields);
-			const result = await this.executeQuery<InterviewQuestionType>(query, params,client);
-			if(isGeneralAppFailureResponse(result)) {
-				return result;
-			}
-			return {
-				success: true,
-				data: result.data,
-			};
+			return await this.executeQuery<InterviewQuestionType>(query, params,client);
 		} catch (error: any) {
 			const dbError: DatabaseError = error as DatabaseError;
 			dbError.errorType = "DatabaseError";

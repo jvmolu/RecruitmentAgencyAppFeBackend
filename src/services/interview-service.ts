@@ -315,7 +315,10 @@ export class InterviewService {
   
       // 2. Generate the new question using AiService
       const existingInterview = await this.findByParams({ id: interviewId }, {isShowApplicationData: true, isShowJobData: true, isShowQuestions: true}, client);
-      if (isGeneralAppFailureResponse(existingInterview) || existingInterview.data.length === 0) {
+      if(isGeneralAppFailureResponse(existingInterview)) {
+        return existingInterview;
+      }
+      else if(existingInterview.data.length === 0) {
         return {
           success: false,
           businessMessage: "Interview not found",
