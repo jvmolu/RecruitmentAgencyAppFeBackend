@@ -18,6 +18,9 @@ import { InterviewQuestionRepository } from "../repositories/interview-question-
 import { InterviewQuestionType } from "../types/zod/interview-question";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import { DataNotFoundError } from "../types/error/data-not-found-error";
+import { ApplicationType } from "../types/zod/application-entity";
+import { JobType } from "../types/zod/job-entity";
+import { Constants } from "../common/constants";
 
 dotenv.config({path: './../../.env'});
 
@@ -55,6 +58,7 @@ export class InterviewService {
           isChecked: false,
           status: InterviewStatus.IN_PROGRESS,
           totalQuestionsToAsk: 10,
+          startedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
       };
@@ -252,6 +256,7 @@ export class InterviewService {
   // Generate next question by calling AI Service after you have submitted the answer to the current question and returned the OK response to the user.
   // When sending the message to AI to generate a new question, reserve its sequenceNumber by saving a dummy question with the same sequenceNumber in the DB.
   // This way we will always know what the next question sequence number should be.
+  // Question Config things will also be there in AI Response. So, we can use that to save the question in the DB.
   @Transactional()
   public static async submitAndGenerateQuestion(
     questionId: string,
@@ -334,12 +339,15 @@ export class InterviewService {
       }
 
       const existingQuestions: InterviewQuestionType[] = existingInterview.data[0].questions;
+      const applicationData: Partial<ApplicationType> = existingInterview.data[0].application;
+      const jobData: Partial<JobType> = existingInterview.data[0].job;
+      const totalQuestionsToAsk: Number = existingInterview.data[0].totalQuestionsToAsk;
 
-      if(existingInterview.data[0].totalQuestionsToAsk === existingQuestions.length) {
+      if(totalQuestionsToAsk === existingQuestions.length) {
         // CALL UPDATE BY PARAMS AND SET INTERVIEW STATUS TO COMPLETED
         const updateInterviewResult = await this.updateByParams(
           { id: interviewId },
-          { status: InterviewStatus.COMPLETED, updatedAt: new Date().toISOString() },
+          { status: InterviewStatus.COMPLETED, updatedAt: new Date().toISOString(), completedAt: new Date().toISOString() },
           client
         );
         if (isGeneralAppFailureResponse(updateInterviewResult)) {
@@ -354,107 +362,129 @@ export class InterviewService {
         };
       }
 
-      // Fetch applicationId from the interview
-      const applicationId = existingInterview.data[0].applicationId;
-
-      // Prepare data for AI generation (dummy placeholders here)
-      // Fetch Resume data from Redis
-      const parsedResume = await RedisService.get(`application-resume-${applicationId}`);
-      if (isGeneralAppFailureResponse(parsedResume)) {
-        return parsedResume;
-      }
-
-      // If resume data is not found in cache, return error response
-      // We should ideally end the interview here.
-      // TTL for parsed resume should be same as the interview time limit + buffer
-      if(parsedResume.data === null) {
-
-        // Update interview status to completed
-        const updateInterviewResult = await this.updateByParams(
-          { id: interviewId },
-          { status: InterviewStatus.COMPLETED, updatedAt: new Date().toISOString() },
-          client
-        );
-
-        return {
-          success: false,
-          businessMessage: "Seems like interview has been going on for too long. Ending the interview now.",
-          error: new Error("Resume data not found in Cache") as GeneralAppError,
-          statusCode: HttpStatusCode.FORBIDDEN
-        };
-      }
-
-      const skillDescriptionMap: Record<string, string> = existingInterview.data[0].application.skillDescriptionMap || {};
-
-      const jobData = {
-        title: existingInterview.data[0].job.title || "",
-        objective: existingInterview.data[0].job.objective || "",
-        goals: existingInterview.data[0].job.goals || "",
-        jobDescription: existingInterview.data[0].job.jobDescription || "",
-        skills: existingInterview.data[0].job.skills || [],
-        experienceRequired: existingInterview.data[0].job.experienceRequired || 0
-      };
-
-      const previousQuestionAnswerPairs: { question: string, answer: string }[] = existingQuestions.map(q => {
-        return { question: q.questionText, answer: (q.answer && q.answer.length > 0) ? q.answer : "NOT ANSWERED THIS QUESTION" };
-      });
-      
+      // Reserve next question's sequence number
       const nextQuestionConfig = {
         expectedTimeToAnswer: 5,
         category: "Technical",
         totalMarks: 10
       };
+      const nextSequenceNumber = existingQuestions.length + 1;
+      const placeholderQuestion: InterviewQuestionType = {
+        id: uuidv4(),
+        interviewId,
+        questionText: Constants.DUMMY_QUESTION_PLACEHOLDER,
+        sequenceNumber: nextSequenceNumber,
+        isAiGenerated: true,
+        estimatedTimeMinutes: nextQuestionConfig.expectedTimeToAnswer,
+        category: nextQuestionConfig.category,
+        totalMarks: nextQuestionConfig.totalMarks,
+        obtainedMarks: 0,
+        isChecked: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-      const aiQuestionResponse = await AiService.generateInterviewQuestions(
-        parsedResume.data,
-        skillDescriptionMap,
-        jobData,
-        previousQuestionAnswerPairs,
-        [ nextQuestionConfig ]
-      );
-      if (isGeneralAppFailureResponse(aiQuestionResponse)) {
-        return aiQuestionResponse;
+      // Insert placeholder row to reserve sequenceNumber
+      const placeholderResult = await this.interviewQuestionRepository.createInterviewQuestions([placeholderQuestion], client);
+      if (isGeneralAppFailureResponse(placeholderResult)) {
+        return placeholderResult;
       }
-  
-      const newQuestions = aiQuestionResponse.data.map((q, index) => {
-        return <InterviewQuestionType>{
-          id: uuidv4(),
-          interviewId,
-          questionText: q.question,
-          sequenceNumber: existingQuestions.length + index + 1,
-          isAiGenerated: true,
-          estimatedTimeMinutes: nextQuestionConfig.expectedTimeToAnswer,
-          category: nextQuestionConfig.category,
-          totalMarks: nextQuestionConfig.totalMarks,
-          obtainedMarks: 0,
-          isChecked: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-      });
-  
-      // 3. Insert new question(s) in the DB
-      const insertNewQuestionResult = await this.interviewQuestionRepository.createInterviewQuestions(newQuestions, client);
-      if (isGeneralAppFailureResponse(insertNewQuestionResult)) {
-        return insertNewQuestionResult;
-      }
-  
-      // Return all questions (old + new)
-      const combinedQuestions = [...(existingInterview.data[0].questions), ...newQuestions];
-      return {
+
+      // Return success immediately (no need to wait for AI generation)
+      const responseToUser: GeneralAppResponse<{ questions: InterviewQuestionType[]; interviewStatus: InterviewStatus }> = {
         success: true,
         data: {
-          questions: combinedQuestions,
-          interviewStatus: existingInterview.data[0].status
-        }
+          questions: existingQuestions.filter(q => q.questionText !== Constants.DUMMY_QUESTION_PLACEHOLDER),
+          interviewStatus: existingInterview.data[0].status,
+        },
       };
+
+      // Generate question in background & update placeholder record
+      // Not using client here as it will be closed after the transaction (Here we will use the default pool client)
+      setImmediate(async () => {
+        try {
+          // Fetch applicationId from the interview
+          const applicationId = existingInterview.data[0].applicationId;
+
+          // Prepare data for AI generation (dummy placeholders here)
+          // Fetch Resume data from Redis
+          const parsedResume = await RedisService.get(`application-resume-${applicationId}`);
+          if (isGeneralAppFailureResponse(parsedResume)) {
+            // Could update placeholder question with "Couldn't generate question"
+            console.error("Resume data not found in cache:", parsedResume);
+            return;
+          }
+
+          // If resume data is not found in cache, return error response
+          // We should ideally end the interview here.
+          // TTL for parsed resume should be same as the interview time limit + buffer
+          if(parsedResume.data === null) {
+
+            // Update interview status to completed
+            const updateInterviewResult = await this.updateByParams(
+              { id: interviewId },
+              { status: InterviewStatus.COMPLETED, updatedAt: new Date().toISOString() },
+              client
+            );
+
+            return;
+          }
+
+          const skillDescriptionMap: Record<string, string> = applicationData.skillDescriptionMap || {};
+
+          const jobDataToPass = {
+            title: jobData.title || "",
+            objective: jobData.objective || "",
+            goals: jobData.goals || "",
+            jobDescription: jobData.jobDescription || "",
+            skills: jobData.skills || [],
+            experienceRequired: jobData.experienceRequired || 0
+          };
+
+          const previousQuestionAnswerPairs: { question: string, answer: string }[] = existingQuestions.filter(q =>  
+            q.questionText !== Constants.DUMMY_QUESTION_PLACEHOLDER &&
+            q.answer !== undefined &&
+            q.answer.length > 0
+          ).map(q => {
+            return { question: q.questionText, answer: q.answer as string };
+          });
+
+          const aiQuestionResponse = await AiService.generateInterviewQuestions(
+            parsedResume.data,
+            skillDescriptionMap,
+            jobDataToPass,
+            previousQuestionAnswerPairs,
+            [ nextQuestionConfig ]
+          );
+          if (isGeneralAppFailureResponse(aiQuestionResponse)) {
+            // Could update placeholder question with "Couldn't generate question"
+            console.error("AI question generation failed:", aiQuestionResponse);
+            return;
+          }
+    
+          // Update placeholder with actual AI question
+          const realQuestion: AIQuestion = aiQuestionResponse.data[0];
+          await this.interviewQuestionRepository.updateByParams(
+            { id: placeholderQuestion.id },
+            { questionText: realQuestion.question, updatedAt: new Date().toISOString() }
+          );
+    
+          return;
+        }
+        catch (error: any) {
+          console.error("Submit & generate question error:", error);
+          return;
+       }
+      });
+
+      return responseToUser;
     } catch (error: any) {
       console.error("Submit & generate question error:", error);
       return {
         success: false,
         error,
         businessMessage: "Error submitting answer and generating new question",
-        statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
+        statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
       };
     }
   }

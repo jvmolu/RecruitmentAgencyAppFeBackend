@@ -42,6 +42,10 @@ TO
 19. Make Interview Service return first when submitAndGenerateNext is called and later generate the next question.
 Generate next question by calling AI Service after you have submitted the answer to the current question and returned the OK response to the user.
 
+20. Use Message Queues + Listeners rather than using setImmediate to work in parallel while generatingNextQuestion
+Expected Flow:
+(Push Request in Message Queue -> AI Listens and responds in another Message Queue -> Listen to it and save response in DB)
+
 FE Changes:
 
 1. Add Delete Pop Up for all Delete Actions
