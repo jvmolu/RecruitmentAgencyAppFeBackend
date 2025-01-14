@@ -53,7 +53,7 @@ export class InterviewRepository extends BaseRepository {
 			const jobTableAlias = 'j';
 			const interviewQuestionTableAlias = 'iq';
 
-			const searchQueryFields = this.createSearchFields(interviewFields);
+			const searchQueryFields = this.createSearchFields(interviewFields, interviewTableAlias);
 
 			const joins: JoinClause[] = [];
 			const selectFieldsAndAlias: {field: string, alias?: string}[] = [
