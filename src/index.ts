@@ -12,7 +12,6 @@ import UserProfileRouter from "./routes/user-profile-routes";
 import ApplicationRouter from "./routes/application-routes";
 import { RouteNotFound } from "./middlewares/error-handling/route-not-found";
 import { ErrorHandler } from "./middlewares/error-handling/general-error-handler";
-import QuestionRouter from "./routes/question-routes";
 import InterviewRouter from "./routes/interview-routes";
 
 dotenv.config({ path: "./../.env" });
@@ -44,7 +43,6 @@ app.use("/api/v1/match-reports", MatchReportRouter);
 app.use("/api/v1/matches", MatchRouter);
 app.use("/api/v1/user-profile", UserProfileRouter);
 app.use("/api/v1/applications", ApplicationRouter);
-app.use("/api/v1/questions", QuestionRouter);
 app.use("/api/v1/interviews", InterviewRouter);
 
 // Error handling middleware

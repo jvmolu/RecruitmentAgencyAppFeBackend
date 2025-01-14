@@ -10,7 +10,6 @@ import userEducationSchemaMapping from "./table-entity-mismatch-mappings/user-ed
 import userExperienceSchemaMapping from "./table-entity-mismatch-mappings/user-experience-schema-mapping";
 import userProfileSchemaMapping from "./table-entity-mismatch-mappings/user-profile-schema-mapping";
 import userSchemaMappings from "./table-entity-mismatch-mappings/user-schema-mappings";
-import questionSchemaMapping from "./table-entity-mismatch-mappings/question-schema-mapping";
 import interviewSchemaMapping from "./table-entity-mismatch-mappings/interview-schema-mapping";
 import interviewQuestionSchemaMapping from "./table-entity-mismatch-mappings/interview-question-schema-mapping";
 import fileParsedSchemaMapping from "./table-entity-mismatch-mappings/file-parsed-schema-mapping";
@@ -33,7 +32,6 @@ export class SchemaMapper {
 		[DbTable.USER_EXPERIENCES]: userExperienceSchemaMapping,
 		[DbTable.USER_EDUCATION]: userEducationSchemaMapping,
 		[DbTable.APPLICATIONS_LIFECYCLE]: applicationLifecycleSchemaMapping,
-		[DbTable.QUESTIONS]: questionSchemaMapping,
 		[DbTable.INTERVIEWS]: interviewSchemaMapping,
 		[DbTable.INTERVIEW_QUESTIONS]: interviewQuestionSchemaMapping,
 		[DbTable.FILE_PARSED]: fileParsedSchemaMapping,

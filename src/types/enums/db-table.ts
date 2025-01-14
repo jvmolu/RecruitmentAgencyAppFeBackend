@@ -12,7 +12,6 @@ enum DbTable {
 	USER_EDUCATION = "user_education",
 	APPLICATIONS = "applications",
 	APPLICATIONS_LIFECYCLE = "applications_lifecycle",
-	QUESTIONS = "questions",
 	INTERVIEWS = "interviews",
 	INTERVIEW_QUESTIONS = "interview_questions",
 	FILE_PARSED = "file_parsed",
