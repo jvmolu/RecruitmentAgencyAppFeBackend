@@ -495,7 +495,7 @@ export class InterviewService {
 
           const previousQuestionAnswerPairs: { question: string, answer: string }[] = existingQuestions.filter(q =>  
             q.questionText !== Constants.DUMMY_QUESTION_PLACEHOLDER &&
-            q.answer !== undefined &&
+            q.answer &&
             q.answer.length > 0
           ).map(q => {
             return { question: q.questionText, answer: q.answer as string };
