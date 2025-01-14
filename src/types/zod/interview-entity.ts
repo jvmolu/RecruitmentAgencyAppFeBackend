@@ -39,9 +39,20 @@ const InterviewSearchSchema = BaseSchema.merge(
 const InterviewSearchParamsSchema = BaseSearchParams.merge(
 	z.object({
 		// I will recieve strings and hence I need transformations which will convert the string to boolean
-		isShowQuestions: z.string().default('false').transform((val) => val === 'true') || z.boolean(),
-		isShowApplicationData: z.string().default('false').transform((val) => val === 'true') || z.boolean(), // boolean
-		isShowJobData: z.string().default('false').transform((val) => val === 'true') || z.boolean(), // boolean
+		isShowQuestions: z
+		.union([z.boolean(), z.string()])
+		.default(false)
+		.transform((val) => (typeof val === "string" ? val === "true" : val)),
+  
+	  isShowApplicationData: z
+		.union([z.boolean(), z.string()])
+		.default(false)
+		.transform((val) => (typeof val === "string" ? val === "true" : val)),
+  
+	  isShowJobData: z
+		.union([z.boolean(), z.string()])
+		.default(false)
+		.transform((val) => (typeof val === "string" ? val === "true" : val)),
 	})
 );
 	
