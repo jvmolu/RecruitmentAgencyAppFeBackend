@@ -33,8 +33,15 @@ const InviteSearchSchema = BaseSchema.merge(
 const InviteSearchParamsSchema = BaseSearchParams.merge(
   z.object({
       // I will recieve strings and hence I need transformations which will convert the string to boolean
-      isShowJobData: z.string().default('true').transform((val) => val === 'true'), // boolean
-      isShowCandidateData: z.string().default('true').transform((val) => val === 'true'), // boolean
+      isShowJobData: z
+        .union([z.boolean(), z.string()])
+        .default(true)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
+      
+      isShowCandidateData: z
+        .union([z.boolean(), z.string()])
+        .default(true)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
   })
 );
 

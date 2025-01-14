@@ -60,9 +60,20 @@ const UserProfileSearchSchema = BaseSchema.merge(
 const UserProfileSearchParamsSchema = BaseSearchParams.merge(
   z.object({
       // I will recieve strings and hence I need transformations which will convert the string to boolean
-      isShowUserData: z.string().default('true').transform((val) => val === 'true'), // boolean
-      isShowUserEducationData: z.string().default('true').transform((val) => val === 'true'), // boolean
-      isShowUserExperienceData: z.string().default('true').transform((val) => val === 'true') // boolean
+      isShowUserData: z
+        .union([z.boolean(), z.string()])
+        .default(true)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
+
+       isShowUserEducationData: z
+        .union([z.boolean(), z.string()])
+        .default(true)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
+
+       isShowUserExperienceData: z
+        .union([z.boolean(), z.string()])
+        .default(true)
+        .transform((val) => (typeof val === "string" ? val === "true" : val))
   })
 );
 
