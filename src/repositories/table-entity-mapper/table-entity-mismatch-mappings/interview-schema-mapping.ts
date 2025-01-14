@@ -8,6 +8,8 @@ export default {
 		{ entityField: "obtainedMarks", dbField: "obtained_marks" },
 		{ entityField: "isChecked", dbField: "is_checked" },
 		{ entityField: "startedAt", dbField: "started_at" },
-		{ entityField: "completedAt", dbField: "completed_at" }
+		{ entityField: "completedAt", dbField: "completed_at" },
+		{ entityField: "createdAt", dbField: "created_at" },
+		{ entityField: "updatedAt", dbField: "updated_at" },
 	]
 };

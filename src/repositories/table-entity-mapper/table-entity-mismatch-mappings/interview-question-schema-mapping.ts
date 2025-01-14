@@ -9,5 +9,7 @@ export default {
 		{ entityField: "isChecked", dbField: "is_checked" },
 		{ entityField: "isAiGenerated", dbField: "is_ai_generated" },
 		{ entityField: "estimatedTimeMinutes", dbField: "estimated_time_minutes" },
+		{ entityField: "createdAt", dbField: "created_at" },
+		{ entityField: "updatedAt", dbField: "updated_at" },
 	],
 };
