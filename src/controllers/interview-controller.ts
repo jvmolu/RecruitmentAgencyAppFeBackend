@@ -81,10 +81,10 @@ export class InterviewController {
         });
       }
 
-      if(!req.file) {
+      if(!req.file && answerText !== "") {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
           success: false,
-          message: "Recording Not Submitted",
+          message: "Recording Not Submitted but answer is provided",
         });
       }
 

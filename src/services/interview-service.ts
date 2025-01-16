@@ -288,6 +288,10 @@ export class InterviewService {
   ): Promise<GeneralAppResponse<{questions: InterviewQuestionType[], interviewStatus: InterviewStatus}>> {
     try {
 
+      if(answerText === "") {
+        answerText = "NOT ANSWERED";
+      }
+
       // 1. Update existing question in the DB with the given answer
       const updateResult = await this.interviewQuestionRepository.updateByParams(
         { id: questionId },

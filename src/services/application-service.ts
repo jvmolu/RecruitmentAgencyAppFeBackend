@@ -25,6 +25,10 @@ import InviteStatus from "../types/enums/invite-status";
 import { InviteType, InviteWithRelatedData } from "../types/zod/invite-entity";
 import { InviteService } from "./invite-service";
 import { JobService } from "./job-service";
+import { AIEvaluationResponse } from "../types/response/ai-service-response";
+import { extractTextFromPDF } from "../common/pdf-util";
+import AiService from "./ai-service";
+import { JobWithCompanyData } from "../types/zod/job-entity";
 
 export class ApplicationService {
 
@@ -250,6 +254,43 @@ export class ApplicationService {
 
 		return updateApplicationRes;
 	}
+
+	public static async evaluateMatch(
+		jobId: string,
+		skillDescriptionMap: { [key: string]: string },
+		file: Express.Multer.File
+	): Promise<GeneralAppResponse<AIEvaluationResponse>> {
+
+		const jobs = await JobService.findByParams({ id: jobId }, {isShowAppliesCount: false, isShowCompanyData: false, isShowMatchesCount: false, isShowPartnerData: false});
+		if (isGeneralAppFailureResponse(jobs)) {
+			return jobs;
+		}
+
+		const job: JobWithCompanyData = jobs.data[0];
+		const cvData: string = await extractTextFromPDF(file.buffer);
+		if(cvData === "") {
+			let badRequestError: BadRequestError = new Error('Unable to parse CV') as BadRequestError;
+			badRequestError.errorType = 'BadRequestError';
+			return {
+				error: badRequestError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: 'Unable to parse CV',
+				success: false
+			};
+		}
+
+		const aiResponse: GeneralAppResponse<AIEvaluationResponse> = await AiService.evaluateMatch({
+			title: job.title || "",
+			objective: job.objective || "",
+			goals: job.goals || "",
+			jobDescription: job.jobDescription || "",
+			skills: job.skills || [],
+			experienceRequired: job.experienceRequired || 0
+		}, cvData, skillDescriptionMap);
+
+		return aiResponse;
+	}
+
 
 	/**
 	 * @method uploadResume

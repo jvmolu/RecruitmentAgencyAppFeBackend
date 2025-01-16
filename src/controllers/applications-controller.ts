@@ -14,6 +14,7 @@ import { JobService } from "../services/job-service";
 import { InviteType } from "../types/zod/invite-entity";
 import Role from "../types/enums/role";
 import dotenv from 'dotenv';
+import { AIEvaluationResponse } from "../types/response/ai-service-response";
 
 dotenv.config({path: './../../.env'});
 
@@ -131,99 +132,56 @@ export class ApplicationController {
 		}
 	}
 
-	// public static async getRequirementsMatch(
-	// 	req: Request,
-	// 	res: Response
-	// ): Promise<any> {
-	// 	try {
-	// 		const jobId = req.params.jobId;
-	// 		const { applicationId, candidateData } = req.body;
+	public static async evaluateApplication(
+		req: Request,
+		res: Response
+	): Promise<any> {
+		try {
 
-	// 		if (!jobId || !applicationId || !candidateData) {
-	// 			return res.status(HttpStatusCode.BAD_REQUEST).json({
-	// 				success: false,
-	// 				message:
-	// 					"Missing required parameters - jobId, applicationId and candidateData are required",
-	// 			});
-	// 		}
+			if(!req.body.jobId) {
+				return res.status(HttpStatusCode.BAD_REQUEST).json({
+					success: false,
+					message: "Invalid request body - jobId is required",
+				});
+			}
 
-	// 		const jobResponse = await JobService.findByParams({ id: jobId }, {});
-	// 		if (
-	// 			isGeneralAppFailureResponse(jobResponse) ||
-	// 			!jobResponse.data.length
-	// 		) {
-	// 			return res.status(HttpStatusCode.NOT_FOUND).json({
-	// 				success: false,
-	// 				message: "Job not found",
-	// 			});
-	// 		}
+			if(!req.body.skillDescriptionMap) {
+				return res.status(HttpStatusCode.BAD_REQUEST).json({
+					success: false,
+					message: "Invalid request body - skillDescriptionMap is required",
+				});
+			}
 
-	// 		const applicationResponse = await ApplicationService.findByParams(
-	// 			{ id: applicationId },
-	// 			{}
-	// 		);
-	// 		if (
-	// 			isGeneralAppFailureResponse(applicationResponse) ||
-	// 			!applicationResponse.data.applications.length
-	// 		) {
-	// 			return res.status(HttpStatusCode.NOT_FOUND).json({
-	// 				success: false,
-	// 				message: "Application not found",
-	// 			});
-	// 		}
+			if(!req.body.file || !req.body.file.buffer) {
+				return res.status(HttpStatusCode.BAD_REQUEST).json({
+					success: false,
+					message: "Invalid request body - file is required",
+				});
+			}
+ 
+			const result: GeneralAppResponse<AIEvaluationResponse> = await ApplicationService.evaluateMatch(
+				req.body.jobId,
+				req.body.skillDescriptionMap,
+				req.body.file as Express.Multer.File
+			);
+			if (isGeneralAppFailureResponse(result)) {
+				return res.status(result.statusCode).json({
+					success: false,
+					message: result.businessMessage,
+					error: result.error,
+				});
+			}
+			return res.status(HttpStatusCode.OK).json(result);
+		} catch (error) {
+			console.error(error);
+			return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+				success: false,
+				message: "Internal server error",
+				error,
+			});
+		}
 
-	// 		const jobDetails = jobResponse.data[0];
-	// 		const application = applicationResponse.data.applications[0];
-
-	// 		const analysisData: AnalysisRequestData = {
-	// 			jobDescription: {
-	// 				title: jobDetails.title || "",
-	// 				description: jobDetails.jobDescription || "",
-	// 				skills: jobDetails.skills || [],
-	// 				experienceRequired: jobDetails.experienceRequired || 0,
-	// 			},
-	// 			candidateProfile: {
-	// 				skills: candidateData.skills,
-	// 				experience: candidateData.experience,
-	// 				resumeUrl: application.resumeLink,
-	// 				noticePeriod: Number(candidateData.noticePeriod) || 0,
-	// 				expectedSalary: Number(candidateData.expectedSalary) || 0,
-	// 			},
-	// 		};
-
-	// 		if (
-	// 			!analysisData.jobDescription.title ||
-	// 			!analysisData.candidateProfile.resumeUrl
-	// 		) {
-	// 			return res.status(HttpStatusCode.BAD_REQUEST).json({
-	// 				success: false,
-	// 				message: "Missing required fields for analysis",
-	// 			});
-	// 		}
-
-	// 		const aiEvaluation = await AIEvaluateService.evaluateMatch(analysisData);
-
-	// 		if (!aiEvaluation.success) {
-	// 			return res.status(aiEvaluation.statusCode).json({
-	// 				success: false,
-	// 				message: aiEvaluation.businessMessage,
-	// 				error: aiEvaluation.error,
-	// 			});
-	// 		}
-
-	// 		return res.status(HttpStatusCode.OK).json({
-	// 			success: true,
-	// 			data: aiEvaluation.data,
-	// 		});
-	// 	} catch (error) {
-	// 		console.error("Requirements match analysis error:", error);
-	// 		return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
-	// 			success: false,
-	// 			message: "Failed to analyze requirements match",
-	// 			error: error instanceof Error ? error.message : "Unknown error",
-	// 		});
-	// 	}
-	// }
+	}
 
 	public static async updateApplications(
 		req: Request,
