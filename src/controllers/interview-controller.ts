@@ -74,7 +74,7 @@ export class InterviewController {
       
       const { questionId, answerText } = req.body;
       
-      if (!questionId || !answerText) {
+      if (!questionId || answerText === undefined) {
         return res.status(HttpStatusCode.BAD_REQUEST).json({
         success: false,
         message: "Question ID and Answer Text are required",
