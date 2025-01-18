@@ -31,7 +31,9 @@ ApplicationRouter.put(
 );
 ApplicationRouter.post(
 	"/evaluate-match",
+	MulterRequestParser,
 	Authenticate,
+	IsPdfFile,
 	ApplicationController.evaluateApplication
 );
 
