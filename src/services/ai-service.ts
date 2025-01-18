@@ -90,8 +90,8 @@ class AiService {
                 `${AiService.AI_SERVICE_URL}/analyze-match`,
                 {
                     job,
-                    cvData,
-                    skillDescriptionMap: skillDescriptionMap || {}
+                    cv_data: cvData,
+                    skill_description_map: skillDescriptionMap || {}
                 }
             );
 
