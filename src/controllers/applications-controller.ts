@@ -35,6 +35,13 @@ export class ApplicationController {
 				});
 			}
 
+			if(!req.body.matchReport) {
+				return res.status(HttpStatusCode.BAD_REQUEST).json({
+					success: false,
+					message: "Invalid request body - matchReport is required",
+				});
+			}
+
 			const existingApplication: GeneralAppResponse<{
 				applications: ApplicationWithRelatedData[];
 				pendingInvites: InviteType[];
@@ -81,8 +88,10 @@ export class ApplicationController {
 			req.body.id = applicationId;
 			req.body.resumeLink = fileUploadResult.data;
 
-			const result: GeneralAppResponse<ApplicationType> =
-				await ApplicationService.createApplication(req.body);
+			const matchReport = req.body.matchReport;
+			delete req.body.matchReport;
+
+			const result: GeneralAppResponse<ApplicationType> = await ApplicationService.createApplication(req.body, matchReport);
 			if (isGeneralAppFailureResponse(result)) {
 				return res.status(result.statusCode).json({
 					success: false,

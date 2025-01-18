@@ -29,6 +29,7 @@ import { AIEvaluationResponse } from "../types/response/ai-service-response";
 import { extractTextFromPDF } from "../common/pdf-util";
 import AiService from "./ai-service";
 import { JobWithCompanyData } from "../types/zod/job-entity";
+import { MatchReportService } from "./match-report-service";
 
 export class ApplicationService {
 
@@ -36,7 +37,7 @@ export class ApplicationService {
     private static s3Service: S3Service = S3Service.getInstance();
 
     @Transactional()
-    public static async createApplication(applicationData: Omit<ApplicationType, 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<ApplicationType>> {
+    public static async createApplication(applicationData: Omit<ApplicationType, 'createdAt' | 'updatedAt'>, matchReport: Record<string, string>,  client?: PoolClient): Promise<GeneralAppResponse<ApplicationType>> {
         
         const application: ApplicationType = {
             createdAt: new Date().toISOString(),
@@ -72,6 +73,17 @@ export class ApplicationService {
                 return updateInviteRes;
             }
         }
+
+		// Create Match Report based on incoming data.
+		const matchReportCreateRes = await MatchReportService.createMatchReport({
+			report: matchReport
+		}, client);
+		if (isGeneralAppFailureResponse(matchReportCreateRes)) {
+			return matchReportCreateRes;
+		}
+
+		// Add the match report ID to the application
+		validationResult.data.matchReportId = matchReportCreateRes.data.id;
 
 		const applicationRes = await this.applicationRepository.create(
 			validationResult.data,

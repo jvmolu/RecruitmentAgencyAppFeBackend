@@ -7,6 +7,7 @@ import DbTable from "../types/enums/db-table";
 import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import QueryOperation from "../types/enums/query-operation";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { PoolClient } from "pg";
 
 class MatchReportRepository extends BaseRepository {
 
@@ -14,11 +15,11 @@ class MatchReportRepository extends BaseRepository {
     super(DbTable.MATCH_REPORTS);
   }
 
-  async create(matchReport: MatchReportType): Promise<GeneralAppResponse<MatchReport>> {
+  async create(matchReport: MatchReportType, client?: PoolClient): Promise<GeneralAppResponse<MatchReport>> {
     try {
       const dbFields = SchemaMapper.toDbSchema(DbTable.MATCH_REPORTS, matchReport);
       const { query, params } = QueryBuilder.buildInsertQuery(DbTable.MATCH_REPORTS, dbFields);
-      const response = await this.executeQuery<MatchReport>(query, params);
+      const response = await this.executeQuery<MatchReport>(query, params, client);
       if (isGeneralAppFailureResponse(response)) {
         return response;
       }

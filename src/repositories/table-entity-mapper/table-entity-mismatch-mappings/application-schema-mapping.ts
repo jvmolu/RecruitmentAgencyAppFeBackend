@@ -10,6 +10,7 @@ export default {
       { entityField: 'expectedBudgetPer', dbField: 'expected_budget_per' },
       { entityField: 'noticePeriod', dbField: 'notice_period' },
       { entityField: 'resumeLink', dbField: 'resume_link' },
+      { entityField: "matchReportId", dbField: "match_report_id" },
       { entityField: 'coverLetter', dbField: 'cover_letter' },
       { entityField: 'inviteId', dbField: 'invite_id' },
       { entityField: 'createdAt', dbField: 'created_at' },

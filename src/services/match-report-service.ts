@@ -5,11 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { PoolClient } from "pg";
 
 export class MatchReportService {
   private static repository = new MatchReportRepository();
 
-  public static async createMatchReport(data: Omit<MatchReportType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<MatchReportType>> {
+  public static async createMatchReport(data: Omit<MatchReportType, 'id' | 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<MatchReportType>> {
     let matchReport: MatchReportType = {
       id: uuidv4(),
       createdAt: new Date().toISOString(),
@@ -29,7 +30,7 @@ export class MatchReportService {
       };
     }
 
-    return await this.repository.create(validationResult.data);
+    return await this.repository.create(validationResult.data, client);
   }
 
   public static async findByParams(params: Partial<MatchReportSearchOptions>): Promise<GeneralAppResponse<MatchReportType[]>> {

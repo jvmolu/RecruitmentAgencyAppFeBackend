@@ -4,13 +4,12 @@ import BaseSchema, { BaseSearchParams } from "./base-entity";
 import { z } from "zod";
 import Currency from "../enums/currency";
 import PaymentPer from "../enums/payment-per";
-import { JobType, JobWithCompanyData } from "./job-entity";
+import { JobWithCompanyData } from "./job-entity";
 import { UserWithProfileData } from "./user-entity";
 import { ApplicationLifecycleType } from "./application-lifecycle-entity";
-import { DateRange, NumberRange } from "./range-entities";
+import { DateRange } from "./range-entities";
 import WorkModel from "../enums/work-model";
 import JobsType from "../enums/job-type";
-import { title } from "process";
 
 const ApplicationSchema = BaseSchema.merge(
     z.object({
@@ -21,6 +20,7 @@ const ApplicationSchema = BaseSchema.merge(
       currentAddress: z.string(),
       expectedBudgetAmount: z.number().int().optional(),
       expectedBudgetCurrency: z.nativeEnum(Currency).optional(),
+      matchReportId: z.string().uuid().optional(),
       expectedBudgetPer: z.nativeEnum(PaymentPer).optional(),
       noticePeriod: z.number().int(),
       resumeLink: z.string(),
@@ -44,6 +44,7 @@ const ApplicationSearchSchema = BaseSchema.merge(
       status: z.nativeEnum(Status).nullable(),
       stage: z.nativeEnum(ApplicationStages).nullable(),
       inviteId: z.string().uuid().nullable(),
+      matchReportId: z.string().uuid().nullable(),
 
       // Job Table related fields
       workModel: z.nativeEnum(WorkModel).nullable(),
