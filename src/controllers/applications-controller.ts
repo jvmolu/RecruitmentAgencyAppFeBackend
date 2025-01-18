@@ -152,7 +152,7 @@ export class ApplicationController {
 				});
 			}
 
-			if(!req.body.file || !req.body.file.buffer) {
+			if(!req.file || !req.file.buffer) {
 				return res.status(HttpStatusCode.BAD_REQUEST).json({
 					success: false,
 					message: "Invalid request body - file is required",
@@ -162,7 +162,7 @@ export class ApplicationController {
 			const result: GeneralAppResponse<AIEvaluationResponse> = await ApplicationService.evaluateMatch(
 				req.body.jobId,
 				req.body.skillDescriptionMap,
-				req.body.file as Express.Multer.File
+				req.file as Express.Multer.File
 			);
 			if (isGeneralAppFailureResponse(result)) {
 				return res.status(result.statusCode).json({
