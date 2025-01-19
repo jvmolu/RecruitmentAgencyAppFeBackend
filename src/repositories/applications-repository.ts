@@ -78,6 +78,7 @@ class ApplicationRepository extends BaseRepository {
           const userProfileTableAlias = 'up';
           const experienceTable = 'ex';
           const lifecycleTableAlias = 'l';
+          const matchReportTableAlias = 'mr';
 
           // Fetch job fields from application fields
           const jobFields = JobService.fetchAndRemoveJobFields(applicationFields);
@@ -157,6 +158,19 @@ class ApplicationRepository extends BaseRepository {
               { field: `json_agg(DISTINCT ${lifecycleTableAlias}.*)`, alias: 'lifecycle_data' }
             );
           }
+
+          if(applicationSearchParams.isShowMatchReport) {
+            joins.push({
+              joinType: JoinType.LEFT,
+              tableName: DbTable.MATCH_REPORTS,
+              alias: matchReportTableAlias,
+              onCondition: `${applicationTableAlias}.id = ${matchReportTableAlias}.application_id`,
+            });
+
+            selectFieldsAndAlias.push(
+              { field: `json_agg(DISTINCT ${matchReportTableAlias}.*)`, alias: 'match_report_data' }
+            );
+          }
           
           let offset = 0;
           if (applicationSearchParams.page && applicationSearchParams.limit) {
@@ -186,7 +200,7 @@ class ApplicationRepository extends BaseRepository {
       
           // Map the result to include related data
           const data: ApplicationWithRelatedData[] = response.data.map((row) => {
-            let { job_data, company_data, candidate_data, lifecycle_data, user_profile_data, experience_data, ...applicationFields } = row;
+            let { job_data, company_data, candidate_data, lifecycle_data, match_report_data, user_profile_data, experience_data, ...applicationFields } = row;
 
             experience_data = experience_data && experience_data.length > 0 && experience_data[0] !== null ? experience_data : [];
             lifecycle_data = lifecycle_data && lifecycle_data.length > 0 && lifecycle_data[0] !== null ? lifecycle_data : [];
@@ -194,6 +208,7 @@ class ApplicationRepository extends BaseRepository {
             candidate_data = candidate_data && candidate_data.length > 0 && candidate_data[0] !== null ? candidate_data[0] : [];
             job_data = job_data && job_data.length > 0 && job_data[0] !== null ? job_data[0] : [];
             company_data = company_data && company_data.length > 0 && company_data[0] !== null ? company_data[0] : [];
+            match_report_data = match_report_data && match_report_data.length > 0 && match_report_data[0] !== null ? match_report_data[0] : [];
 
             // Use Schema Mapper to convert the fields to the entity
             candidate_data = SchemaMapper.toEntity<User>(DbTable.USERS, candidate_data);
@@ -202,6 +217,7 @@ class ApplicationRepository extends BaseRepository {
             user_profile_data = SchemaMapper.toEntity<UserProfile>(DbTable.USER_PROFILES, user_profile_data);
             experience_data = experience_data.map((row: any) => SchemaMapper.toEntity(DbTable.USER_EXPERIENCES, row));
             lifecycle_data = lifecycle_data.map((row: any) => SchemaMapper.toEntity(DbTable.APPLICATIONS_LIFECYCLE, row));
+            match_report_data = SchemaMapper.toEntity(DbTable.MATCH_REPORTS, match_report_data);
 
             // Sort Lifecycle data by createdAt in DESC order
             lifecycle_data = lifecycle_data.sort((a: ApplicationLifecycleType, b: ApplicationLifecycleType) => {
@@ -216,12 +232,13 @@ class ApplicationRepository extends BaseRepository {
                   profile: user_profile_data,
                   experience: experience_data
                 } : undefined,
-                lifecycle: applicationSearchParams.isShowLifeCycleData ? lifecycle_data : undefined
+                lifecycle: applicationSearchParams.isShowLifeCycleData ? lifecycle_data : undefined,
+                matchReport: applicationSearchParams.isShowMatchReport ? match_report_data : undefined 
             };
           });
       
           return { success: true, data };
-        } 
+        }
         catch (error: any) 
         {
           return {

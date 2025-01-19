@@ -10,6 +10,8 @@ import { ApplicationLifecycleType } from "./application-lifecycle-entity";
 import { DateRange } from "./range-entities";
 import WorkModel from "../enums/work-model";
 import JobsType from "../enums/job-type";
+import { MatchReportType } from "./match-report-entity";
+import { InterviewWithRelatedData } from "./interview-entity";
 
 const ApplicationSchema = BaseSchema.merge(
     z.object({
@@ -63,7 +65,7 @@ const ApplicationSearchSchema = BaseSchema.merge(
 const ApplicationSearchParamsSchema = BaseSearchParams.merge(
   z.object({
 
-    // I will recieve strings and hence I need transformations which will convert the string to boolean
+      // I will recieve strings and hence I need transformations which will convert the string to boolean
       isShowJobData: z
         .union([z.boolean(), z.string()])
         .default(true)
@@ -83,13 +85,29 @@ const ApplicationSearchParamsSchema = BaseSearchParams.merge(
         .union([z.boolean(), z.string()])
         .default(false)
         .transform((val) => (typeof val === "string" ? val === "true" : val)),
+      
+      isShowMatchReport: z
+        .union([z.boolean(), z.string()])
+        .default(false)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
+      
+      isShowInterviewData: z
+        .union([z.boolean(), z.string()])
+        .default(false)
+        .transform((val) => (typeof val === "string" ? val === "true" : val)),
   })
 );
 
 type ApplicationType = z.infer<typeof ApplicationSchema>
 type ApplicationSearchOptions = z.infer<typeof ApplicationSearchSchema>
 type ApplicationSearchParams = z.infer<typeof ApplicationSearchParamsSchema>
-type ApplicationWithRelatedData = ApplicationType & { job : Partial<JobWithCompanyData> | undefined, candidate: Partial<UserWithProfileData> | undefined, lifecycle: ApplicationLifecycleType[] | undefined }
+type ApplicationWithRelatedData = ApplicationType & {
+  job : Partial<JobWithCompanyData> | undefined,
+  candidate: Partial<UserWithProfileData> | undefined,
+  lifecycle: ApplicationLifecycleType[] | undefined,
+  matchReport: MatchReportType | undefined,
+  interviews: Partial<InterviewWithRelatedData>[] | undefined
+}
 
 class Application implements ApplicationType {
   id: string;

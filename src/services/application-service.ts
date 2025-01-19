@@ -30,6 +30,7 @@ import { extractTextFromPDF } from "../common/pdf-util";
 import AiService from "./ai-service";
 import { JobWithCompanyData } from "../types/zod/job-entity";
 import { MatchReportService } from "./match-report-service";
+import { InterviewService } from "./interview-service";
 
 export class ApplicationService {
 
@@ -155,6 +156,28 @@ export class ApplicationService {
         if (isGeneralAppFailureResponse(applicationsRes)) {
             return applicationsRes;
         }
+
+		// Later merge this into repository
+		if(searchParamsValidationResult.data.isShowInterviewData && applicationsRes.data.length > 0) {
+
+			if(applicationsRes.data.length > 1) {
+				let badRequestError: BadRequestError = new Error('Interview data can only be fetched for a single application at a time') as BadRequestError;
+				badRequestError.errorType = 'BadRequestError';
+				return {
+					error: badRequestError,
+					statusCode: HttpStatusCode.BAD_REQUEST,
+					businessMessage: 'Invalid search parameters',
+					success: false
+				};
+			}
+
+			const interviewRes = await InterviewService.findByParams({applicationId: applicationsRes.data[0].id}, {isShowQuestions: true}, client);
+			if(isGeneralAppFailureResponse(interviewRes)) {
+				return interviewRes;
+			}
+
+			applicationsRes.data[0].interviews = interviewRes.data
+		}
 
         let invitesRes: GeneralAppResponse<InviteWithRelatedData[]> = {success: true, data: []};      
 
