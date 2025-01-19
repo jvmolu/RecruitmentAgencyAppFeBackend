@@ -137,6 +137,59 @@ class AiService {
         }
 	}
 
+  
+    public static async gradeQuestionAnswers(
+        questionAnswerPairs: { id: string, question: string; answer: string }[]
+    ): Promise<GeneralAppResponse<{ id: string, question: string; answer: string; score: number }[]>> {
+        try {
+            
+            const aiResponse = await axios.post<{ id: string, question: string; answer: string; score: number }[]>(
+                `${AiService.AI_SERVICE_URL}/score-answers`,
+                {
+                    questionAnswerPairs
+                }
+            );
+
+            // If response has status code other than 200
+            if (aiResponse.status !== HttpStatusCode.OK) {
+                let aiResponseError: AIServiceError = new Error("AI Service Failed") as AIServiceError;
+                aiResponseError.errorType = "AIServiceError";
+                return {
+                    error: aiResponseError,
+                    statusCode: aiResponse.status,
+                    businessMessage: "AI Service Returned an Error",
+                    success: false,
+                };
+            }
+
+            let aiResponseData = aiResponse.data;
+
+            if (!aiResponseData) {
+                let aiResponseError: AIServiceError = new Error("Invalid Response from AI Service") as AIServiceError;
+                aiResponseError.errorType = "AIServiceError";
+                return {
+                    error: aiResponseError,
+                    statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    businessMessage: "Invalid Response from AI Service",
+                    success: false,
+                };
+            }
+
+            return {
+                data: aiResponseData,
+                success: true
+            };
+        }
+        catch (error: any) {
+            return {
+                error,
+                businessMessage: 'Internal Server Error',
+                success: false,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
+            };
+        }
+    }
+
 }
 
 export default AiService;

@@ -69,6 +69,32 @@ export class InterviewController {
     }
   }
 
+  public static async gradeInterview(req: Request, res: Response): Promise<any> {
+    try {
+      const { interviewId } = req.body;
+      if (!interviewId) {
+        return res.status(HttpStatusCode.BAD_REQUEST).json({
+          success: false,
+          message: "Interview ID is required",
+        });
+      }
+      const result = await InterviewService.gradeInterview(interviewId);
+      if (isGeneralAppFailureResponse(result)) {
+        return res.status(result.statusCode).json({
+          success: false,
+          message: result.businessMessage,
+          error: result.error,
+        });
+      }
+      return res.status(HttpStatusCode.OK).json(result.data);
+    } catch (error) {
+      return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
   public static async submitAndGenerateQuestion(req: Request, res: Response): Promise<any> {
     try {
       

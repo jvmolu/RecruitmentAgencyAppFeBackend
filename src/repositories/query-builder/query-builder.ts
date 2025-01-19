@@ -209,6 +209,55 @@ export class QueryBuilder {
     return { query: query, params };
   }
 
+  public static buildUpdateQueryViaValue(
+    tableName: string,
+    updates: Array<{
+      searchFields: Record<string, any>, // Fields to match in WHERE clause
+      updateFields: Record<string, any>  // Fields to update
+    }>,
+    returningFields: string[] = ['*']
+  ): { query: string; params: any[] } {
+    
+    if (updates.length === 0) {
+      return { query: '', params: [] };
+    }
+
+    // Get column names from first update
+    const updateColumnNames = Object.keys(updates[0].updateFields);
+    const searchColumnNames = Object.keys(updates[0].searchFields);
+    
+    let params: any[] = [];
+    let paramIndex = 1;
+
+    // Build VALUES section
+    const values = updates.map(row => {
+      const allValues = [
+        ...Object.values(row.updateFields),
+        ...Object.values(row.searchFields)
+      ];
+      const placeholders = allValues.map(() => `$${paramIndex++}`);
+      params.push(...allValues);
+      return `(${placeholders.join(',')})`;
+    });
+
+    // Build query
+    const query = `
+      UPDATE ${tableName} AS t 
+      SET ${updateColumnNames.map(col => 
+        `${col} = v.${col}`
+      ).join(',')}
+      FROM (VALUES 
+        ${values.join(',\n      ')}
+      ) AS v(${[...updateColumnNames, ...searchColumnNames].join(',')})
+      WHERE ${searchColumnNames.map(col => 
+        `t.${col} = v.${col}`
+      ).join(' AND ')}
+      RETURNING ${returningFields.join(',')};
+    `;
+
+    return { query, params };
+  }
+
   public static buildDeleteQuery(tableName: string, conditions: QueryFields): { query: string; params: any[] } {
     
     if (Object.keys(conditions).length === 0) {

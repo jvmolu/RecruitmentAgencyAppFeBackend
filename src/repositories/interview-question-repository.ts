@@ -78,6 +78,18 @@ export class InterviewQuestionRepository extends BaseRepository {
 		}
 	}
 
+	async updateByValues(updates: {searchFields: Partial<InterviewQuestionType>, updateFields: Partial<InterviewQuestionType>}[], client?: PoolClient): Promise<GeneralAppResponse<InterviewQuestionType[]>> {
+		// User Schema Mapper to convert the data to DB schema
+		const interviewQuestionUpdateFields = updates.map(u => {
+			return {
+				searchFields: SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.searchFields),
+				updateFields: SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.updateFields)
+			}
+		});
+		const { query, params } = QueryBuilder.buildUpdateQueryViaValue(DbTable.INTERVIEW_QUESTIONS, interviewQuestionUpdateFields);
+		return await this.executeQuery<InterviewQuestionType>(query, params, client);
+	}
+
 	private createSearchFields(interviewFields: Partial<InterviewQuestionSearchOptions>, tableAlias?: string): QueryFields {
 
 		const queryFields: QueryFields = {};

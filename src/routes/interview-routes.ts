@@ -34,4 +34,10 @@ InterviewRouter.post(
 	InterviewController.submitAndGenerateQuestion
 );
 
+InterviewRouter.post(
+	"/gradeInterview",
+	Authenticate,
+	InterviewController.gradeInterview
+);
+
 export default InterviewRouter;

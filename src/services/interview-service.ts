@@ -22,6 +22,9 @@ import { ApplicationType } from "../types/zod/application-entity";
 import { JobType } from "../types/zod/job-entity";
 import { Constants } from "../common/constants";
 import S3Service from "./aws-service";
+import { SchemaMapper } from "../repositories/table-entity-mapper/schema-mapper";
+import DbTable from "../types/enums/db-table";
+import { QueryBuilder } from "../repositories/query-builder/query-builder";
 
 dotenv.config({path: './../../.env'});
 
@@ -272,6 +275,110 @@ export class InterviewService {
           error,
           businessMessage: "Error updating interview",
           statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
+
+  // Grade Interview
+  @Transactional()
+  public static async gradeInterview(interviewId: string, client?: PoolClient): Promise<GeneralAppResponse<InterviewWithRelatedData>> {
+    try {
+      
+        // Fetch Interview with Questions
+        const existingInterview = await this.findByParams({ id: interviewId }, {isShowQuestions: true}, client);
+        if(isGeneralAppFailureResponse(existingInterview)) {
+            return existingInterview;
+        }
+
+        // Validate that the interviewId was correct
+        if(existingInterview.data.length === 0) {
+            return {
+                success: false,
+                businessMessage: "Interview not found",
+                error: new Error("Interview not found") as GeneralAppError,
+                statusCode: HttpStatusCode.NOT_FOUND
+            };
+        }
+
+        // Validate that the interview is completed
+        if(existingInterview.data[0].status !== InterviewStatus.COMPLETED) {
+            return {
+                success: false,
+                businessMessage: "Interview not completed",
+                error: new Error("Interview not completed") as GeneralAppError,
+                statusCode: HttpStatusCode.FORBIDDEN
+            };
+        }
+
+        // Fetch all questions for the interview
+        const interviewQuestions = existingInterview.data[0].questions;
+
+        if(!interviewQuestions || interviewQuestions.length === 0) {
+            return {
+                success: false,
+                businessMessage: "Questions not found in Interview",
+                error: new Error("Questions not found in Interview") as GeneralAppError,
+                statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
+            };
+        }
+
+        const questionsToPass: { id: string, question: string; answer: string }[] = interviewQuestions.map(q => {
+            return {
+                id: q.id,
+                question: q.questionText,
+                answer: q.answer || ""
+            };
+        });
+
+        // Call AI Service to grade the answers
+        const gradeResult: GeneralAppResponse<{ id: string, question: string; answer: string; score: number }[]> = await AiService.gradeQuestionAnswers(questionsToPass);
+        if(isGeneralAppFailureResponse(gradeResult)) {
+            return gradeResult;
+        }
+
+        const updates: {searchFields: Partial<InterviewQuestionType>, updateFields: Partial<InterviewQuestionType>}[] = gradeResult.data.map(q => {
+            return {
+              searchFields: { id: q.id },
+              updateFields: { obtainedMarks: q.score, isChecked: true, updatedAt: new Date().toISOString() }
+            }
+        });
+
+        // Update the questions in the DB
+        const updateResult = await this.interviewQuestionRepository.updateByValues(updates, client);
+        if(isGeneralAppFailureResponse(updateResult)) {
+            return updateResult;
+        }
+
+        // Calculate total marks
+        const totalMarks = interviewQuestions.reduce((acc, q) => acc + (q.obtainedMarks || 0), 0);
+
+        // Update the interview with total marks
+        const interviewUpdateResult = await this.updateByParams(
+            { id: interviewId },
+            { obtainedMarks: totalMarks, isChecked: true, updatedAt: new Date().toISOString() },
+            client
+        );
+        if(isGeneralAppFailureResponse(interviewUpdateResult)) {
+            return interviewUpdateResult;
+        }
+
+        return {
+            success: true,
+            data: {
+                ...existingInterview.data[0],
+                obtainedMarks: totalMarks,
+                questions: updateResult.data
+            }
+        };
+
+    } catch (error: any) {
+      console.error("Error grading interview questions:", error);
+      return {
+        success: false,
+        error,
+        businessMessage: "Error grading interview questions",
+        statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
       };
     }
   }
@@ -545,7 +652,6 @@ export class InterviewService {
       };
     }
   }
-
 
   /**
 	 * @method uploadQuestionRecording
