@@ -84,6 +84,7 @@ export class InterviewQuestionRepository extends BaseRepository {
 			const dbSearchFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.searchFields);
 			const dbUpdateFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.updateFields);
 
+			// TODO. REMOVE THESE PARSERS, THERE SHOULD BE NO NEED FOR THIS.
 			// ADD PARSER INFO FOR COLUMN TYPES
 			return {
 				searchFields: Object.entries(dbSearchFields).reduce((acc, [key, value]) => ({
