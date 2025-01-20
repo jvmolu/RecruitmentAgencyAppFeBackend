@@ -97,7 +97,14 @@ export class InterviewQuestionRepository extends BaseRepository {
 						...acc,
 						[key]: {
 						value,
-						parser: key === 'updated_at' ? 'timestamptz' : null
+						// if updated_at then parser is timestamptz
+						// if obtained_marks, then parser is integer
+						// if is_checked, then parser is boolean
+						parser: {
+							updated_at: 'timestamptz',
+							obtained_marks: 'integer',
+							is_checked: 'boolean'
+						}[key] || null
 					}
 				}), {})
 			};
