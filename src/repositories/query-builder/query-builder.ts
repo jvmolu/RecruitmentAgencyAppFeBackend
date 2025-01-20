@@ -209,52 +209,117 @@ export class QueryBuilder {
     return { query: query, params };
   }
 
+// UPDATE interview_questions AS t
+// SET obtained_marks = v.obtained_marks,
+// is_checked = v.is_checked,
+// updated_at = v.updated_at::timestamptz  -- Cast to timestamp with time zone
+// FROM (VALUES
+// (0, true, '2025-01-20T17:44:19.205Z'::timestamptz, '0251f7f4-419e-4033-8e55-fcf6085f8754'::uuid),
+// (0, true, '2025-01-20T17:44:19.211Z'::timestamptz, '21cc0820-33d2-463d-8ef0-b120d6aa1a96'::uuid),
+// (2, true, '2025-01-20T17:44:19.211Z'::timestamptz, '2494dd6b-2a7b-4bd5-befa-c748fe1ca33e'::uuid),
+// (1, true, '2025-01-20T17:44:19.211Z'::timestamptz, '4cca9fe8-0da2-4402-b8f3-8bfddaf1dd34'::uuid),
+// (3, true, '2025-01-20T17:44:19.211Z'::timestamptz, '85dfb28a-1037-4132-9cc5-bcf86380a3db'::uuid),
+// (1, true, '2025-01-20T17:44:19.211Z'::timestamptz, '8d4925b4-fbf4-4651-997f-8daaae0d159d'::uuid),
+// (1, true, '2025-01-20T17:44:19.211Z'::timestamptz, 'b0f58bfa-495b-4474-bc76-01bf7458bc65'::uuid),
+// (5, true, '2025-01-20T17:44:19.211Z'::timestamptz, 'ddccac68-8d3c-4d3e-87b4-3f57599af04b'::uuid),
+// (4, true, '2025-01-20T17:44:19.211Z'::timestamptz, 'f5e192f4-5308-40f1-b391-02b5cdba6799'::uuid),
+// (0, true, '2025-01-20T17:44:19.211Z'::timestamptz, 'f638fcbd-e0ae-4431-9726-de5c9f16bfa1'::uuid)
+// ) AS v(obtained_marks, is_checked, updated_at, id)
+// WHERE t.id = v.id
+// RETURNING *;
+  // public static buildUpdateQueryViaValue(
+  //   tableName: string,
+  //   updates: Array<{
+  //     searchFields: Record<string, {value: string, parser: string}>, // Fields to match in WHERE clause
+  //     updateFields: Record<string, {value: string, parser: string}>  // Fields to update
+  //   }>,
+  //   returningFields: string[] = ['*']
+  // ): { query: string; params: any[] } {
+    
+  //   if (updates.length === 0) {
+  //     return { query: '', params: [] };
+  //   }
+
+  //   // Get column names from first update
+  //   const updateColumnNames = Object.keys(updates[0].updateFields);
+  //   const searchColumnNames = Object.keys(updates[0].searchFields);
+    
+  //   let params: any[] = [];
+  //   let paramIndex = 1;
+
+  //   // Build VALUES section
+  //   const values = updates.map(row => {
+  //     const allValues = [
+  //       ...Object.values(row.updateFields).map(field => field.value),
+  //       ...Object.values(row.searchFields).map(field => field.value)
+  //     ];
+  //     const placeholders = allValues.map(() => `$${paramIndex++}`);
+  //     params.push(...allValues);
+  //     return `(${placeholders.join(',')})`;
+  //   });
+
+  //   // Build query
+  //   const query = `
+  //     UPDATE ${tableName} AS t 
+  //     SET ${updateColumnNames.map(col => 
+  //       `${col} = v.${col}`
+  //     ).join(',')}
+  //     FROM (VALUES 
+  //       ${values.join(',')}
+  //     ) AS v(${[...updateColumnNames, ...searchColumnNames].join(',')})
+  //     WHERE ${searchColumnNames.map(col => 
+  //       `t.${col} = v.${col}`
+  //     ).join(' AND ')}
+  //     RETURNING ${returningFields.join(',')};
+  //   `;
+
+  //   return { query, params };
+  // }
   public static buildUpdateQueryViaValue(
     tableName: string,
     updates: Array<{
-      searchFields: Record<string, any>, // Fields to match in WHERE clause
-      updateFields: Record<string, any>  // Fields to update
+      searchFields: Record<string, {value: any, parser: string}>,
+      updateFields: Record<string, {value: any, parser: string}>
     }>,
     returningFields: string[] = ['*']
   ): { query: string; params: any[] } {
     
-    if (updates.length === 0) {
-      return { query: '', params: [] };
-    }
-
-    // Get column names from first update
+    if (updates.length === 0) return { query: '', params: [] };
+  
     const updateColumnNames = Object.keys(updates[0].updateFields);
     const searchColumnNames = Object.keys(updates[0].searchFields);
-    
     let params: any[] = [];
     let paramIndex = 1;
-
-    // Build VALUES section
+  
+    // Build VALUES section with type casting
     const values = updates.map(row => {
-      const allValues = [
-        ...Object.values(row.updateFields),
-        ...Object.values(row.searchFields)
+      const placeholders = [
+        ...Object.entries(row.updateFields).map(([_, field]) => {
+          params.push(field.value);
+          return `$${paramIndex++}${field.parser ? '::' + field.parser : ''}`;
+        }),
+        ...Object.entries(row.searchFields).map(([_, field]) => {
+          params.push(field.value);
+          return `$${paramIndex++}${field.parser ? '::' + field.parser : ''}`;
+        })
       ];
-      const placeholders = allValues.map(() => `$${paramIndex++}`);
-      params.push(...allValues);
       return `(${placeholders.join(',')})`;
     });
-
-    // Build query
+  
     const query = `
-      UPDATE ${tableName} AS t 
+      UPDATE ${tableName} AS t
       SET ${updateColumnNames.map(col => 
         `${col} = v.${col}`
-      ).join(',')}
-      FROM (VALUES 
+      ).join(',\n    ')}
+      FROM (VALUES
         ${values.join(',\n      ')}
-      ) AS v(${[...updateColumnNames, ...searchColumnNames].join(',')})
+      ) AS v(${[...updateColumnNames, ...searchColumnNames].join(', ')})
       WHERE ${searchColumnNames.map(col => 
         `t.${col} = v.${col}`
       ).join(' AND ')}
       RETURNING ${returningFields.join(',')};
     `;
-
+  
     return { query, params };
   }
 

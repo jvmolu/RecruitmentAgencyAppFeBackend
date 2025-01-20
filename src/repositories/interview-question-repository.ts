@@ -81,11 +81,29 @@ export class InterviewQuestionRepository extends BaseRepository {
 	async updateByValues(updates: {searchFields: Partial<InterviewQuestionType>, updateFields: Partial<InterviewQuestionType>}[], client?: PoolClient): Promise<GeneralAppResponse<InterviewQuestionType[]>> {
 		// User Schema Mapper to convert the data to DB schema
 		const interviewQuestionUpdateFields = updates.map(u => {
+			const dbSearchFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.searchFields);
+			const dbUpdateFields = SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.updateFields);
+
+			// ADD PARSER INFO FOR COLUMN TYPES
 			return {
-				searchFields: SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.searchFields),
-				updateFields: SchemaMapper.toDbSchema(DbTable.INTERVIEW_QUESTIONS, u.updateFields)
-			}
+				searchFields: Object.entries(dbSearchFields).reduce((acc, [key, value]) => ({
+						...acc,
+						[key]: {
+						value,
+						parser: key === 'id' ? 'uuid' : null
+					}
+				}), {}),
+				updateFields: Object.entries(dbUpdateFields).reduce((acc, [key, value]) => ({
+						...acc,
+						[key]: {
+						value,
+						parser: key === 'updated_at' ? 'timestamptz' : null
+					}
+				}), {})
+			};
 		});
+
+		// ADD PARSER INFO
 		const { query, params } = QueryBuilder.buildUpdateQueryViaValue(DbTable.INTERVIEW_QUESTIONS, interviewQuestionUpdateFields);
 		return await this.executeQuery<InterviewQuestionType>(query, params, client);
 	}
