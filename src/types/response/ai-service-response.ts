@@ -17,6 +17,7 @@ export interface RequirementMatch {
 
 export interface AIEvaluationResponse {
 	overallMatch: number;
+	overallComment: string;
 	requirements: RequirementMatch[];
 }
 

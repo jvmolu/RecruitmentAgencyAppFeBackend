@@ -22,9 +22,6 @@ import { ApplicationType } from "../types/zod/application-entity";
 import { JobType } from "../types/zod/job-entity";
 import { Constants } from "../common/constants";
 import S3Service from "./aws-service";
-import { SchemaMapper } from "../repositories/table-entity-mapper/schema-mapper";
-import DbTable from "../types/enums/db-table";
-import { QueryBuilder } from "../repositories/query-builder/query-builder";
 
 dotenv.config({path: './../../.env'});
 
@@ -279,7 +276,6 @@ export class InterviewService {
     }
   }
 
-
   // Grade Interview
   @Transactional()
   public static async gradeInterview(interviewId: string, client?: PoolClient): Promise<GeneralAppResponse<InterviewWithRelatedData>> {
@@ -490,6 +486,16 @@ export class InterviewService {
         if (isGeneralAppFailureResponse(updateInterviewResult)) {
           return updateInterviewResult;
         }
+
+        // Set Immediate to Grade Interview
+        setImmediate(async () => {
+          try {
+            await this.gradeInterview(interviewId);
+          } catch (error: any) {
+            console.error("Grade Interview error:", error);
+          }
+        });
+
         return {
           success: true,
           data: {
@@ -514,6 +520,14 @@ export class InterviewService {
         if (isGeneralAppFailureResponse(updateInterviewResult)) {
           return updateInterviewResult;
         }
+        // Set Immediate to Grade Interview
+        setImmediate(async () => {
+          try {
+            await this.gradeInterview(interviewId);
+          } catch (error: any) {
+            console.error("Grade Interview error:", error);
+          }
+        });
         return {
           success: true,
           data: {
@@ -583,6 +597,9 @@ export class InterviewService {
           // We should ideally end the interview here.
           // TTL for parsed resume should be same as the interview time limit + buffer
           if(parsedResume.data === null) {
+
+            // Set Immediate to Grade Interview
+            await this.gradeInterview(interviewId);
 
             // Update interview status to completed
             const updateInterviewResult = await this.updateByParams(
