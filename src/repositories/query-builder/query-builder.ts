@@ -310,9 +310,9 @@ export class QueryBuilder {
       UPDATE ${tableName} AS t
       SET ${updateColumnNames.map(col => 
         `${col} = v.${col}`
-      ).join(',\n    ')}
+      ).join(', ')}
       FROM (VALUES
-        ${values.join(',\n      ')}
+        ${values.join(', ')}
       ) AS v(${[...updateColumnNames, ...searchColumnNames].join(', ')})
       WHERE ${searchColumnNames.map(col => 
         `t.${col} = v.${col}`
