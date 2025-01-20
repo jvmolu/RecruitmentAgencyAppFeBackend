@@ -164,7 +164,7 @@ class ApplicationRepository extends BaseRepository {
               joinType: JoinType.LEFT,
               tableName: DbTable.MATCH_REPORTS,
               alias: matchReportTableAlias,
-              onCondition: `${applicationTableAlias}.id = ${matchReportTableAlias}.application_id`,
+              onCondition: `${applicationTableAlias}.match_report_id = ${matchReportTableAlias}.id`,
             });
 
             selectFieldsAndAlias.push(
