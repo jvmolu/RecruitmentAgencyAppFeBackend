@@ -296,11 +296,11 @@ export class QueryBuilder {
       const placeholders = [
         ...Object.entries(row.updateFields).map(([_, field]) => {
           params.push(field.value);
-          return ` $${paramIndex++}${field.parser ? '::' + field.parser : ''} `;
+          return `$${paramIndex++}${field.parser ? '::' + field.parser : ''} `;
         }),
         ...Object.entries(row.searchFields).map(([_, field]) => {
           params.push(field.value);
-          return ` $${paramIndex++}${field.parser ? '::' + field.parser : ''} `;
+          return `$${paramIndex++}${field.parser ? '::' + field.parser : ''} `;
         })
       ];
       return `(${placeholders.join(',')})`;
