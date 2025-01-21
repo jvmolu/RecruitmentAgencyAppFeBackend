@@ -22,6 +22,7 @@ import { ApplicationType } from "../types/zod/application-entity";
 import { JobType } from "../types/zod/job-entity";
 import { Constants } from "../common/constants";
 import S3Service from "./aws-service";
+import ApplicationStages from "../types/enums/application-stages";
 
 dotenv.config({path: './../../.env'});
 
@@ -36,31 +37,46 @@ export class InterviewService {
 		try {
 
       // Check if interview already exists for this application
-      const existingInterview: GeneralAppResponse<InterviewWithRelatedData[]> = await this.findByParams({ applicationId, status: InterviewStatus.IN_PROGRESS }, {isShowQuestions: true}, client);
-      if(isGeneralAppFailureResponse(existingInterview)) {
-          return existingInterview;
+      const existingInterviews: GeneralAppResponse<InterviewWithRelatedData[]> = await this.findByParams({ applicationId }, {isShowQuestions: true}, client);
+      if(isGeneralAppFailureResponse(existingInterviews)) {
+          return existingInterviews;
       }
 
-      if(existingInterview.data.length > 0) {
-        return {
-          success: true,
-          data: existingInterview.data[0]
-        }
-      }
-
-      if(existingInterview.data.length > 0) {
+      const inProgressInterviews = existingInterviews.data.filter(interview => interview.status === InterviewStatus.IN_PROGRESS);
+      if(inProgressInterviews.length > 0) {
           return {
-              success: false,
-              error: new Error("Interview already exists for this application") as GeneralAppError,
-              businessMessage: "Interview already exists for this application",
-              statusCode: HttpStatusCode.CONFLICT
+              success: true,
+              data: inProgressInterviews[0]
           };
       }
 
       // Use ApplicationService to get application data
-      const applicationWithRelatedData = await ApplicationService.findByParams({id: applicationId}, {isShowLifeCycleData: false}, client);
+      const applicationWithRelatedData = await ApplicationService.findByParams({id: applicationId}, {isShowLifeCycleData: true}, client);
       if(isGeneralAppFailureResponse(applicationWithRelatedData)) {
           return applicationWithRelatedData;
+      }
+
+      // Check how many AI Interviews are there in application lifecycle
+      const lifecycleData = applicationWithRelatedData.data.applications[0].lifecycle;
+      if(!lifecycleData) {
+          return {
+              success: false,
+              error: new Error("Application lifecycle data not found") as GeneralAppError,
+              businessMessage: "Application lifecycle data not found",
+              statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR
+          };
+      }
+
+      const numberOfCompletedInterviews = existingInterviews.data.filter(interview => interview.status === InterviewStatus.COMPLETED).length;
+      const numberOfAiInterviews = lifecycleData.filter((lifecycle) => lifecycle.status === ApplicationStages.AI_INTERVIEW).length;
+
+      if(numberOfCompletedInterviews >= numberOfAiInterviews) {
+          return {
+              success: false,
+              error: new Error("All AI Interviews have been completed") as GeneralAppError,
+              businessMessage: "All AI Interviews have been completed",
+              statusCode: HttpStatusCode.FORBIDDEN
+          };
       }
 
       if(applicationWithRelatedData.data.applications.length === 0 || !applicationWithRelatedData.data.applications[0].job) {
@@ -474,7 +490,7 @@ export class InterviewService {
       const existingQuestions: InterviewQuestionType[] = existingInterview.data[0].questions;
       const applicationData: Partial<ApplicationType> = existingInterview.data[0].application;
       const jobData: Partial<JobType> = existingInterview.data[0].job;
-      const totalQuestionsToAsk: Number = existingInterview.data[0].totalQuestionsToAsk;
+      const totalQuestionsToAsk: number = existingInterview.data[0].totalQuestionsToAsk;
 
       if(totalQuestionsToAsk === updateResult.data[0].sequenceNumber) {
         // CALL UPDATE BY PARAMS AND SET INTERVIEW STATUS TO COMPLETED
@@ -537,8 +553,18 @@ export class InterviewService {
         };
       }
 
+      // ALL QUESTIONS HAVE BEEN GENERATED AND NOW DONT GENERATE ANY MORE QUESTIONS
+      if(existingQuestions.length >= totalQuestionsToAsk) {
+        return {
+          success: true,
+          data: {
+            questions: existingQuestions,
+            interviewStatus: InterviewStatus.IN_PROGRESS
+          }
+        }
+      }
+
       // Reserve next question's sequence number
-      
       const nextSequenceNumber = existingQuestions.length + 1;
       const nextQuestionConfig = {
         expectedTimeToAnswer: 5,
