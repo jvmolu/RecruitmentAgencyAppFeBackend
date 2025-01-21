@@ -476,7 +476,7 @@ export class InterviewService {
       const jobData: Partial<JobType> = existingInterview.data[0].job;
       const totalQuestionsToAsk: Number = existingInterview.data[0].totalQuestionsToAsk;
 
-      if(totalQuestionsToAsk === existingQuestions.length) {
+      if(totalQuestionsToAsk === updateResult.data[0].sequenceNumber) {
         // CALL UPDATE BY PARAMS AND SET INTERVIEW STATUS TO COMPLETED
         const updateInterviewResult = await this.updateByParams(
           { id: interviewId },
