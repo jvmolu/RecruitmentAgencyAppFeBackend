@@ -23,6 +23,7 @@ import { JobType } from "../types/zod/job-entity";
 import { Constants } from "../common/constants";
 import S3Service from "./aws-service";
 import ApplicationStages from "../types/enums/application-stages";
+import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
 
 dotenv.config({path: './../../.env'});
 
@@ -68,8 +69,27 @@ export class InterviewService {
       }
 
       const numberOfCompletedInterviews = existingInterviews.data.filter(interview => interview.status === InterviewStatus.COMPLETED).length;
-      const numberOfAiInterviews = lifecycleData.filter((lifecycle) => lifecycle.status === ApplicationStages.AI_INTERVIEW).length;
+      if(numberOfCompletedInterviews === 0) {
 
+        const lifecycle: ApplicationLifecycleType = {
+          id: uuidv4(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          applicationId: applicationId,
+          status: ApplicationStages.AI_INTERVIEW,
+          notes: 'AI Interview Started',
+        };
+
+        // IN THIS SCENARIO ....... -> THERE IS NO AI INTERVIEW LIFECYCLE YET. CREATE ONE. (FOR FUTURE AI INTERVIEWS, AI INTERVIEW STAGE WILL ALREADY BE PRESENT AS IT WILL HAVE BEEN MOVED BY ADMIN)
+        const insertStatusRes = await ApplicationService.insertLifecycle(lifecycle, client);
+        if (isGeneralAppFailureResponse(insertStatusRes)) {
+            return insertStatusRes;
+        }
+
+        lifecycleData.push(lifecycle);
+      }
+
+      const numberOfAiInterviews = lifecycleData.filter((lifecycle) => lifecycle.status === ApplicationStages.AI_INTERVIEW).length;
       if(numberOfCompletedInterviews >= numberOfAiInterviews) {
           return {
               success: false,
