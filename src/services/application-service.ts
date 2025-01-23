@@ -16,7 +16,7 @@ import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
 import { PoolClient } from "pg";
 import S3Service from "./aws-service";
-import { ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
+import { ApplicationLifecycleSchema, ApplicationLifecycleType } from "../types/zod/application-lifecycle-entity";
 import { v4 as uuidv4 } from "uuid";
 import { Transactional } from "../decorators/transactional";
 import { BadRequestError } from "../types/error/bad-request-error";
@@ -121,6 +121,23 @@ export class ApplicationService {
 
 		return applicationRes;
 	}
+
+
+	public static async insertLifecycle(lifecycleData: ApplicationLifecycleType, client?: PoolClient): Promise<GeneralAppResponse<ApplicationLifecycleType[]>> {
+		const validationResult = ApplicationLifecycleSchema.safeParse(lifecycleData);
+		if (!validationResult.success) {
+			const zodError: ZodParsingError = validationResult.error as ZodParsingError;
+			zodError.errorType = 'ZodParsingError';
+			return {
+				error: zodError,
+				statusCode: HttpStatusCode.BAD_REQUEST,
+				businessMessage: 'Invalid lifecycle data',
+				success: false
+			};
+		}
+		return await this.applicationRepository.insertLifecycles([validationResult.data], client);
+	}
+
 
     public static async findByParams(
         applicationFields: Partial<ApplicationSearchOptions>,
