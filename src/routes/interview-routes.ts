@@ -3,6 +3,7 @@ import { InterviewController } from "../controllers/interview-controller";
 import Authenticate from "../middlewares/auth/authenticate";
 import MulterRequestParser from "../middlewares/file-upload/multer-file-parser";
 import isMp4File from "../middlewares/file-upload/file-mp4";
+import LockRouteFor60Seconds from "../middlewares/lock-route";
 
 const InterviewRouter = Router();
 
@@ -31,6 +32,7 @@ InterviewRouter.post(
     MulterRequestParser,
 	Authenticate,
     isMp4File,
+	LockRouteFor60Seconds,
 	InterviewController.submitAndGenerateQuestion
 );
 

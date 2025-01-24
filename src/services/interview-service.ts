@@ -147,7 +147,7 @@ export class InterviewService {
       const parsedResume = await extractTextFromPDF(resumeFile.data);
 
       // Store in redis for 1 hour
-      RedisService.set(`application-resume-${applicationId}`, parsedResume, {expiresInMillis: 3600 * 1000});
+      RedisService.set(`${Constants.APPLICATION_RESUME}-${applicationId}`, parsedResume, {expiresInMillis: 3600 * 1000});
 
       const jobDataToPass = {
           title: applicationWithRelatedData.data.applications[0].job.title || "",
@@ -632,7 +632,7 @@ export class InterviewService {
 
           // Prepare data for AI generation (dummy placeholders here)
           // Fetch Resume data from Redis
-          const parsedResume = await RedisService.get(`application-resume-${applicationId}`);
+          const parsedResume = await RedisService.get(`${Constants.APPLICATION_RESUME}-${applicationId}`);
           if (isGeneralAppFailureResponse(parsedResume)) {
             // Could update placeholder question with "Couldn't generate question"
             console.error("Resume data not found in cache:", parsedResume);
