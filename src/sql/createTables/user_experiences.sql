@@ -2,8 +2,8 @@
 CREATE TABLE user_experiences (
     id UUID PRIMARY KEY,
     user_profile_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    company_name VARCHAR(255) NOT NULL,
-    role_title VARCHAR(255) NOT NULL,
+    company_name TEXT NOT NULL,
+    role_title TEXT NOT NULL,
     from_date DATE NOT NULL,
     to_date DATE,
     description TEXT,

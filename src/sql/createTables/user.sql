@@ -5,10 +5,10 @@ CREATE TYPE user_status AS ENUM ('ACTIVE', 'INACTIVE');
 -- Create users table
 CREATE TABLE users (
     id UUID PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
     role user_role NOT NULL DEFAULT 'CANDIDATE',
     status user_status NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

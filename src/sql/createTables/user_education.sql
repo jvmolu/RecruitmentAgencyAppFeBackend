@@ -2,8 +2,8 @@
 CREATE TABLE user_education (
     id UUID PRIMARY KEY,
     user_profile_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    course VARCHAR(255) NOT NULL,
-    institute VARCHAR(255) NOT NULL,
+    course TEXT NOT NULL,
+    institute TEXT NOT NULL,
     cgpa NUMERIC(3,2),
     passing_year INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

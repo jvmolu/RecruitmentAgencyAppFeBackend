@@ -9,7 +9,7 @@ CREATE TABLE user_profiles (
     about_me TEXT,
     country_code VARCHAR(10),
     phone BIGINT UNIQUE,
-    current_address VARCHAR(255),
+    current_address TEXT,
     current_yearly_salary INT,
     current_salary_currency budget_currency_type,
     resume_link TEXT,
