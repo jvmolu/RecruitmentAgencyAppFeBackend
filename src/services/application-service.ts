@@ -199,7 +199,7 @@ export class ApplicationService {
         let invitesRes: GeneralAppResponse<InviteWithRelatedData[]> = {success: true, data: []};      
 
         // If searching applications for a specific user, also send the pending invites
-        if(searchParamsValidationResult.data.isShowPendingInvites) {
+		if (searchParamsValidationResult.data.isShowPendingInvites) {
             if(applicationFields.candidateId === undefined) {
                 let badRequestError: BadRequestError = new Error('CandidateId is required to get pending invites') as BadRequestError;
                 badRequestError.errorType = 'BadRequestError';
@@ -211,8 +211,7 @@ export class ApplicationService {
                 };
             }
 
-			const jobFields = JobService.fetchAndRemoveJobFields(applicationFields);
-            invitesRes = await InviteService.findByParams({...jobFields, candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {}, client);
+            invitesRes = await InviteService.findByParams({ candidateId: applicationFields.candidateId, status: InviteStatus.PENDING}, {}, client);
             if (isGeneralAppFailureResponse(invitesRes)) {
                 return invitesRes;
             }
