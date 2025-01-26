@@ -8,7 +8,7 @@ import { UserWithProfileData } from "./user-entity";
 
 const MatchSchema = BaseSchema.merge(
   z.object({
-    matchReportId: z.string().uuid(),
+    matchReportId: z.string().uuid().optional(),
     jobId: z.string().uuid(),
     candidateId: z.string().uuid(),
   })
@@ -53,7 +53,7 @@ type MatchWithRelatedData = MatchType & { job : Partial<JobWithCompanyData> | un
 
 class Match implements MatchType {
   id: string;
-  matchReportId: string;
+  matchReportId?: string;
   jobId: string;
   candidateId: string;
   createdAt: string;

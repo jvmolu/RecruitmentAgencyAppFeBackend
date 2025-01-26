@@ -9,6 +9,8 @@ import { PoolClient } from "pg";
 import AiService from "./ai-service";
 import { BadRequestError } from "../types/error/bad-request-error";
 import dotenv from 'dotenv';
+import { MatchService } from "./match-service";
+import { MatchType } from "../types/zod/match-entity";
 
 dotenv.config({ path: __dirname + "/./../../.env" });
 
@@ -178,7 +180,7 @@ export class JobService {
         return updateResponse;
     }
 
-    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<any>> {
+    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<GeneralAppResponse<MatchType>[]>> {
 
         if(!jobId) {
             return {
@@ -202,7 +204,41 @@ export class JobService {
             };
         }
 
-        return await AiService.getMatchesForJob(jobId, threshold);
+        const matches: GeneralAppResponse<{
+            jobId: string;
+            candidates: {
+                userId: string;
+                resumeText: string;
+                similarity: number;
+            }[];
+        }> = await AiService.getMatchesForJob(jobId, threshold);
+        if(isGeneralAppFailureResponse(matches)) {
+            return matches;
+        }
+
+        // Insert all matches into the database
+        let promises: Promise<GeneralAppResponse<MatchType>>[] = [];
+        for(let i = 0; i < matches.data.candidates.length; i++) {
+            const candidate = matches.data.candidates[i];
+            promises.push(MatchService.createMatch({
+                jobId: matches.data.jobId,
+                candidateId: candidate.userId
+            }));
+        }
+
+        const matchesResults: GeneralAppResponse<MatchType>[] = await Promise.all(promises);
+        
+        // Check if all matches were created successfully
+        for(let i = 0; i < promises.length; i++) {
+            if(isGeneralAppFailureResponse(matchesResults[i])) {
+                console.error(matchesResults[i]);
+            }
+        }
+
+        return {
+            success: true,
+            data: matchesResults
+        };
     }
 
     public static fetchAndRemoveJobFields(sourceFields: any): Partial<JobSearchOptions> {

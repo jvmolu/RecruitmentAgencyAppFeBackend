@@ -94,7 +94,7 @@ export class JobController {
                 });
             }
 
-            const result: GeneralAppResponse<JobType[]> = await JobService.getMatchesForJob(jobId, threshold);
+            const result: GeneralAppResponse<any> = await JobService.getMatchesForJob(jobId, threshold);
             if(isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

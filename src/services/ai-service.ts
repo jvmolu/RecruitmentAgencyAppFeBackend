@@ -325,7 +325,7 @@ class AiService {
 
             let aiResponseData = aiResponse.data;
 
-            if (!aiResponseData) {
+            if (!aiResponseData || !aiResponseData.jobId || !aiResponseData.candidates) {
                 let aiResponseError: AIServiceError = new Error("Invalid Response from AI Service") as AIServiceError;
                 aiResponseError.errorType = "AIServiceError";
                 return {
