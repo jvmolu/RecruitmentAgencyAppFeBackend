@@ -32,6 +32,30 @@ export class MatchService {
     return await this.repository.create(validationResult.data);
   }
 
+  public static async createMatchesInBulk(matches: Partial<MatchType>[]): Promise<GeneralAppResponse<MatchType[]>> {
+
+    matches = matches.map((match) => ({
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...match,
+    }));
+
+    const validationResult = MatchSchema.array().safeParse(matches);
+    if (!validationResult.success) {
+      const error = validationResult.error as ZodParsingError;
+      error.errorType = 'ZodParsingError';
+      return {
+        error,
+        statusCode: HttpStatusCode.BAD_REQUEST,
+        businessMessage: 'Invalid match data',
+        success: false,
+      };
+    }
+
+    return await this.repository.createMatchesInBulk(validationResult.data);
+  }
+
   public static async findByParams(
     matchSearchOptions: Partial<MatchSearchOptions>,
     matchSearchParams: Partial<MatchSearchParams>

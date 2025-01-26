@@ -36,6 +36,31 @@ class MatchRepository extends BaseRepository {
     }
   }
 
+  async createMatchesInBulk(matches: MatchType[]): Promise<GeneralAppResponse<Match[]>> {
+    try {
+      const dbFields = matches.map((match) => SchemaMapper.toDbSchema(DbTable.MATCHES, match));
+      if (dbFields.length === 0) {
+        return {
+          data: [],
+          success: true,
+        };
+      }
+      const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.MATCHES, dbFields);
+      const response = await this.executeQuery<Match>(query, params);
+      if (isGeneralAppFailureResponse(response)) {
+        return response;
+      }
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return {
+        error,
+        businessMessage: 'Internal server error',
+        statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+        success: false,
+      };
+    }
+  }
+
   async findByParams(
     fields: Partial<MatchSearchOptions>,
     searchParams: MatchSearchParams

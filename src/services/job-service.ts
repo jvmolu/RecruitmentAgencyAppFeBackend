@@ -180,7 +180,7 @@ export class JobService {
         return updateResponse;
     }
 
-    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<GeneralAppResponse<MatchType>[]>> {
+    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<MatchType[]>> {
 
         if(!jobId) {
             return {
@@ -216,28 +216,19 @@ export class JobService {
             return matches;
         }
 
-        // Insert all matches into the database
-        let promises: Promise<GeneralAppResponse<MatchType>>[] = [];
-        for(let i = 0; i < matches.data.candidates.length; i++) {
-            const candidate = matches.data.candidates[i];
-            promises.push(MatchService.createMatch({
-                jobId: matches.data.jobId,
-                candidateId: candidate.userId
-            }));
-        }
-
-        const matchesResults: GeneralAppResponse<MatchType>[] = await Promise.all(promises);
-        
-        // Check if all matches were created successfully
-        for(let i = 0; i < promises.length; i++) {
-            if(isGeneralAppFailureResponse(matchesResults[i])) {
-                console.error(matchesResults[i]);
-            }
+        const createMatchResult = await MatchService.createMatchesInBulk(matches.data.candidates.map((candidate) => {
+            return {
+                jobId: jobId,
+                candidateId: candidate.userId,
+            };
+        }));
+        if(isGeneralAppFailureResponse(createMatchResult)) {
+            return createMatchResult;
         }
 
         return {
             success: true,
-            data: matchesResults
+            data: createMatchResult.data,
         };
     }
 

@@ -4,6 +4,7 @@ import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/respon
 import { JobService } from "../services/job-service";
 import { JobType, JobWithCompanyData } from "../types/zod/job-entity";
 import Role from "../types/enums/role";
+import { MatchType } from "../types/zod/match-entity";
 
 export class JobController {
 
@@ -94,7 +95,7 @@ export class JobController {
                 });
             }
 
-            const result: GeneralAppResponse<any> = await JobService.getMatchesForJob(jobId, threshold);
+            const result: GeneralAppResponse<MatchType[]> = await JobService.getMatchesForJob(jobId, threshold);
             if(isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,
