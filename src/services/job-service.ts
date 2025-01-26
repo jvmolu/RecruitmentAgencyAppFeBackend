@@ -226,6 +226,8 @@ export class JobService {
             return {
                 jobId: jobId,
                 candidateId: candidate.userId,
+                // Multiply by 100 to convert to percentage and round off to 2 decimal places
+                similarityScore: parseFloat(candidate.similarity.toFixed(2)) * 100,
             };
         }), client);
         if(isGeneralAppFailureResponse(createMatchResult)) {

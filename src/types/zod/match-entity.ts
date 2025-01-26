@@ -11,6 +11,7 @@ const MatchSchema = BaseSchema.merge(
     matchReportId: z.string().uuid().optional(),
     jobId: z.string().uuid(),
     candidateId: z.string().uuid(),
+    similarityScore: z.number().int().optional(),
   })
 );
 
