@@ -67,7 +67,7 @@ export class JobService {
         }
 
         // Get Matches for this job.
-        const matches: GeneralAppResponse<MatchType[]> = await JobService.getMatchesForJob(job.id);
+        const matches: GeneralAppResponse<MatchType[]> = await JobService.getMatchesForJob(job.id, parseFloat(process.env.DEFAULT_MATCH_THRESHOLD || "0"),  client);
         if(isGeneralAppFailureResponse(matches)) {
             return matches;
         }
@@ -186,7 +186,7 @@ export class JobService {
         return updateResponse;
     }
 
-    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<MatchType[]>> {
+    public static async getMatchesForJob(jobId: string, threshold?: number, client?: PoolClient): Promise<GeneralAppResponse<MatchType[]>> {
 
         if(!jobId) {
             return {
@@ -227,7 +227,7 @@ export class JobService {
                 jobId: jobId,
                 candidateId: candidate.userId,
             };
-        }));
+        }), client);
         if(isGeneralAppFailureResponse(createMatchResult)) {
             return createMatchResult;
         }

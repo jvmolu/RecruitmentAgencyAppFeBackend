@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GeneralAppResponse } from "../types/response/general-app-response";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
+import { PoolClient } from "pg";
 
 export class MatchService {
   private static repository = new MatchRepository();
@@ -32,7 +33,7 @@ export class MatchService {
     return await this.repository.create(validationResult.data);
   }
 
-  public static async createMatchesInBulk(matches: Partial<MatchType>[]): Promise<GeneralAppResponse<MatchType[]>> {
+  public static async createMatchesInBulk(matches: Partial<MatchType>[], client?: PoolClient): Promise<GeneralAppResponse<MatchType[]>> {
 
     matches = matches.map((match) => ({
       id: uuidv4(),
@@ -53,7 +54,7 @@ export class MatchService {
       };
     }
 
-    return await this.repository.createMatchesInBulk(validationResult.data);
+    return await this.repository.createMatchesInBulk(validationResult.data, client);
   }
 
   public static async findByParams(

@@ -10,6 +10,7 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { JoinClause, JoinType } from "../types/enums/join-type";
 import { User } from "../types/zod/user-entity";
 import { UserProfile } from "../types/zod/user-profile-entity";
+import { PoolClient } from "pg";
 
 class MatchRepository extends BaseRepository {
     
@@ -36,7 +37,7 @@ class MatchRepository extends BaseRepository {
     }
   }
 
-  async createMatchesInBulk(matches: MatchType[]): Promise<GeneralAppResponse<Match[]>> {
+  async createMatchesInBulk(matches: MatchType[], client?: PoolClient): Promise<GeneralAppResponse<Match[]>> {
     try {
       const dbFields = matches.map((match) => SchemaMapper.toDbSchema(DbTable.MATCHES, match));
       if (dbFields.length === 0) {
@@ -46,7 +47,7 @@ class MatchRepository extends BaseRepository {
         };
       }
       const { query, params } = QueryBuilder.buildBulkInsertQuery(DbTable.MATCHES, dbFields);
-      const response = await this.executeQuery<Match>(query, params);
+      const response = await this.executeQuery<Match>(query, params, client);
       if (isGeneralAppFailureResponse(response)) {
         return response;
       }
