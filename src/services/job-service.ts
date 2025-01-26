@@ -66,6 +66,12 @@ export class JobService {
             return jobEmbeddingResultGeneration;
         }
 
+        // Get Matches for this job.
+        const matches: GeneralAppResponse<MatchType[]> = await JobService.getMatchesForJob(job.id);
+        if(isGeneralAppFailureResponse(matches)) {
+            return matches;
+        }
+
         return createResponse;
     }
 
