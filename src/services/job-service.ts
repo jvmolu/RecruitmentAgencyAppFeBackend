@@ -4,14 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { JobSchema, JobSearchOptions, JobSearchSchema, JobType, Job, JobWithCompanyData, JobSearchParams, JobSearchParamsSchema } from "../types/zod/job-entity";
 import { ZodParsingError } from "../types/error/zod-parsing-error";
 import HttpStatusCode from "../types/enums/http-status-codes";
-import { Company, CompanyType } from "../types/zod/company-entity";
-import { ApplicationSearchOptions } from "../types/zod/application-entity";
+import { Transactional } from "../decorators/transactional";
+import { PoolClient } from "pg";
+import AiService from "./ai-service";
 
 export class JobService {
 
     private static jobRepository: JobRepository = new JobRepository();
 
-    public static async createJob(jobData: Omit<JobType, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneralAppResponse<JobType>> {
+    @Transactional()
+    public static async createJob(jobData: Omit<JobType, 'id' | 'createdAt' | 'updatedAt'>, client?: PoolClient): Promise<GeneralAppResponse<JobType>> {
         
         let job: JobType = {
             id: uuidv4(),
@@ -34,8 +36,31 @@ export class JobService {
         }
         job = validationResult.data;
 
-        let response: GeneralAppResponse<JobType> = await JobService.jobRepository.create(job);
-        return response;
+        let createResponse: GeneralAppResponse<JobType> = await JobService.jobRepository.create(job, client);
+        if(isGeneralAppFailureResponse(createResponse)) {
+            return createResponse;
+        }
+
+        // Generate an Embedding for this job from AI Service
+        const jobEmbeddingResultGeneration: GeneralAppResponse<{
+            jobId: string;
+            embedding: number[];
+        }> = await AiService.generateJobEmbedding(
+            {
+                title: job.title,
+                objective: job.objective || '',
+                goals: job.goals || '',
+                jobDescription: job.jobDescription || '',
+                skills: job.skills || [],
+                experienceRequired: job.experienceRequired
+            },
+            job.id
+        )
+        if(isGeneralAppFailureResponse(jobEmbeddingResultGeneration)) {
+            return jobEmbeddingResultGeneration;
+        }
+
+        return createResponse;
     }
 
     public static async findByParams(jobFields: Partial<JobSearchOptions>, jobSearchParams: Partial<JobSearchParams>): Promise<GeneralAppResponse<JobWithCompanyData[]>> {
@@ -72,7 +97,9 @@ export class JobService {
         return await this.jobRepository.findByParams(jobFields, jobSearchParams as JobSearchParams);
       }
 
-    public static async updateJobs(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<JobType[]>> {
+
+    @Transactional()
+    public static async updateJobs(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>, client?: PoolClient): Promise<GeneralAppResponse<JobType[]>> {
 
         // Validate job search data
         const validationResult = JobSearchSchema.partial().safeParse(jobSearchFields);
@@ -103,10 +130,48 @@ export class JobService {
 
         // Update updatedAt as well
         updateValidationResult.data.updatedAt = new Date().toISOString();
-
         jobUpdateFields = updateValidationResult.data;
 
-        return await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields);
+        const updateResponse = await JobService.jobRepository.updateByParams(jobSearchFields, jobUpdateFields, client);
+        if(isGeneralAppFailureResponse(updateResponse)) {
+            return updateResponse;
+        }
+
+        // Update Embeddings for all updated jobs in setImmediate
+        setImmediate(async () => {
+            try {
+                let promises = [];
+                for(let i = 0; i < updateResponse.data.length; i++) {
+                    const job = updateResponse.data[i];
+                    const jobEmbeddingResultGeneration: Promise<GeneralAppResponse<{
+                        jobId: string;
+                        embedding: number[];
+                    }>> = AiService.generateJobEmbedding(
+                        {
+                            title: job.title,
+                            objective: job.objective || '',
+                            goals: job.goals || '',
+                            jobDescription: job.jobDescription || '',
+                            skills: job.skills || [],
+                            experienceRequired: job.experienceRequired
+                        },
+                        job.id
+                    )
+                    promises.push(jobEmbeddingResultGeneration);
+                }
+                const jobEmbeddingResults = await Promise.all(promises);
+                for(let i = 0; i < jobEmbeddingResults.length; i++) {
+                    if(isGeneralAppFailureResponse(jobEmbeddingResults[i])) {
+                        console.error(jobEmbeddingResults[i]);
+                    }
+                }
+            }
+            catch(error) {
+                console.error(error);
+            }
+        });
+
+        return updateResponse;
     }
 
     public static fetchAndRemoveJobFields(sourceFields: any): Partial<JobSearchOptions> {

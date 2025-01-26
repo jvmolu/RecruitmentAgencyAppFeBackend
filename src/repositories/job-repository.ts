@@ -10,6 +10,7 @@ import { SchemaMapper } from "./table-entity-mapper/schema-mapper";
 import { JoinClause, JoinType } from '../types/enums/join-type';
 import { z } from "zod";
 import { isDateRange, isNumberRange } from "../types/zod/range-entities";
+import { PoolClient } from "pg";
 
 class JobRepository extends BaseRepository {
 
@@ -18,11 +19,11 @@ class JobRepository extends BaseRepository {
     }
 
     // Create a new Job
-    async create(job: JobType): Promise<GeneralAppResponse<Job>> {
+    async create(job: JobType, client?: PoolClient): Promise<GeneralAppResponse<Job>> {
         try {
             const jobDbFields = SchemaMapper.toDbSchema(DbTable.JOBS, job);
             const { query, params } = QueryBuilder.buildInsertQuery(DbTable.JOBS, jobDbFields);
-            const response: GeneralAppResponse<Job[]> = await this.executeQuery<Job>(query, params);
+            const response: GeneralAppResponse<Job[]> = await this.executeQuery<Job>(query, params, client);
             // If the response is a failure response, directly return
             if(isGeneralAppFailureResponse(response)) {
                 return response;
@@ -41,7 +42,7 @@ class JobRepository extends BaseRepository {
         }
     }
 
-    async updateByParams(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>): Promise<GeneralAppResponse<Job[]>> {
+    async updateByParams(jobSearchFields: Partial<JobSearchOptions>, jobUpdateFields: Partial<JobType>, client?: PoolClient): Promise<GeneralAppResponse<Job[]>> {
         // Build the QueryFields object
         const searchQueryFields: QueryFields = this.createSearchFields(jobSearchFields);
         // Prepare the update fields
@@ -49,7 +50,7 @@ class JobRepository extends BaseRepository {
         // Build the query
         const { query, params } = QueryBuilder.buildUpdateQuery(DbTable.JOBS, updateFields, searchQueryFields);
         // Execute the query
-        return await this.executeQuery<Job>(query, params);
+        return await this.executeQuery<Job>(query, params, client);
     }
 
     async findByParams(
