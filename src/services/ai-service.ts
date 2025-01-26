@@ -219,7 +219,7 @@ class AiService {
 
             let aiResponseData = aiResponse.data;
 
-            if (!aiResponseData) {
+            if (!aiResponseData || !aiResponseData.userId || !aiResponseData.embedding || aiResponseData.embedding.length === 0) {
                 let aiResponseError: AIServiceError = new Error("Invalid Response from AI Service") as AIServiceError;
                 aiResponseError.errorType = "AIServiceError";
                 return {
@@ -244,6 +244,7 @@ class AiService {
             };
         }
     }
+
 
     public static async generateJobEmbedding(
         job: {title: string, objective: string, goals: string, jobDescription: string, skills: string[], experienceRequired: number},
@@ -298,6 +299,7 @@ class AiService {
             };
         }
     }
+
 
     public static async getMatchesForJob(
         jobId: string,

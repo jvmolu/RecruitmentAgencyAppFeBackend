@@ -27,6 +27,9 @@ import S3Service from "./aws-service";
 import { UserSearchOptions, UserType } from "../types/zod/user-entity";
 import { UserService } from "./user-service";
 import axios from "axios";
+import AiService from "./ai-service";
+import { extractTextFromPDF } from "../common/pdf-util";
+import { GeneralAppError } from "../types/error/general-app-error";
 
 export class UserProfileService {
 
@@ -420,31 +423,65 @@ export class UserProfileService {
 			};
 		}
 
-		// Send to AI backend
-		try {
-			const formData = new FormData();
-			const blob = new Blob([file.buffer], { type: "application/pdf" });
-			formData.append("file", blob, "resume.pdf");
-			formData.append("userId", userId);
-
-			const aiResponse = await axios.post(
-				`${this.AI_SERVICE_URL}/process-resume`,
-				formData,
-				{
-					headers: {
-						"Content-Type": "multipart/form-data",
-					},
-				}
-			);
-
-			console.log("AI Processing Success:", aiResponse.data);
-		} catch (error) {
-			console.error("AI Processing Error:", error);
-		}
-
 		return {
 			success: true,
 			data: fileUrl,
 		};
+	}
+
+	public static async uploadResumeAndUpdateEmbedding(
+		bucketName: string,
+		userId: string,
+		file: Express.Multer.File
+	): Promise<GeneralAppResponse<{
+		userId: string,
+		embedding: number[],
+		fileUrl: string
+	}>> {
+		try {
+
+			const uploadResumeResult = await this.uploadResume(bucketName, userId, file);
+			if (isGeneralAppFailureResponse(uploadResumeResult)) {
+				return uploadResumeResult;
+			}
+
+			// Extract File Text
+			const text: string = await extractTextFromPDF(file.buffer);
+			if (!text) {
+				return {
+					success: false,
+					businessMessage: "Error extracting text from PDF",
+					error: new Error("Error extracting text from PDF") as GeneralAppError,
+					statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+				};
+			}
+
+			// Call AI Service to update the embedding
+			const embeddingResult: GeneralAppResponse<{
+				userId: string;
+				embedding: number[];
+			}> = await AiService.generateProfileEmbedding(text, userId);
+			if (isGeneralAppFailureResponse(embeddingResult)) {
+				return embeddingResult;
+			}
+
+			return {
+				success: true,
+				data: {
+					userId: embeddingResult.data.userId,
+					embedding: embeddingResult.data.embedding,
+					fileUrl: uploadResumeResult.data,
+				},
+			};
+
+		} catch (error: any) {
+			console.error(error);
+			return {
+				success: false,
+				businessMessage: "Internal server error",
+				error,
+				statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+			};
+		}
 	}
 }

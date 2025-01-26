@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config({path: './../../.env'});
 
 export class UserProfileController {
-    
+
     public static async createUserProfile(req: Request, res: Response): Promise<any> {
         try {
 
@@ -27,7 +27,11 @@ export class UserProfileController {
                 }
 
                 const userIdentifier: string = profileData.userId;
-                const fileUploadResult: GeneralAppResponse<string> = await UserProfileService.uploadResume(bucketName, userIdentifier, file);
+                const fileUploadResult: GeneralAppResponse<{
+                    userId: string;
+                    embedding: number[];
+                    fileUrl: string;
+                }> = await UserProfileService.uploadResumeAndUpdateEmbedding(bucketName, userIdentifier, file);
                 if(isGeneralAppFailureResponse(fileUploadResult)) {
                     return res.status(fileUploadResult.statusCode).json({
                         success: false,
@@ -36,7 +40,7 @@ export class UserProfileController {
                     });
                 }
 
-                profileData.resumeLink = fileUploadResult.data;
+                profileData.resumeLink = fileUploadResult.data.fileUrl;
             }
 
             const result = await UserProfileService.createUserProfileWithDetails(profileData, educationData, experienceData);
@@ -162,7 +166,11 @@ export class UserProfileController {
                 }
 
                 const userIdentifier: string = profileSearchFields.userId;
-                const fileUploadResult: GeneralAppResponse<string> = await UserProfileService.uploadResume(bucketName, userIdentifier, file);
+                const fileUploadResult: GeneralAppResponse<{
+                    userId: string;
+                    embedding: number[];
+                    fileUrl: string;
+                }> = await UserProfileService.uploadResumeAndUpdateEmbedding(bucketName, userIdentifier, file);
                 if(isGeneralAppFailureResponse(fileUploadResult)) {
                     return res.status(fileUploadResult.statusCode).json({
                         success: false,
@@ -171,7 +179,7 @@ export class UserProfileController {
                     });
                 }
 
-                profileUpdateFields.resumeLink = fileUploadResult.data;
+                profileUpdateFields.resumeLink = fileUploadResult.data.fileUrl;
             }
 
             const result = await UserProfileService.updateUserProfileWithDetails(profileSearchFields, userFields, profileUpdateFields, educationData, experienceData);
