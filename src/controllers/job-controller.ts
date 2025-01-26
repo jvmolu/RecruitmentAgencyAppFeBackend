@@ -2,11 +2,8 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { Request, Response } from "express";
 import { GeneralAppResponse, isGeneralAppFailureResponse } from "../types/response/general-app-response";
 import { JobService } from "../services/job-service";
-import { Job, JobSearchParams, JobType, JobWithCompanyData } from "../types/zod/job-entity";
+import { JobType, JobWithCompanyData } from "../types/zod/job-entity";
 import Role from "../types/enums/role";
-
-// PSQL
-// ROUTE -> CONTROLLER (req/res) (business logic but we keep it minimal) -> SERVICE (Business Logic) -> (REPOSITORIES) -> SQL
 
 export class JobController {
 
@@ -68,6 +65,36 @@ export class JobController {
                 });
             }
             const result: GeneralAppResponse<JobType[]> = await JobService.updateJobs(req.body.searchParams, req.body.updateParams);
+            if(isGeneralAppFailureResponse(result)) {
+                return res.status(result.statusCode).json({
+                    success: false,
+                    message: result.businessMessage,
+                    error: result.error
+                });
+            }
+            return res.status(HttpStatusCode.OK).json(result);
+        }
+        catch (error) {
+            console.log(error);
+            return res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
+
+    public static async getMatchesForJob(req: Request, res: Response) : Promise<any> {
+        try {
+
+            const {jobId, threshold} = req.body;
+            if(!jobId) {
+                return res.status(HttpStatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: 'Invalid request body - jobId is required'
+                });
+            }
+
+            const result: GeneralAppResponse<JobType[]> = await JobService.getMatchesForJob(jobId, threshold);
             if(isGeneralAppFailureResponse(result)) {
                 return res.status(result.statusCode).json({
                     success: false,

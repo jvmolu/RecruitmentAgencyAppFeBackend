@@ -7,6 +7,10 @@ import HttpStatusCode from "../types/enums/http-status-codes";
 import { Transactional } from "../decorators/transactional";
 import { PoolClient } from "pg";
 import AiService from "./ai-service";
+import { BadRequestError } from "../types/error/bad-request-error";
+import dotenv from 'dotenv';
+
+dotenv.config({ path: __dirname + "/./../../.env" });
 
 export class JobService {
 
@@ -172,6 +176,33 @@ export class JobService {
         });
 
         return updateResponse;
+    }
+
+    public static async getMatchesForJob(jobId: string, threshold?: number): Promise<GeneralAppResponse<any>> {
+
+        if(!jobId) {
+            return {
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid request body - jobId is required',
+                error: new Error('Invalid request body - jobId is required') as BadRequestError
+            };
+        }
+
+        if(!threshold) {
+            threshold = process.env.DEFAULT_MATCH_THRESHOLD ? parseFloat(process.env.DEFAULT_MATCH_THRESHOLD) : undefined;
+        }
+
+        if(!threshold) {
+            return {
+                success: false,
+                statusCode: HttpStatusCode.BAD_REQUEST,
+                businessMessage: 'Invalid threshold value',
+                error: new Error('Invalid threshold value') as BadRequestError
+            };
+        }
+
+        return await AiService.getMatchesForJob(jobId, threshold);
     }
 
     public static fetchAndRemoveJobFields(sourceFields: any): Partial<JobSearchOptions> {
