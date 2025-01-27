@@ -88,4 +88,20 @@ export class MatchService {
 
     return await this.repository.findByParams(validationResult.data, searchParamsValidationResult.data as MatchSearchParams);
   }
+
+  private static async deleteByParams(matchSearchOptions: Partial<MatchSearchOptions>): Promise<GeneralAppResponse<MatchType[]>> {
+    const validationResult = MatchSearchSchema.partial().safeParse(matchSearchOptions);
+    if (!validationResult.success) {
+      const error = validationResult.error as ZodParsingError;
+      error.errorType = 'ZodParsingError';
+      return {
+        error,
+        statusCode: HttpStatusCode.BAD_REQUEST,
+        businessMessage: 'Invalid search parameters',
+        success: false,
+      };
+    }
+
+    return await this.repository.deleteByParams(validationResult.data);
+  }
 }

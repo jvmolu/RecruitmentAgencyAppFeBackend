@@ -157,6 +157,21 @@ class MatchRepository extends BaseRepository {
     }
   }
 
+  async deleteByParams(fields: Partial<MatchSearchOptions>, client?: PoolClient): Promise<GeneralAppResponse<MatchType[]>> {
+    try {
+      const searchQueryFields: QueryFields = this.createSearchFields(fields);
+      const { query, params } = QueryBuilder.buildDeleteQuery(DbTable.MATCHES, searchQueryFields);
+      return await this.executeQuery<Match>(query, params, client);
+    } catch (error: any) {
+        return {
+            error,
+            businessMessage: 'Internal server error',
+            statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+            success: false
+        };
+    }
+  }
+
   private createSearchFields(fields: Partial<MatchSearchOptions>, tableAlias?: string): QueryFields {
     const searchFields: QueryFields = {};
     Object.entries(fields).forEach(([key, value]) => {
