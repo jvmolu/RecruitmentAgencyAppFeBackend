@@ -81,9 +81,9 @@ export class InterviewService {
         };
 
         // IN THIS SCENARIO ....... -> THERE IS NO AI INTERVIEW LIFECYCLE YET. CREATE ONE. (FOR FUTURE AI INTERVIEWS, AI INTERVIEW STAGE WILL ALREADY BE PRESENT AS IT WILL HAVE BEEN MOVED BY ADMIN)
-        const insertStatusRes = await ApplicationService.insertLifecycle(lifecycle, client);
-        if (isGeneralAppFailureResponse(insertStatusRes)) {
-            return insertStatusRes;
+        const updateStatus = await ApplicationService.updateApplications({id: applicationId}, {stage: ApplicationStages.AI_INTERVIEW}, client);
+        if(isGeneralAppFailureResponse(updateStatus)) {
+            return updateStatus;
         }
 
         lifecycleData.push(lifecycle);
